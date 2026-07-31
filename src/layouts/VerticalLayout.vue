@@ -14,7 +14,7 @@
       v-on:mouseleave="expandMiniMenu"
       bordered
     >
-      <vertical-menu v-model:miniModeState="miniModeState" v-model:miniExpandState="miniExpandState"></vertical-menu>
+      <vertical-menu v-bind:mini-mode-state="miniModeState" v-bind:mini-expand-state="miniExpandState"></vertical-menu>
     </q-drawer>
 
     <!-- 設定面板 -->
@@ -43,35 +43,32 @@ import SettingPanel from '@/layouts/SettingPanel.vue'
 const $q = useQuasar()
 const layoutStore = useLayoutStore()
 const isVerticalMenuOpen = ref(true)
-/** 是否啟用 mini（icon-only）收合能力 */
+/** 是否啟用 mini（icon-only）收合能力：常駐收合設定或小螢幕時皆啟用 */
 const miniModeState = ref(false)
-/** 目前是否呈現展開狀態（顯示文字） */
+/** 目前是否呈現展開狀態（顯示文字），mini 能力關閉時視為恆展開 */
 const miniExpandState = ref(true)
 
-// Sidebar Size 設定與螢幕寬度共同決定側邊欄的初始收合狀態
+// Sidebar Size 設定與螢幕寬度共同決定側邊欄的收合能力，並在切換時重置展開狀態
 watch(
   () => [layoutStore.layoutConfig.sidebarSize, $q.screen.lt.md] as const,
   ([sidebarSize, isSmallScreen]) => {
-    if (isSmallScreen) {
-      miniModeState.value = true
-      miniExpandState.value = false
-      return
-    }
-    miniModeState.value = sidebarSize !== 'default'
-    miniExpandState.value = sidebarSize === 'default'
+    miniModeState.value = isSmallScreen || sidebarSize === 'sm-hover'
+    miniExpandState.value = !miniModeState.value
   },
   { immediate: true },
 )
 
-/** 點擊選單按鈕：僅在有啟用 mini 能力時手動切換展開/收合 */
+/** 點擊選單按鈕：小螢幕時僅暫時展開/收合；桌面時在「常駐展開」與「常駐收合」設定間切換 */
 function toggleLeftDrawer() {
-  if (!miniModeState.value) return
-  miniExpandState.value = !miniExpandState.value
+  if ($q.screen.lt.md) {
+    miniExpandState.value = !miniExpandState.value
+    return
+  }
+  layoutStore.setSidebarSize(layoutStore.layoutConfig.sidebarSize === 'default' ? 'sm-hover' : 'default')
 }
 
-/** 滑鼠移入/移出：僅「滑鼠移入展開」模式需要此行為，常駐收合模式維持 icon-only */
+/** 滑鼠移入/移出：僅有啟用 mini 能力時才需要 hover 展開 */
 function expandMiniMenu() {
-  if (layoutStore.layoutConfig.sidebarSize !== 'sm-hover') return
   if (miniModeState.value) {
     miniExpandState.value = !miniExpandState.value
   }

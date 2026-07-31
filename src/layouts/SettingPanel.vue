@@ -123,29 +123,21 @@
       <div class="q-mb-lg" v-if="layoutStore.layoutConfig.layout === 'vertical'">
         <h6 class="text-h6 q-my-md">側邊選單尺寸</h6>
         <div class="row q-gutter-md">
-          <div class="col-3">
+          <div class="col-5">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setSidebarSize('default')">
               <q-card-section class="q-pa-sm flex justify-center">
                 <SidebarSizeDefault :is-selected="layoutStore.layoutConfig.sidebarSize === 'default'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">預設展開</div>
+            <div class="text-center q-mt-sm text-caption">常駐展開</div>
           </div>
-          <div class="col-3">
-            <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setSidebarSize('condensed')">
-              <q-card-section class="q-pa-sm flex justify-center">
-                <SidebarSizeCondensed :is-selected="layoutStore.layoutConfig.sidebarSize === 'condensed'" :size="80" />
-              </q-card-section>
-            </q-card>
-            <div class="text-center q-mt-sm text-caption">常駐收合</div>
-          </div>
-          <div class="col-3">
+          <div class="col-5">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setSidebarSize('sm-hover')">
               <q-card-section class="q-pa-sm flex justify-center">
                 <SidebarSizeHover :is-selected="layoutStore.layoutConfig.sidebarSize === 'sm-hover'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">滑鼠移入展開</div>
+            <div class="text-center q-mt-sm text-caption">常駐收合</div>
           </div>
         </div>
       </div>
@@ -167,7 +159,6 @@ import MenuColorLight from '@/layouts/components/MenuColorLight.vue'
 import MenuColorDark from '@/layouts/components/MenuColorDark.vue'
 import MenuColorBrand from '@/layouts/components/MenuColorBrand.vue'
 import SidebarSizeDefault from '@/layouts/components/SidebarSizeDefault.vue'
-import SidebarSizeCondensed from '@/layouts/components/SidebarSizeCondensed.vue'
 import SidebarSizeHover from '@/layouts/components/SidebarSizeHover.vue'
 
 // 使用 layout store

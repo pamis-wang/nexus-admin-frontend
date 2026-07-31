@@ -2,7 +2,7 @@
   <q-scroll-area class="fit" v-bind:class="layoutStore.getMenuColorClass()">
     <q-toolbar class="flex justify-center">
       <router-link to="/" class="logo-container">
-        <img v-if="miniModeState && !miniExpandState" :src="logoMarkSrc" alt="logo" class="logo-mark" />
+        <img v-if="props.miniModeState && !props.miniExpandState" :src="logoMarkSrc" alt="logo" class="logo-mark" />
         <img v-else :src="logoLockupSrc" alt="logo" class="logo-lockup" />
       </router-link>
     </q-toolbar>
@@ -79,8 +79,12 @@ import type { RouteRecordRaw } from 'vue-router'
 const route = useRoute()
 const layoutStore = useLayoutStore()
 
-const miniModeState = defineModel<boolean>('miniModeState')
-const miniExpandState = defineModel<boolean>('miniExpandState')
+interface Props {
+  miniModeState: boolean
+  miniExpandState: boolean
+}
+
+const props = defineProps<Props>()
 
 const expansionStates = ref<Record<string, boolean>>({})
 

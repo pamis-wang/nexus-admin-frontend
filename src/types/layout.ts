@@ -8,6 +8,6 @@ export interface LayoutConfig {
   topbarColor: 'light' | 'dark' | 'brand'
   /** 選單顏色：亮色、暗色或品牌色 */
   menuColor: 'light' | 'dark' | 'brand'
-  /** 側邊選單尺寸：預設展開、常駐收合、滑鼠移入展開 */
-  sidebarSize: 'default' | 'condensed' | 'sm-hover'
+  /** 側邊選單尺寸：常駐展開、常駐收合（滑鼠移入時暫時展開） */
+  sidebarSize: 'default' | 'sm-hover'
 }
