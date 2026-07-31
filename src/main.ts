@@ -4,9 +4,13 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
-const app = createApp(App)
+import quasarPlugin from '@/plugins/quasar'
 
-app.use(createPinia())
+const app = createApp(App)
+const pinia = createPinia()
+
+app.use(pinia)
 app.use(router)
+app.use(quasarPlugin)
 
 app.mount('#app')
