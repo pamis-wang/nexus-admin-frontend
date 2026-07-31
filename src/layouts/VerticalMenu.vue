@@ -152,13 +152,9 @@ function hasVisibleChildren(route: RouteRecordRaw): boolean {
   color: inherit;
 }
 
-.logo-mark {
-  height: 28px;
-  width: auto;
-}
-
+.logo-mark,
 .logo-lockup {
-  height: 22px;
+  height: 26px;
   width: auto;
 }
 </style>
