@@ -41,6 +41,7 @@ UI：**Quasar（後台）｜Tailwind CSS（前台）** ← 複製到專案後刪
 - **禁用 `Omit`／`Pick`／`Partial` 等衍生型別**，欄位逐一明確列出；共同欄位用 `extends`。
 - **頁面 `types.ts` 禁止 import service 層型別**，須在頁面自己的 `types.ts` 重新宣告，以頁面功能為前綴。
 - 所有 interface 欄位加 `/** */` JSDoc。
+- **後端字串列舉值用字面值聯集，不用 TypeScript `enum`。** 值逐一比照後端字串碼（如 `type AuthStatus = 'success' | 'account_not_found'`），判斷用 `===` 直接比較。
 
 ## API 串接
 
@@ -65,20 +66,20 @@ UI：**Quasar（後台）｜Tailwind CSS（前台）** ← 複製到專案後刪
 
 ## 命名
 
-| 對象 | 規則 |
-|---|---|
-| 頁面模組資料夾 | PascalCase（`UserManagement/`） |
-| 頁面（CRUD 視圖） | `<模組名><動作>.vue`，動作固定 `List`／`Add`／`Edit`／`View` |
-| 共用元件 | `PascalCase.vue` |
-| 組合函式／狀態管理 | `useXxx.ts` |
-| 服務 | `xxxService.ts` |
-| 路由檔 | `xxx.routes.ts` |
-| API 型別 | `Response`／`Request` 後綴（`UserResponse`、`CreateUserRequest`） |
-| 頁面表單型別 | 頁面功能為前綴（`UserFormData`） |
-| 布林 | `is`／`has`／`should` 前綴 |
-| 模組層常數 | `UPPER_SNAKE_CASE`（`BASE_API_URL`） |
-| 路由 `path` | kebab-case 複數（`user-management`） |
-| 路由 `name` | camelCase（`userEdit`） |
+| 對象               | 規則                                                              |
+| ------------------ | ----------------------------------------------------------------- |
+| 頁面模組資料夾     | PascalCase（`UserManagement/`）                                   |
+| 頁面（CRUD 視圖）  | `<模組名><動作>.vue`，動作固定 `List`／`Add`／`Edit`／`View`      |
+| 共用元件           | `PascalCase.vue`                                                  |
+| 組合函式／狀態管理 | `useXxx.ts`                                                       |
+| 服務               | `xxxService.ts`                                                   |
+| 路由檔             | `xxx.routes.ts`                                                   |
+| API 型別           | `Response`／`Request` 後綴（`UserResponse`、`CreateUserRequest`） |
+| 頁面表單型別       | 頁面功能為前綴（`UserFormData`）                                  |
+| 布林               | `is`／`has`／`should` 前綴                                        |
+| 模組層常數         | `UPPER_SNAKE_CASE`（`BASE_API_URL`）                              |
+| 路由 `path`        | kebab-case 複數（`user-management`）                              |
+| 路由 `name`        | camelCase（`userEdit`）                                           |
 
 - 固定識別欄位（ID）用**路由參數**，不用 query string：`users/:userId`。
 - 頁面元件一律**動態 import** 懶載入。

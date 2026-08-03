@@ -30,7 +30,7 @@ Vue 3.5（TypeScript）＋ Vite，Composition API ＋ `<script setup>`。硬規�
 | `03.專案架構與目錄說明.md` | `src/` 完整目錄結構、各層職責、依賴方向 |
 | `07.元件、組合函式、狀態管理設計規範.md` | props／emit／`defineModel`、Pinia setup store 寫法 |
 | `08.樣式規範.md` | Quasar 註冊與 SCSS 變數、Tailwind 設定與設計 token、響應式 |
-| `附錄01`–`附錄03` | 不用 Optional、一律 `function` 宣告、`computed` 優先於 `watch` 的決策理由 |
+| `附錄01`–`附錄04` | 不用 Optional、一律 `function` 宣告、`computed` 優先於 `watch`、列舉字串值不用 `enum` 的決策理由 |
 
 ## 遇到規範沒寫的情況
 
