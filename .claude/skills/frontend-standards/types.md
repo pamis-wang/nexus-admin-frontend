@@ -1,6 +1,6 @@
 # TypeScript 型別與可空性
 
-> 來源：development-standards @ `d76e95f` — `frontend-standards/06.型別與API串接規範.md`、`附錄01`
+> 來源：development-standards @ `d76e95f` — `frontend-standards/06.型別與API串接規範.md`、`附錄01`、`附錄04`
 
 ---
 
@@ -137,6 +137,30 @@ export interface DonationApplicationAttachment {
 ```
 
 目的：頁面與 service 解耦，**service 型別改動不會悄悄影響頁面**。這是刻意接受「型別重複宣告」來換取解耦。
+
+---
+
+## 列舉字串值：字面值聯集，不用 `enum`
+
+後端 Enum 一律序列化為字串（`[JsonStringEnumMemberName]`）。前端對應型別**不用** TypeScript 的 `enum`，改用字串字面值聯集型別，值逐一比照後端字串碼（大小寫、底線／駝峰不自行轉換）。
+
+```ts
+// ✗ 禁止：enum 有執行期成本，且是名義型別，收到的原始字串無法直接指派
+export enum AuthStatus {
+  Success = 'success',
+  AccountNotFound = 'account_not_found',
+}
+
+// ✓ 正確：字面值聯集，值忠實照抄後端字串碼
+export type AuthStatus = 'success' | 'account_not_found' | 'account_disabled' | 'password_incorrect'
+```
+
+判斷準則：
+
+- 型別的值**直接來自後端 API 回應**（狀態、認證結果等）→ 用字面值聯集，判斷一律用 `===` 直接比較（`status === 'success'`）。
+- 型別**純前端內部使用**、不會跟外部字串比對、且需要「值 ↔ 名稱」雙向查找 → 才考慮 TS `enum`。
+
+決策理由（執行期成本、名義型別與原始字串不相容、`const enum` 與 `isolatedModules` 互斥）見 `附錄04`。
 
 ---
 
