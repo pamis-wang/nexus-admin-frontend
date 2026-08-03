@@ -19,12 +19,12 @@
           <q-avatar>
             <q-icon name="person" color="white" size="sm" class="bg-primary rounded-borders" />
           </q-avatar>
-          <div>{{ mockUserName }}</div>
+          <div>{{ displayName }}</div>
         </div>
       </template>
 
       <q-list>
-        <q-item clickable v-close-popup @click="handleLogout">
+        <q-item clickable v-close-popup v-bind:disable="isLoggingOut" @click="handleLogout">
           <q-item-section>
             <q-item-label class="flex items-center">
               <q-icon name="logout" size="xs" class="q-mr-sm" />
@@ -40,7 +40,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { storeToRefs } from 'pinia'
 import { useLayoutStore } from '@/stores/useLayout'
+import { useUserStore } from '@/stores/useUser'
+import { useAuthentication } from '@/composables/useAuthentication'
 import logoLockupBlue from '@/assets/images/nexus-lockup-blue.svg'
 import logoLockupWhite from '@/assets/images/nexus-lockup-white.svg'
 
@@ -50,18 +53,18 @@ defineEmits<{
 
 const $q = useQuasar()
 const layoutStore = useLayoutStore()
-
-// 尚未串接使用者/驗證後端，先用假資料呈現版面
-const mockUserName = '王小明'
+const { userProfile } = storeToRefs(useUserStore())
+const { isLoggingOut, logout } = useAuthentication()
 
 // 頂部欄背景是亮色時用藍色版標誌，暗色／品牌色背景用白色版以維持對比
 const logoLockupSrc = computed(() => (layoutStore.layoutConfig.topbarColor === 'light' ? logoLockupBlue : logoLockupWhite))
+const displayName = computed(() => userProfile.value?.fullName ?? userProfile.value?.account ?? '')
 
 onMounted(() => {
   layoutStore.initQuasar($q)
 })
 
-function handleLogout() {
-  console.info('登出功能尚未串接後端')
+async function handleLogout() {
+  await logout()
 }
 </script>

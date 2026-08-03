@@ -7,6 +7,16 @@ import type { RouteRecordRaw } from 'vue-router'
  * （單層、二層、三層各一組），之後接上真實頁面時再逐一替換 component。
  */
 
+/** 不須驗證就可使用的路由 */
+export const authRoutes: RouteRecordRaw[] = [
+  {
+    path: '/login',
+    name: 'login',
+    meta: { title: '登入' },
+    component: () => import('@/pages/Authentication/LoginPage.vue'),
+  },
+]
+
 /** 功能頁面路由 */
 export const featureRoutes: RouteRecordRaw[] = [
   {
@@ -82,9 +92,9 @@ export const mainRoutes: RouteRecordRaw[] = [
   {
     path: '/',
     component: () => import('@/layouts/MainLayout.vue'),
-    meta: {},
+    meta: { requiresAuth: true },
     children: [...featureRoutes],
   },
 ]
 
-export const allRoutes: RouteRecordRaw[] = [...mainRoutes, catchAllRoute]
+export const allRoutes: RouteRecordRaw[] = [...authRoutes, ...mainRoutes, catchAllRoute]

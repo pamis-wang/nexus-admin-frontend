@@ -42,6 +42,8 @@ export function useAuthentication() {
     isLoggingOut.value = true
     try {
       await logoutRequest()
+    } catch {
+      // 撤銷失敗不影響登出流程，仍繼續清空使用者狀態並導向登入頁
     } finally {
       await userStore.clearUser()
       await router.push({ name: 'login' })
