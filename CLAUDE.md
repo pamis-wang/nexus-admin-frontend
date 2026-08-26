@@ -1,11 +1,11 @@
 # 前端開發規範
 
-> 來源：development-standards @ `d76e95f`（2026-07-28）
-> 完整規範見 GitLab `agent-go/development-standards` 的 `frontend-standards/`。
-> 本檔只列**預設做法會出錯**的規則；其餘細節在 skill `frontend-standards`。
+> 本檔是 `development-standards` 的 `ai-templates/frontend/CLAUDE.md` 副本。要改規範請改上游正本再複製回來，直接改這一份會在下次同步時被覆蓋。
 
 技術基礎：Vue 3.5（TypeScript）＋ Vite，Composition API ＋ `<script setup lang="ts">`。
 UI：**Quasar（後台）｜Tailwind CSS（前台）** ← 複製到專案後刪掉不適用的一項。
+
+本檔只列**每種任務都會踩到的硬規則**。照抄用的流程與模板在 skill `frontend-standards`——**動手做 CRUD 頁面、service 檔與 API 串接、宣告 API 型別、寫元件測試前，先讀那個 skill**；本檔不重複它的內容。
 
 ---
 
@@ -37,11 +37,11 @@ UI：**Quasar（後台）｜Tailwind CSS（前台）** ← 複製到專案後刪
 ## 型別
 
 - **Response／POST／PATCH 一律固定欄位，可空用 `| null`，不用 `?`。** `?` 只給查詢／篩選參數（query string）。
-- 判斷可空一律 `=== null`，**不用 `=== undefined`**——後端有送 key，值是 `null`。
+- 判斷可空一律 `=== null`，**不用 `=== undefined`**。
 - **禁用 `Omit`／`Pick`／`Partial` 等衍生型別**，欄位逐一明確列出；共同欄位用 `extends`。
-- **頁面 `types.ts` 禁止 import service 層型別**，須在頁面自己的 `types.ts` 重新宣告，以頁面功能為前綴。
-- 所有 interface 欄位加 `/** */` JSDoc。
-- **後端字串列舉值用字面值聯集，不用 TypeScript `enum`。** 值逐一比照後端字串碼（如 `type AuthStatus = 'success' | 'account_not_found'`），判斷用 `===` 直接比較。
+- **後端字串列舉值用字面值聯集，不用 TypeScript `enum`**（`type AuthStatus = 'success' | 'account_not_found'`）。
+
+對照後端 JSON 形狀、PATCH 的欄位取捨、頁面型別與 service 型別的解耦、JSDoc 慣例照 skill 的 `types.md`。
 
 ## API 串接
 
@@ -64,22 +64,26 @@ UI：**Quasar（後台）｜Tailwind CSS（前台）** ← 複製到專案後刪
 - 元件樣式一律 **`<style scoped>`**，避免污染全域。
 - **不寫死設計值**：顏色、字級、間距一律用 token——後台改 `quasar-variables.sass`，前台用 `tailwind.config.js` 的 `theme.extend`。模板只引用語意 token（`text-primary`、`text-h1`），不寫 `#B3A093` 或 `text-[#B3A093]`。
 
+## 測試
+
+**測試檔一律集中放 `src/__tests__/`**，依來源檔案的 `src/` 相對路徑建子目錄，命名 `<原始檔名>.spec.ts`。Quasar 元件測試有四個預設做法會靜默失敗的地方（`mount` vs `shallowMount`、Quasar plugin、`vi.mock` 的 `ref`、`vi.waitFor`），寫測試前照 skill 的 `component-test.md`。
+
 ## 命名
 
-| 對象               | 規則                                                              |
-| ------------------ | ----------------------------------------------------------------- |
-| 頁面模組資料夾     | PascalCase（`UserManagement/`）                                   |
-| 頁面（CRUD 視圖）  | `<模組名><動作>.vue`，動作固定 `List`／`Add`／`Edit`／`View`      |
-| 共用元件           | `PascalCase.vue`                                                  |
-| 組合函式／狀態管理 | `useXxx.ts`                                                       |
-| 服務               | `xxxService.ts`                                                   |
-| 路由檔             | `xxx.routes.ts`                                                   |
-| API 型別           | `Response`／`Request` 後綴（`UserResponse`、`CreateUserRequest`） |
-| 頁面表單型別       | 頁面功能為前綴（`UserFormData`）                                  |
-| 布林               | `is`／`has`／`should` 前綴                                        |
-| 模組層常數         | `UPPER_SNAKE_CASE`（`BASE_API_URL`）                              |
-| 路由 `path`        | kebab-case 複數（`user-management`）                              |
-| 路由 `name`        | camelCase（`userEdit`）                                           |
+| 對象 | 規則 |
+|---|---|
+| 頁面模組資料夾 | PascalCase（`UserManagement/`） |
+| 頁面（CRUD 視圖） | `<模組名><動作>.vue`，動作固定 `List`／`Add`／`Edit`／`View` |
+| 共用元件 | `PascalCase.vue` |
+| 組合函式／狀態管理 | `useXxx.ts` |
+| 服務 | `xxxService.ts` |
+| 路由檔 | `xxx.routes.ts` |
+| API 型別 | `Response`／`Request` 後綴（`UserResponse`、`CreateUserRequest`） |
+| 頁面表單型別 | 頁面功能為前綴（`UserFormData`） |
+| 布林 | `is`／`has`／`should` 前綴 |
+| 模組層常數 | `UPPER_SNAKE_CASE`（`BASE_API_URL`） |
+| 路由 `path` | kebab-case 複數（`user-management`） |
+| 路由 `name` | camelCase（`userEdit`） |
 
 - 固定識別欄位（ID）用**路由參數**，不用 query string：`users/:userId`。
 - 頁面元件一律**動態 import** 懶載入。
@@ -90,13 +94,3 @@ UI：**Quasar（後台）｜Tailwind CSS（前台）** ← 複製到專案後刪
 - 破壞性變更（呼叫端不改程式就會壞）在 type 後加 `!`：`feat!: 移除 UserResponse 的 status 欄位`。
 - 分支 `<類型>/<描述>`，類型**只有** `feat`／`fix`／`refactor`／`docs`／`chore`。一律從 `develop` 切出、PR／MR 回 `develop`。
 - `main`／`stage`／`develop` 為環境分支：不得直接推送、不得強制推送。
-
----
-
-## 專案上下文
-
-> 以下內容為本專案自有的背景資訊，**不屬於** development-standards 同步下來的規範，不受上方版本／同步機制管控。
-
-- 本專案（`nexus-admin-frontend`）為全新專案，對應的後端專案為本機 `D:\ProjectCollection\NexusBackend`。確認 API 契約、資料形狀、後端行為時，應以該專案的原始碼為準。
-- 團隊前端開發規範的唯一來源是 `D:\development-standards`（GitLab repo `agent-go/development-standards`，`frontend-standards/`）。本檔上方的規範內容與 `.claude/skills` 內的 `frontend-standards` 皆為同步下來的副本，規範仍在成形中，會持續調整。
-- **若發現上方規範內容與實際開發需求有衝突或缺漏，不可直接修改本檔或 skill 檔案來「修正」規範本身**，須回到來源 `D:\development-standards` 修改，再以同步的形式帶回本專案，確保規範的資料流單向（來源 → 專案），避免副本與來源分岔。
