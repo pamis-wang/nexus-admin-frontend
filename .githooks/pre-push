@@ -1,0 +1,27 @@
+#!/bin/sh
+# push 前的完整檢查（約 5 秒）：格式、oxlint、eslint、型別、單元測試、build。
+# 目的是讓推上去發 MR 的分支保證 npm run build 過得去。
+#
+# 這個目錄由 package.json 的 prepare 掛上（git config core.hooksPath .githooks）。
+
+# 只是刪除遠端分支時（local oid 全為 0）沒有程式要驗，直接放行。
+has_commits=0
+while read -r _local_ref local_oid _remote_ref _remote_oid; do
+  case "$local_oid" in
+    *[!0]*) has_commits=1 ;;
+  esac
+done
+
+if [ "$has_commits" -eq 0 ]; then
+  exit 0
+fi
+
+printf '\n\033[36m▶ push 前完整檢查中…\033[0m\n\n'
+
+if ! npm run --silent verify; then
+  printf '\n\033[31m✖ push 已中止：專案未通過完整檢查\033[0m\n'
+  printf '  請自行執行 npm run verify 看完整錯誤訊息後修正\n\n'
+  exit 1
+fi
+
+printf '\n\033[32m✔ 全部通過\033[0m\n\n'
