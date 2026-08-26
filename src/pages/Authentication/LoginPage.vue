@@ -25,7 +25,8 @@
       </q-input>
 
       <div v-if="isCapsLockOn" class="text-warning text-center">
-        <q-icon name="mdi-alert-outline" size="xs" class="q-mr-xs" />Caps Lock 已開啟
+        <q-icon name="mdi-alert-outline" size="xs" class="q-mr-xs" />
+        Caps Lock 已開啟
       </div>
 
       <div v-if="errorMessage" class="text-negative text-center">{{ errorMessage }}</div>

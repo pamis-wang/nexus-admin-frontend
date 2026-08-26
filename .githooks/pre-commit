@@ -1,0 +1,11 @@
+#!/bin/sh
+# commit 前的快速檢查（約 0.5 秒）：格式與 oxlint。
+# 較重的型別檢查、測試、build 留給 pre-push，避免每次 commit 都等。
+#
+# 這個目錄由 package.json 的 prepare 掛上（git config core.hooksPath .githooks）。
+
+if ! npm run --silent verify:quick; then
+  printf '\n\033[31m✖ commit 已中止：格式或 oxlint 未通過\033[0m\n'
+  printf '  修正方式： npm run format 與 npm run lint\n\n'
+  exit 1
+fi

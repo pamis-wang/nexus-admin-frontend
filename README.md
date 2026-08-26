@@ -84,3 +84,42 @@ npm run test:e2e -- --debug
 ```sh
 npm run lint
 ```
+
+## 提交前的自動檢查（Git hooks）
+
+`.githooks/` 內的 hooks 隨 repo 一起進版控，透過 `git config core.hooksPath .githooks` 生效。
+設定由 `scripts/setup-git-hooks.mjs` 自動完成，掛在 `prepare`（`npm install` 時）
+以及 `predev` / `prebuild`——**clone 後跑過任一個指令就會生效，不需要額外步驟**。
+
+| 時機 | 檢查內容 | 約耗時 |
+|---|---|---|
+| `pre-commit` | 格式（`oxfmt --check`）、`oxlint` | 0.5 秒 |
+| `pre-push` | 上述加上 `eslint`、型別檢查、單元測試、`vite build` | 9 秒 |
+
+`pre-push` 的目的是讓推上去發 MR 的分支保證 `npm run build` 過得去。
+想在推之前自己先跑一次完整檢查：
+
+```sh
+npm run verify
+```
+
+只跑快的那一段（格式與 oxlint）：
+
+```sh
+npm run verify:quick
+```
+
+`verify:*` 各項也可以單獨執行，用來定位失敗：
+
+```sh
+npm run verify:format   # oxfmt --check src/
+npm run verify:oxlint   # oxlint . --deny-warnings
+npm run verify:eslint   # eslint . --max-warnings 0
+npm run verify:types    # vue-tsc --build --force
+npm run verify:test     # vitest run
+npm run verify:build    # vite build
+```
+
+> `verify:*` 系列一律**不帶 `--fix`**，只回報不修改；`npm run lint` 與 `npm run format` 才會動檔案。
+> 型別檢查與 build 的涵蓋範圍不同：`verify:types` 收 `src/**/*`（含未被引用的檔案），
+> `verify:build` 只走進入點可達的模組但抓得到靜態資源、SASS、動態 import 等 TypeScript 看不到的錯誤——兩者互補，缺一不可。
