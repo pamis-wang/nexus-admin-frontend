@@ -14,6 +14,11 @@
     "module": "preserve",
     "moduleResolution": "bundler",
 
+    // Vite's native config loader (a future default) relies on Node's type-stripping,
+    // which does not resolve extensionless imports. vitest.config.ts therefore imports
+    // "./vite.config.ts" with an explicit extension, which this flag allows.
+    "allowImportingTsExtensions": true,
+
     // Include Node.js types and avoid accidentally including other `@types/*` packages.
     "types": ["node"],
 
