@@ -23,6 +23,19 @@ TypeScript cannot handle type information for `.vue` imports by default, so we r
 
 See [Vite Configuration Reference](https://vite.dev/config/).
 
+## Node.js 版本
+
+本專案限定 Node.js `24.16.0`（`engines` 為 `^24.16.0`，即 24.16.0 以上、25.0.0 以下）。
+版本不符時，`.npmrc` 的 `engine-strict=true` 會讓 `npm install` / `npm ci` 直接中止（EBADENGINE）；
+`npm run dev` / `npm run build` 則由 `scripts/ensure-node-version.mjs` 在 `predev` / `prebuild` 擋下。
+
+```sh
+nvm install 24.16.0
+nvm use 24.16.0
+```
+
+> nvm-windows 不支援讀取 `.nvmrc`，必須明確指定版號；macOS / Linux 的 nvm 可直接執行 `nvm use`。
+
 ## Project Setup
 
 ```sh
