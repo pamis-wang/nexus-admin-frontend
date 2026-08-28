@@ -196,7 +196,7 @@ axiosService.interceptors.response.use(
     // login／refresh 的回應形狀由 authService 自行解析（HTTP 狀態碼隨 authStatus 變動、data 不可靠推斷成功失敗），
     // 攔截器不做任何轉換，直接把原始錯誤丟回去，避免真正的回應內容被這裡的錯誤處理邏輯蓋掉
     const requestUrl = error.config?.url ?? ''
-    if (requestUrl.endsWith('/admin-auth/login') || requestUrl.endsWith('/admin-auth/refresh')) {
+    if (requestUrl.endsWith('/auth/login') || requestUrl.endsWith('/auth/refresh')) {
       return Promise.reject(error)
     }
 

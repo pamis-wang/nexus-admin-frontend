@@ -2,7 +2,7 @@ import axios from 'axios'
 import { axiosService, request, type BaseResponse, type ResponseStructure } from '@/services/axiosService'
 
 /** 呼叫路徑 */
-const BASE_API_URL = `${import.meta.env.VITE_API_URL}/api/admin-auth`
+const BASE_API_URL = `${import.meta.env.VITE_API_URL}/api/auth`
 
 /** 認證狀態 */
 export type AuthStatus =
@@ -96,7 +96,7 @@ export interface LogoutResponse {
 
 /**
  * 登入
- * @description AdminAuthController 不論登入結果一律回傳完整的回應內容，只有 HTTP 狀態碼隨 authStatus 變動
+ * @description AuthController 不論登入結果一律回傳完整的回應內容，只有 HTTP 狀態碼隨 authStatus 變動
  * （例如密碼錯誤回 401、帳號鎖定回 429），這裡繞過共用的 request()（它假設非 2xx 一律視為錯誤、內容不可靠），
  * 改成自行解析回應內容，統一以 authStatus 判斷結果，不看 HTTP 狀態碼。
  */
