@@ -36,7 +36,7 @@
       <div class="q-mb-lg">
         <h6 class="text-h6 q-my-md">色彩方案</h6>
         <div class="row q-gutter-md">
-          <div class="col-5">
+          <div class="col-3">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setColorScheme('light')">
               <q-card-section class="q-pa-sm flex justify-center">
                 <ColorSchemeLight :is-selected="layoutStore.layoutConfig.colorScheme === 'light'" :size="80" />
@@ -44,13 +44,21 @@
             </q-card>
             <div class="text-center q-mt-sm text-caption">亮色主題</div>
           </div>
-          <div class="col-5">
+          <div class="col-3">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setColorScheme('dark')">
               <q-card-section class="q-pa-sm flex justify-center">
                 <ColorSchemeDark :is-selected="layoutStore.layoutConfig.colorScheme === 'dark'" :size="80" />
               </q-card-section>
             </q-card>
             <div class="text-center q-mt-sm text-caption">暗色主題</div>
+          </div>
+          <div class="col-3">
+            <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setColorScheme('system')">
+              <q-card-section class="q-pa-sm flex justify-center">
+                <ColorSchemeSystem :is-selected="layoutStore.layoutConfig.colorScheme === 'system'" :size="80" />
+              </q-card-section>
+            </q-card>
+            <div class="text-center q-mt-sm text-caption">跟隨系統</div>
           </div>
         </div>
       </div>
@@ -116,7 +124,7 @@
           </div>
         </div>
         <!-- 提示文字 -->
-        <div v-if="!isMenuColorAvailable.light" class="text-caption text-grey-6 q-mt-sm">💡 暗色主題下僅支援暗色或品牌色選單，以確保最佳視覺體驗</div>
+        <div v-if="!isMenuColorAvailable.light" class="text-caption text-grey-6 q-mt-sm">💡 暗色模式下僅支援暗色或品牌色選單，以確保最佳視覺體驗</div>
       </div>
 
       <!-- 側邊選單尺寸：僅垂直佈局適用 -->
@@ -152,6 +160,7 @@ import LayoutVerticalPreview from '@/layouts/components/LayoutVerticalPreview.vu
 import LayoutHorizontalPreview from '@/layouts/components/LayoutHorizontalPreview.vue'
 import ColorSchemeLight from '@/layouts/components/ColorSchemeLight.vue'
 import ColorSchemeDark from '@/layouts/components/ColorSchemeDark.vue'
+import ColorSchemeSystem from '@/layouts/components/ColorSchemeSystem.vue'
 import TopbarColorLight from '@/layouts/components/TopbarColorLight.vue'
 import TopbarColorDark from '@/layouts/components/TopbarColorDark.vue'
 import TopbarColorBrand from '@/layouts/components/TopbarColorBrand.vue'
@@ -164,11 +173,11 @@ import SidebarSizeHover from '@/layouts/components/SidebarSizeHover.vue'
 // 使用 layout store
 const layoutStore = useLayoutStore()
 
-// 計算可用的選單顏色選項
+// 計算可用的選單顏色選項：'system' 需看實際生效的亮／暗，故用 isDarkActive
 const isMenuColorAvailable = computed(() => {
-  const isDarkMode = layoutStore.layoutConfig.colorScheme === 'dark'
+  const isDarkMode = layoutStore.isDarkActive
   return {
-    light: !isDarkMode, // 暗色主題時不可選亮色選單
+    light: !isDarkMode, // 暗色生效時不可選亮色選單
     dark: true, // 暗色選單總是可選
     brand: true, // 品牌色選單總是可選
   }

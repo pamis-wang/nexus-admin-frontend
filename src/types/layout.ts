@@ -2,8 +2,8 @@
 export interface LayoutConfig {
   /** 佈局類型：垂直或水平 */
   layout: 'vertical' | 'horizontal'
-  /** 色彩方案：亮色或暗色 */
-  colorScheme: 'light' | 'dark'
+  /** 色彩方案：亮色、暗色或跟隨作業系統 */
+  colorScheme: 'light' | 'dark' | 'system'
   /** 頂部欄顏色：亮色、暗色或品牌色 */
   topbarColor: 'light' | 'dark' | 'brand'
   /** 選單顏色：亮色、暗色或品牌色 */
