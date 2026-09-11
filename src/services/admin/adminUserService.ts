@@ -48,7 +48,7 @@ export interface AdminUserLoginResponse {
 export interface AdminUserResponse {
   /** 唯一編號 */
   id: string
-  /** 登入帳號，建立後不可修改 */
+  /** 登入帳號，整個系統內不可重複 */
   account: string
   /** 電子信箱 */
   email: string
@@ -78,8 +78,10 @@ export interface CreateAdminUserRequest {
   fullName: string | null
 }
 
-/** 更新用戶請求；帳號不在其中，建立後不可修改 */
+/** 更新用戶請求 */
 export interface UpdateAdminUserRequest {
+  /** 登入帳號；PUT 是完整替換，沒帶會被寫成空字串，後台目前不開放修改、一律帶回載入當下的值 */
+  account: string
   /** 電子信箱 */
   email: string
   /** 姓名 */
@@ -130,9 +132,12 @@ export async function createAdminUser(data: CreateAdminUserRequest): Promise<Res
 
 /**
  * 更新後台用戶基本資料
- * @description 完整替換，帳號不可修改；停用狀態請原樣帶回，要變更請改用 updateAdminUserDisabledState
+ * @description
+ * 完整替換：帳號、電子信箱、姓名與停用狀態都要帶齊，沒帶的欄位會被寫成空值。
+ * 帳號與電子信箱可以修改，但不能改成其他用戶正在使用的值，重複時回 409。
+ * 停用狀態請原樣帶回，要變更請改用 updateAdminUserDisabledState。
  * @param userId 用戶唯一編號
- * @param data 電子信箱、姓名與停用狀態
+ * @param data 帳號、電子信箱、姓名與停用狀態
  * @returns 用戶唯一編號與更新時間
  */
 export async function updateAdminUser(userId: string, data: UpdateAdminUserRequest): Promise<ResponseStructure<UpdatedResponse>> {

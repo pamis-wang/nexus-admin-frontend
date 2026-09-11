@@ -22,7 +22,8 @@
       <q-form class="q-gutter-md" @submit="handleSubmit" @reset="handleReset">
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6">
-            <q-input :model-value="formData.account" label="登入帳號" outlined dense readonly hint="帳號建立後不可修改" />
+            <!-- 後端允許修改帳號，但後台目前不開放；送出時仍要原樣帶回，PUT 是完整替換 -->
+            <q-input :model-value="formData.account" label="登入帳號" outlined dense readonly hint="目前不開放在後台修改" />
           </div>
           <div class="col-12 col-md-6">
             <q-input
@@ -135,6 +136,7 @@ async function handleSubmit() {
   isSubmitting.value = true
   try {
     const response = await updateAdminUser(formData.id, {
+      account: formData.account.trim(),
       email: formData.email.trim(),
       fullName: formData.fullName.trim() || null,
       isDisabled: formData.isDisabled,
@@ -156,6 +158,7 @@ async function handleSubmit() {
     logger.error('更新用戶失敗', { status: failure.status, errorMessage })
 
     if (failure.status === 409) {
+      // 後端對帳號與電子信箱都會擋重複，但帳號在這裡唯讀、不可能撞到別人，實際只會是信箱
       dialog.showWarning(errorMessage, '電子信箱重複')
     } else {
       dialog.showError(errorMessage, '更新失敗')

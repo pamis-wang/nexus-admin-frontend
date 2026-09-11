@@ -36,7 +36,7 @@ export interface UserManagementCreateFormData {
 export interface UserManagementEditFormData {
   /** 用戶唯一編號 */
   id: string
-  /** 登入帳號，唯讀 */
+  /** 登入帳號；畫面唯讀，更新時原樣帶回 */
   account: string
   /** 電子信箱 */
   email: string
