@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router'
+import { roleManagementRoutes } from '@/router/roleManagement.routes'
 
 /**
  * 路由配置主檔案
@@ -41,7 +42,7 @@ export const featureRoutes: RouteRecordRaw[] = [
         path: 'roles',
         name: 'roleManagementList',
         meta: { title: '角色管理', icon: 'mdi-shield-account', resourceName: '系統管理>角色管理' },
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/RoleManagement/RoleManagementList.vue'),
       },
       {
         // resourceName 對齊後端 AdminResourceSeed 的「系統管理>資源管理」（權限判斷鍵 admin_resources 綁在該筆），
@@ -101,7 +102,8 @@ export const mainRoutes: RouteRecordRaw[] = [
     path: '/',
     component: () => import('@/layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
-    children: [...featureRoutes],
+    // featureRoutes 是選單來源，只放選單項目；只從列表進入的子頁另外掛在後面
+    children: [...featureRoutes, ...roleManagementRoutes],
   },
 ]
 
