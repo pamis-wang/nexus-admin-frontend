@@ -26,9 +26,9 @@
       handle=".drag-handle"
       :animation="200"
       :disabled="!canDrag"
-      ghost-class="bg-blue-1"
-      chosen-class="bg-blue-1"
-      drag-class="bg-blue-1"
+      ghost-class="menu-row-dragging"
+      chosen-class="menu-row-dragging"
+      drag-class="menu-row-dragging"
       tag="tbody"
       @move="handleMove"
       @update="handleUpdate"
@@ -287,9 +287,9 @@ function handleEditKeyup(event: KeyboardEvent, rowKey: string) {
  */
 function rowClass(element: MenuSettingsTableRow): string {
   if (element.row.level === 1) {
-    return 'bg-blue-1'
+    return 'menu-row-root'
   }
-  return element.row.isEnabled ? '' : 'bg-grey-2'
+  return element.row.isEnabled ? '' : 'menu-row-disabled'
 }
 
 /**
@@ -300,7 +300,7 @@ function levelColor(level: number): string {
   if (level === 1) {
     return 'primary'
   }
-  return level === 2 ? 'secondary' : 'grey-7'
+  return level === 2 ? 'secondary' : 'grey'
 }
 
 /**
@@ -313,3 +313,18 @@ function previewPath(element: MenuSettingsTableRow): string {
   return segments.join('>')
 }
 </script>
+
+<style scoped>
+/* 底色一律由語意色 token 調色，不寫死 bg-blue-1 這類調色盤色階 */
+.menu-row-root {
+  background: color-mix(in srgb, var(--q-primary) 8%, transparent);
+}
+
+.menu-row-disabled {
+  background: color-mix(in srgb, var(--q-dark) 6%, transparent);
+}
+
+.menu-row-dragging {
+  background: color-mix(in srgb, var(--q-primary) 16%, transparent);
+}
+</style>

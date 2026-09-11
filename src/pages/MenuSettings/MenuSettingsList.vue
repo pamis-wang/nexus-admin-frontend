@@ -5,7 +5,7 @@
     <!-- 頁面標題 -->
     <q-card-section class="q-pa-sm row items-center q-gutter-sm">
       <q-icon name="mdi-file-tree" size="sm" color="primary" />
-      <div class="text-h6">選單設定</div>
+      <div class="text-h6 text-primary">選單設定</div>
     </q-card-section>
 
     <q-separator />
