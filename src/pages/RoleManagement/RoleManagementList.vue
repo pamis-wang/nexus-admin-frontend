@@ -34,11 +34,20 @@
 
         <template #body-cell-action="props">
           <q-td :props="props">
-            <x-icon tooltip="檢視權限" color="info" icon="mdi-eye-outline" flat dense :to="{ name: 'roleManagementView', params: { roleId: props.row.id } }" />
+            <x-icon
+              tooltip="檢視權限"
+              color="primary"
+              icon="mdi-eye-outline"
+              :size="props.isDense ? 'md' : 'lg'"
+              flat
+              dense
+              :to="{ name: 'roleManagementView', params: { roleId: props.row.id } }"
+            />
             <x-icon
               tooltip="編輯角色"
-              color="primary"
+              color="warning"
               icon="mdi-file-document-edit-outline"
+              :size="props.isDense ? 'md' : 'lg'"
               flat
               dense
               :to="{ name: 'roleManagementEdit', params: { roleId: props.row.id } }"
@@ -49,6 +58,7 @@
               tooltip="刪除角色"
               color="negative"
               icon="mdi-trash-can-outline"
+              :size="props.isDense ? 'md' : 'lg'"
               flat
               dense
               @click="handleDelete(props.row)"

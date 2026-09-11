@@ -107,11 +107,20 @@
 
         <template #body-cell-action="props">
           <q-td :props="props">
-            <x-icon tooltip="檢視" color="info" icon="mdi-eye-outline" flat dense :to="{ name: 'userManagementView', params: { userId: props.row.id } }" />
+            <x-icon
+              tooltip="檢視"
+              color="primary"
+              icon="mdi-eye-outline"
+              :size="props.isDense ? 'md' : 'lg'"
+              flat
+              dense
+              :to="{ name: 'userManagementView', params: { userId: props.row.id } }"
+            />
             <x-icon
               tooltip="編輯"
-              color="primary"
+              color="warning"
               icon="mdi-file-document-edit-outline"
+              :size="props.isDense ? 'md' : 'lg'"
               flat
               dense
               :to="{ name: 'userManagementEdit', params: { userId: props.row.id } }"
