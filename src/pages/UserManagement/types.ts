@@ -32,11 +32,11 @@ export interface UserManagementCreateFormData {
   roleIds: string[]
 }
 
-/** 編輯用戶的表單；帳號唯讀，停用狀態另走專用端點 */
+/** 編輯用戶的表單；停用狀態另走專用端點 */
 export interface UserManagementEditFormData {
   /** 用戶唯一編號 */
   id: string
-  /** 登入帳號，唯讀 */
+  /** 登入帳號 */
   account: string
   /** 電子信箱 */
   email: string
