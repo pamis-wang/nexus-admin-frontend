@@ -85,6 +85,42 @@ export const mainRoutes: RouteRecordRaw[] = [
 export const allRoutes: RouteRecordRaw[] = [...authRoutes, ...errorRoutes, ...mainRoutes, catchAllRoute]
 
 /**
+ * 依權限篩掉看不到的選單項目
+ *
+ * 分組節點（有子選單的那一層）本身不是可以進入的頁面，只看底下還剩不剩子項：
+ * 全被擋掉就整組收起來，留一個點不進去的空群組沒有意義；反過來只要還有子項就保留，
+ * 因為父層漏設權限而讓整組功能從選單消失太容易誤判。
+ *
+ * 葉節點則看自己有沒有訪問權限。沒有標 resourceName 的節點一律顯示，與守衛的判斷一致。
+ *
+ * 不做成 computed 放在本檔：這支在模組載入時就會被求值，那時 pinia 還沒安裝，
+ * 拿不到 store。由選單元件各自包一層 computed 傳入判斷函式。
+ * @param routes 選單樹，通常是 menuRoutes
+ * @param hasPermission 判斷是否具備該資源的訪問權限
+ * @returns 篩選後的選單樹
+ */
+export function filterMenuRoutesByPermission(routes: RouteRecordRaw[], hasPermission: (resourceName: string) => boolean): RouteRecordRaw[] {
+  const visibleItems: RouteRecordRaw[] = []
+
+  for (const route of routes) {
+    if (route.children !== undefined) {
+      const children = filterMenuRoutesByPermission(route.children, hasPermission)
+      if (children.length > 0) {
+        visibleItems.push({ ...route, children })
+      }
+      continue
+    }
+
+    const resourceName = route.meta?.resourceName
+    if (resourceName === undefined || hasPermission(resourceName)) {
+      visibleItems.push(route)
+    }
+  }
+
+  return visibleItems
+}
+
+/**
  * 遞迴篩出選單項目
  *
  * 沒有 meta.title 的節點整支剔除。父層把子項剔光後仍保留自己，

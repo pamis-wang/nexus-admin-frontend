@@ -8,7 +8,7 @@
     </q-toolbar>
 
     <q-list>
-      <template v-for="item in menuRoutes" :key="item.name">
+      <template v-for="item in visibleMenuRoutes" :key="item.name">
         <!-- 無子選單的項目 -->
         <template v-if="!hasVisibleChildren(item)">
           <q-item clickable v-ripple exact :to="{ name: item.name }">
@@ -69,7 +69,8 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useLayoutStore } from '@/stores/useLayout'
-import { menuRoutes } from '@/router/routes'
+import { useUserStore } from '@/stores/useUser'
+import { filterMenuRoutesByPermission, menuRoutes } from '@/router/routes'
 import logoMarkBlue from '@/assets/images/nexus-mark-blue.svg'
 import logoMarkWhite from '@/assets/images/nexus-mark-white.svg'
 import logoLockupBlue from '@/assets/images/nexus-lockup-blue.svg'
@@ -78,6 +79,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 const route = useRoute()
 const layoutStore = useLayoutStore()
+const userStore = useUserStore()
 
 interface Props {
   miniModeState: boolean
@@ -88,6 +90,8 @@ const props = defineProps<Props>()
 
 const expansionStates = ref<Record<string, boolean>>({})
 
+/** 目前這位使用者看得到的選單，隨生效角色變動 */
+const visibleMenuRoutes = computed(() => filterMenuRoutesByPermission(menuRoutes, (resourceName) => userStore.hasPermission(resourceName)))
 // 選單背景是亮色時用藍色版標誌，暗色／品牌色背景用白色版以維持對比
 const isLightMenu = computed(() => layoutStore.layoutConfig.menuColor === 'light')
 const logoMarkSrc = computed(() => (isLightMenu.value ? logoMarkBlue : logoMarkWhite))
@@ -97,7 +101,7 @@ const logoLockupSrc = computed(() => (isLightMenu.value ? logoLockupBlue : logoL
 watch(
   () => route.path,
   () => {
-    menuRoutes.forEach((item) => {
+    visibleMenuRoutes.value.forEach((item) => {
       if (item.children && isChildRouteActive(item)) {
         expansionStates.value[String(item.name)] = true
       }
@@ -124,7 +128,7 @@ function isMenuItemActive(routeName: string | symbol | null | undefined): boolea
   if (!routeName) return false
   if (route.name === routeName) return true
   // 用 resourceName 判斷：當前路由與選單項目屬於同一個資源群組
-  const targetResourceName = findRouteResourceName(menuRoutes, routeName)
+  const targetResourceName = findRouteResourceName(visibleMenuRoutes.value, routeName)
   if (!targetResourceName) return false
   return route.meta?.resourceName === targetResourceName
 }

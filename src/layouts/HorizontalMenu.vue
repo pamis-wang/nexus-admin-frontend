@@ -1,6 +1,6 @@
 <template>
   <div class="row q-gutter-xs" v-bind:class="layoutStore.getMenuColorClass()">
-    <template v-for="item in menuRoutes" :key="item.name">
+    <template v-for="item in visibleMenuRoutes" :key="item.name">
       <!-- 無子選單的項目 (一層選單) -->
       <template v-if="!hasSubMenu(item)">
         <q-btn class="col q-my-none q-py-md" flat no-caps :label="item.meta?.title" :icon="item.meta?.icon" :to="{ name: item.name }" />
@@ -78,11 +78,17 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useLayoutStore } from '@/stores/useLayout'
-import { menuRoutes } from '@/router/routes'
+import { useUserStore } from '@/stores/useUser'
+import { filterMenuRoutesByPermission, menuRoutes } from '@/router/routes'
 import type { RouteRecordRaw } from 'vue-router'
 
 const layoutStore = useLayoutStore()
+const userStore = useUserStore()
+
+/** 目前這位使用者看得到的選單，隨生效角色變動 */
+const visibleMenuRoutes = computed(() => filterMenuRoutesByPermission(menuRoutes, (resourceName) => userStore.hasPermission(resourceName)))
 
 /** 是否有子選單；menuRoutes 已把非選單節點剔掉，這裡只需看還剩不剩 */
 function hasSubMenu(route: RouteRecordRaw): boolean {
