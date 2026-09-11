@@ -2,9 +2,9 @@
   <q-dialog v-model="isVisible" persistent>
     <q-card style="min-width: 460px; max-width: 560px">
       <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">移到其他層級</div>
+        <div class="text-h6 text-primary">移到其他層級</div>
         <q-space />
-        <q-btn v-close-popup icon="close" flat round dense />
+        <q-btn v-close-popup icon="mdi-close" flat round dense />
       </q-card-section>
 
       <q-card-section class="q-pb-none">
@@ -28,7 +28,7 @@
             clickable
             :disable="target.disabled"
             :active="selectedParentRowKey === target.parentRowKey"
-            active-class="bg-blue-1 text-primary"
+            active-class="menu-move-target-active text-primary"
             @click="handleSelect(target)"
           >
             <q-item-section avatar>
@@ -44,7 +44,7 @@
           </q-item>
         </q-list>
 
-        <q-banner v-if="selectedTarget !== null" class="bg-blue-1 q-mt-md" rounded dense>
+        <q-banner v-if="selectedTarget !== null" class="bg-info text-white q-mt-md" rounded dense>
           <div class="text-caption">
             搬移後的完整資源名稱會變成
             <span class="text-weight-bold">{{ previewPath }}</span>
@@ -55,8 +55,8 @@
       </q-card-section>
 
       <q-card-actions align="center" class="q-pt-none q-pb-md">
-        <q-btn v-close-popup label="取消" outline color="primary" style="min-width: 80px" />
-        <q-btn label="確認搬移" color="primary" style="min-width: 96px" :disable="selectedTarget === null" @click="handleConfirm" />
+        <q-btn v-close-popup flat label="取消" color="grey" class="q-px-xl" />
+        <q-btn unelevated label="確認搬移" color="primary" class="q-px-xl" :disable="selectedTarget === null" @click="handleConfirm" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -139,3 +139,10 @@ function handleConfirm() {
   isVisible.value = false
 }
 </script>
+
+<style scoped>
+/* 選取中的搬移目標，底色由語意色 token 調色 */
+.menu-move-target-active {
+  background: color-mix(in srgb, var(--q-primary) 8%, transparent);
+}
+</style>

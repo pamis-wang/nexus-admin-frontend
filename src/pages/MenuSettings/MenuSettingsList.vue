@@ -1,11 +1,11 @@
 <template>
-  <x-breadcrumb :items="[{ label: '首頁', icon: 'home', to: { name: 'home' } }, { label: '系統管理' }, { label: '選單設定' }]" />
+  <x-breadcrumb :items="[{ label: '首頁', icon: 'mdi-home', to: { name: 'home' } }, { label: '系統管理' }, { label: '選單設定' }]" />
 
   <q-card flat bordered class="q-mt-xs">
     <!-- 頁面標題 -->
     <q-card-section class="q-pa-sm row items-center q-gutter-sm">
       <q-icon name="mdi-file-tree" size="sm" color="primary" />
-      <div class="text-h6">選單設定</div>
+      <div class="text-h6 text-primary">選單設定</div>
     </q-card-section>
 
     <q-separator />
@@ -13,7 +13,7 @@
     <!-- 小提醒 -->
     <q-banner class="bg-info text-white q-mx-sm q-my-sm" rounded dense>
       <template #avatar>
-        <q-icon name="info" />
+        <q-icon name="mdi-information-outline" />
       </template>
       <div class="text-caption">※ 儲存是整棵樹一次送出，新增、改名、顯示狀態與順序的變更會一併寫入。</div>
       <div class="text-caption">※ 拖曳只能調整同一層的順序；要換到別的層級請用該列的「移到其他層級」。</div>
@@ -24,13 +24,13 @@
     <!-- 未儲存變更 -->
     <q-banner v-if="hasChanges" class="bg-warning text-dark q-mx-sm q-mb-sm" rounded dense>
       <template #avatar>
-        <q-icon name="warning" />
+        <q-icon name="mdi-alert-outline" />
       </template>
       <div class="text-caption">
         有未儲存的變更：新增 {{ changeSummary.addedCount }} 筆、更新 {{ changeSummary.updatedCount }} 筆、位置變動 {{ changeSummary.movedCount }} 筆
       </div>
       <template #action>
-        <q-btn flat dense color="dark" label="全部還原" icon="undo" @click="handleReset" />
+        <q-btn flat dense color="dark" label="全部還原" icon="mdi-undo" @click="handleReset" />
       </template>
     </q-banner>
 
@@ -38,17 +38,17 @@
     <div class="row items-center q-pa-sm q-gutter-sm">
       <q-input v-model="keyword" dense outlined clearable placeholder="搜尋選單名稱或資源代碼" style="min-width: 240px">
         <template #prepend>
-          <q-icon name="search" />
+          <q-icon name="mdi-magnify" />
         </template>
       </q-input>
 
-      <q-btn outline color="primary" label="全部展開" icon="unfold_more" :disable="isFiltering" @click="handleExpandAll" />
-      <q-btn outline color="primary" label="全部收合" icon="unfold_less" :disable="isFiltering" @click="handleCollapseAll" />
+      <q-btn outline color="primary" label="全部展開" icon="mdi-unfold-more-horizontal" :disable="isFiltering" @click="handleExpandAll" />
+      <q-btn outline color="primary" label="全部收合" icon="mdi-unfold-less-horizontal" :disable="isFiltering" @click="handleCollapseAll" />
 
       <q-space />
 
-      <q-btn label="新增第一層" color="primary" icon="add" @click="handleAddRoot" />
-      <q-btn label="儲存" color="primary" icon="save" :disable="!hasChanges" :loading="isSaving" @click="handleSave" />
+      <q-btn label="新增第一層" color="primary" icon="mdi-plus" @click="handleAddRoot" />
+      <q-btn label="儲存" color="primary" icon="mdi-content-save-outline" :disable="!hasChanges" :loading="isSaving" @click="handleSave" />
     </div>
 
     <!-- 搜尋提示：全量替換的坑，送出一律用完整的樹 -->
@@ -96,6 +96,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import { useMenuSettingsTree } from '@/pages/MenuSettings/composables/useMenuSettingsTree'
 import MenuSettingsMoveDialog from '@/pages/MenuSettings/components/MenuSettingsMoveDialog.vue'
@@ -103,6 +104,7 @@ import MenuSettingsTreeTable from '@/pages/MenuSettings/components/MenuSettingsT
 import type { MenuSettingsDragMove, MenuSettingsRow, MenuSettingsTableRow } from '@/pages/MenuSettings/types'
 
 const dialog = useDialog()
+const notify = useNotify()
 const logger = useLogger({ prefix: 'MenuSettings', enabled: import.meta.env.DEV })
 const {
   rows,
@@ -192,7 +194,7 @@ async function handleSave() {
       editingRowKey.value = null
       editingName.value = ''
       handleExpandAll()
-      dialog.showSuccess('選單設定已儲存')
+      notify.notifySuccess('選單設定已儲存')
     }
   })
 }
@@ -246,11 +248,11 @@ function handleStartEdit(rowKey: string) {
 function handleCommitEdit(rowKey: string) {
   const name = editingName.value.trim()
   if (name.length === 0) {
-    dialog.showWarning('選單名稱不可空白')
+    notify.notifyWarning('選單名稱不可空白')
     return
   }
   if (name.includes('>')) {
-    dialog.showWarning('選單名稱不可包含「>」，該符號是階層分隔用的')
+    notify.notifyWarning('選單名稱不可包含「>」，該符號是階層分隔用的')
     return
   }
 

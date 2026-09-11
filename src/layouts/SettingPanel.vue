@@ -4,7 +4,7 @@
     <q-card-section class="row items-center q-py-sm" :class="layoutStore.getTopbarColorClass()">
       <div class="text-h6">主題設定</div>
       <q-space />
-      <q-btn flat round dense icon="close" v-close-popup />
+      <q-btn flat round dense icon="mdi-close" v-close-popup />
     </q-card-section>
 
     <!-- 內容區域 -->

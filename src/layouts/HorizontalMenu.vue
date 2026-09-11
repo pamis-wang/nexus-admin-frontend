@@ -50,7 +50,7 @@
                       </q-item-section>
                       <q-item-section>{{ child.meta?.title }}</q-item-section>
                       <q-item-section side>
-                        <q-icon name="keyboard_arrow_right" />
+                        <q-icon name="mdi-chevron-right" />
                       </q-item-section>
 
                       <q-menu anchor="top end" self="top start">

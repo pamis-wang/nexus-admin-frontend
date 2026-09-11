@@ -1,7 +1,7 @@
 <template>
   <x-breadcrumb
     :items="[
-      { label: '首頁', icon: 'home', to: { name: 'home' } },
+      { label: '首頁', icon: 'mdi-home', to: { name: 'home' } },
       { label: '系統管理' },
       { label: '用戶管理', to: { name: 'userManagementList' } },
       { label: '新增用戶' },
@@ -17,7 +17,7 @@
 
       <q-banner class="bg-info text-white q-mb-md" rounded dense>
         <template #avatar>
-          <q-icon name="info" />
+          <q-icon name="mdi-information-outline" />
         </template>
         <div class="text-caption">※ 這裡只建立帳號本身。新帳號尚未綁定登入方式，需另行啟用後才能登入。</div>
         <div class="text-caption">※ 帳號建立後不可修改，電子信箱與姓名之後仍可在編輯頁調整。</div>
@@ -28,38 +28,52 @@
           <div class="col-12 col-md-6">
             <q-input
               v-model="formData.account"
-              label="登入帳號 *"
+              label="登入帳號"
               :rules="[(value) => !!value?.trim() || '請輸入登入帳號']"
               maxlength="50"
               counter
               outlined
               dense
-            />
+            >
+              <template #prepend>
+                <q-icon name="mdi-asterisk" color="negative" size="8px" />
+              </template>
+            </q-input>
           </div>
           <div class="col-12 col-md-6">
             <q-input
               v-model="formData.email"
               type="email"
-              label="電子信箱 *"
+              label="電子信箱"
               :rules="[(value) => !!value?.trim() || '請輸入電子信箱', (value) => EMAIL_PATTERN.test(value ?? '') || '電子信箱格式不正確']"
               maxlength="100"
               outlined
               dense
-            />
+            >
+              <template #prepend>
+                <q-icon name="mdi-asterisk" color="negative" size="8px" />
+              </template>
+            </q-input>
           </div>
           <div class="col-12 col-md-6">
-            <q-input v-model="formData.fullName" label="姓名" maxlength="50" outlined dense />
+            <q-input v-model="formData.fullName" label="姓名" maxlength="50" outlined dense>
+              <template #prepend>
+                <div style="width: 8px" />
+              </template>
+            </q-input>
           </div>
           <div class="col-12 col-md-6">
             <UserRoleSelector v-model="formData.roleIds" @load-failed="handleRoleLoadFailed" />
           </div>
         </div>
 
-        <q-separator class="q-my-md" />
+        <q-separator />
 
-        <div class="row q-gutter-sm justify-end">
-          <q-btn flat label="取消" color="grey" @click="handleCancel" />
-          <q-btn unelevated label="儲存" color="primary" type="submit" :loading="isSubmitting" />
+        <div class="q-pa-md q-mt-lg">
+          <div class="row q-gutter-sm justify-center">
+            <q-btn flat label="取消" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
+            <q-btn unelevated label="儲存" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />
+          </div>
         </div>
       </q-form>
     </q-card-section>
@@ -71,6 +85,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import UserRoleSelector from '@/pages/UserManagement/components/UserRoleSelector.vue'
 import { createAdminUser, updateAdminUserRoles } from '@/services/admin/adminUserService'
@@ -79,6 +94,7 @@ import type { UserManagementCreateFormData } from '@/pages/UserManagement/types'
 
 const router = useRouter()
 const dialog = useDialog()
+const notify = useNotify()
 const logger = useLogger({ prefix: 'UserManagementAdd', enabled: import.meta.env.DEV })
 
 /** 電子信箱格式，與後端的 [EmailAddress] 一致地只做基本檢查 */
@@ -104,7 +120,7 @@ async function handleSubmit() {
     })
 
     if (!response.success || response.result.data?.id == null) {
-      dialog.showError(response.result.error?.message || '新增用戶失敗', '新增失敗')
+      notify.notifyError(response.result.error?.message || '新增用戶失敗', 0)
       return
     }
 
@@ -119,9 +135,9 @@ async function handleSubmit() {
     logger.error('新增用戶失敗', { status: failure.status, errorMessage })
 
     if (failure.status === 409) {
-      dialog.showWarning(errorMessage, '帳號或電子信箱重複')
+      notify.notifyError(errorMessage, 0)
     } else {
-      dialog.showError(errorMessage, '新增失敗')
+      notify.notifyError(errorMessage, 0)
     }
   } finally {
     isSubmitting.value = false
@@ -154,7 +170,7 @@ async function assignRoles(userId: string, account: string): Promise<boolean> {
 }
 
 function handleRoleLoadFailed(message: string) {
-  dialog.showWarning(message, '載入角色清單失敗')
+  notify.notifyError(message, 0)
 }
 
 function handleCancel() {

@@ -3,7 +3,7 @@
     <thead class="bg-primary text-white">
       <q-tr>
         <q-th class="text-center" style="width: 40px">
-          <q-icon name="drag_indicator" size="xs" />
+          <q-icon name="mdi-drag" size="xs" />
         </q-th>
         <q-th class="text-left">選單名稱</q-th>
         <q-th class="text-center" style="width: 90px">層級</q-th>
@@ -26,9 +26,9 @@
       handle=".drag-handle"
       :animation="200"
       :disabled="!canDrag"
-      ghost-class="bg-blue-1"
-      chosen-class="bg-blue-1"
-      drag-class="bg-blue-1"
+      ghost-class="menu-row-dragging"
+      chosen-class="menu-row-dragging"
+      drag-class="menu-row-dragging"
       tag="tbody"
       @move="handleMove"
       @update="handleUpdate"
@@ -36,7 +36,7 @@
       <q-tr v-for="element in rows" :key="element.row.rowKey" :data-row-key="element.row.rowKey" :class="rowClass(element)">
         <!-- 拖曳把手 -->
         <q-td class="text-center">
-          <q-icon name="drag_indicator" size="xs" :class="canDrag ? 'text-grey-6 drag-handle cursor-pointer' : 'text-grey-4'">
+          <q-icon name="mdi-drag" size="xs" :class="canDrag ? 'text-grey-6 drag-handle cursor-pointer' : 'text-grey-4'">
             <q-tooltip>{{ canDrag ? '拖曳可調整同一層的順序，跨層請用「移到其他層級」' : '搜尋中無法拖曳排序' }}</q-tooltip>
           </q-icon>
         </q-td>
@@ -90,11 +90,11 @@
         <!-- 資源代碼：後端種子資料維護的端點權限判斷鍵，畫面唯讀 -->
         <q-td>
           <template v-if="element.row.resourceCode === null">
-            <span class="text-caption text-grey-5">—</span>
+            <span class="text-caption text-grey-5">-</span>
           </template>
           <template v-else>
             <q-badge color="grey-3" text-color="dark" class="text-caption">
-              <q-icon name="lock" size="xs" class="q-mr-xs" />
+              <q-icon name="mdi-lock-outline" size="xs" class="q-mr-xs" />
               {{ element.row.resourceCode }}
               <q-tooltip>已綁定端點權限，由後端種子資料維護，畫面不可修改</q-tooltip>
             </q-badge>
@@ -104,11 +104,11 @@
         <!-- displayOrder -->
         <q-td class="text-center">
           <div class="row items-center justify-center no-wrap">
-            <q-btn flat dense round size="sm" icon="keyboard_arrow_up" @click="emit('nudge', element.row.rowKey, -1)">
+            <q-btn flat dense round size="sm" icon="mdi-chevron-up" @click="emit('nudge', element.row.rowKey, -1)">
               <q-tooltip>上移</q-tooltip>
             </q-btn>
-            <span class="text-caption text-grey-7">{{ element.row.displayOrder || '—' }}</span>
-            <q-btn flat dense round size="sm" icon="keyboard_arrow_down" @click="emit('nudge', element.row.rowKey, 1)">
+            <span class="text-caption text-grey-7">{{ element.row.displayOrder || '-' }}</span>
+            <q-btn flat dense round size="sm" icon="mdi-chevron-down" @click="emit('nudge', element.row.rowKey, 1)">
               <q-tooltip>下移</q-tooltip>
             </q-btn>
           </div>
@@ -130,21 +130,21 @@
         <!-- 操作 -->
         <q-td class="text-center">
           <template v-if="editingRowKey === element.row.rowKey">
-            <q-btn flat dense round color="positive" icon="check" @click="emit('commitEdit', element.row.rowKey)">
+            <q-btn flat dense round color="positive" icon="mdi-check" @click="emit('commitEdit', element.row.rowKey)">
               <q-tooltip>完成</q-tooltip>
             </q-btn>
-            <q-btn flat dense round color="negative" icon="close" @click="emit('cancelEdit', element.row.rowKey)">
+            <q-btn flat dense round color="negative" icon="mdi-close" @click="emit('cancelEdit', element.row.rowKey)">
               <q-tooltip>取消</q-tooltip>
             </q-btn>
           </template>
           <template v-else>
-            <q-btn flat dense round color="primary" icon="edit" @click="emit('startEdit', element.row.rowKey)">
+            <q-btn flat dense round color="primary" icon="mdi-file-document-edit-outline" @click="emit('startEdit', element.row.rowKey)">
               <q-tooltip>改名</q-tooltip>
             </q-btn>
-            <q-btn v-if="element.row.level < maxLevel" flat dense round color="primary" icon="add" @click="emit('addChild', element.row.rowKey)">
+            <q-btn v-if="element.row.level < maxLevel" flat dense round color="primary" icon="mdi-plus" @click="emit('addChild', element.row.rowKey)">
               <q-tooltip>新增第 {{ element.row.level + 1 }} 層</q-tooltip>
             </q-btn>
-            <q-btn flat dense round color="primary" icon="drive_file_move" @click="emit('requestMove', element.row.rowKey)">
+            <q-btn flat dense round color="primary" icon="mdi-folder-move-outline" @click="emit('requestMove', element.row.rowKey)">
               <q-tooltip>移到其他層級</q-tooltip>
             </q-btn>
           </template>
@@ -287,9 +287,9 @@ function handleEditKeyup(event: KeyboardEvent, rowKey: string) {
  */
 function rowClass(element: MenuSettingsTableRow): string {
   if (element.row.level === 1) {
-    return 'bg-blue-1'
+    return 'menu-row-root'
   }
-  return element.row.isEnabled ? '' : 'bg-grey-2'
+  return element.row.isEnabled ? '' : 'menu-row-disabled'
 }
 
 /**
@@ -300,7 +300,7 @@ function levelColor(level: number): string {
   if (level === 1) {
     return 'primary'
   }
-  return level === 2 ? 'secondary' : 'grey-7'
+  return level === 2 ? 'secondary' : 'grey'
 }
 
 /**
@@ -313,3 +313,18 @@ function previewPath(element: MenuSettingsTableRow): string {
   return segments.join('>')
 }
 </script>
+
+<style scoped>
+/* 底色一律由語意色 token 調色，不寫死 bg-blue-1 這類調色盤色階 */
+.menu-row-root {
+  background: color-mix(in srgb, var(--q-primary) 8%, transparent);
+}
+
+.menu-row-disabled {
+  background: color-mix(in srgb, var(--q-dark) 6%, transparent);
+}
+
+.menu-row-dragging {
+  background: color-mix(in srgb, var(--q-primary) 16%, transparent);
+}
+</style>

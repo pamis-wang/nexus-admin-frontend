@@ -1,5 +1,5 @@
 <template>
-  <x-breadcrumb :items="[{ label: '首頁', icon: 'home', to: { name: 'home' } }, { label: '系統管理' }, { label: '用戶管理' }]" />
+  <x-breadcrumb :items="[{ label: '首頁', icon: 'mdi-home', to: { name: 'home' } }, { label: '系統管理' }, { label: '用戶管理' }]" />
 
   <!-- 功能操作區 -->
   <q-card flat bordered class="q-mt-xs">
@@ -107,11 +107,20 @@
 
         <template #body-cell-action="props">
           <q-td :props="props">
-            <x-icon tooltip="檢視" color="info" icon="mdi-eye-outline" flat dense :to="{ name: 'userManagementView', params: { userId: props.row.id } }" />
+            <x-icon
+              tooltip="檢視"
+              color="primary"
+              icon="mdi-eye-outline"
+              :size="props.isDense ? 'md' : 'lg'"
+              flat
+              dense
+              :to="{ name: 'userManagementView', params: { userId: props.row.id } }"
+            />
             <x-icon
               tooltip="編輯"
-              color="primary"
+              color="warning"
               icon="mdi-file-document-edit-outline"
+              :size="props.isDense ? 'md' : 'lg'"
               flat
               dense
               :to="{ name: 'userManagementEdit', params: { userId: props.row.id } }"
@@ -126,13 +135,13 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 
-import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import { getAdminUsers } from '@/services/admin/adminUserService'
 import type { ResponseStructure } from '@/services/axiosService'
 import type { UserManagementAccountStatusOption, UserManagementFilter, UserManagementRow } from '@/pages/UserManagement/types'
 
-const dialog = useDialog()
+const notify = useNotify()
 const logger = useLogger({ prefix: 'UserManagementList', enabled: import.meta.env.DEV })
 
 const isLoading = ref(false)
@@ -142,7 +151,7 @@ const pagination = ref<XPagination>({ sortBy: 'account', descending: false, page
 const columns: XTableColumn[] = [
   { name: 'number', align: 'center', label: '項次', field: '', style: 'width: 60px' },
   { name: 'account', align: 'left', label: '帳號', field: (row) => row.account },
-  { name: 'fullName', align: 'left', label: '姓名', field: (row) => row.fullName || '—' },
+  { name: 'fullName', align: 'left', label: '姓名', field: (row) => row.fullName || '-' },
   { name: 'email', align: 'left', label: '電子信箱', field: (row) => row.email },
   { name: 'roleNames', align: 'left', label: '角色', field: '' },
   { name: 'loginState', align: 'center', label: '登入狀態', field: '', style: 'width: 150px' },
@@ -207,12 +216,12 @@ async function loadUsers() {
         isLocked: user.logins.some((login) => login.lockedUntil !== null),
       }))
     } else if (response.result.error) {
-      dialog.showWarning(response.result.error.message, '載入失敗')
+      notify.notifyError(response.result.error.message, 0)
     }
   } catch (error) {
     const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
     logger.error('載入用戶列表失敗', errorMessage)
-    dialog.showError(errorMessage, '載入用戶列表失敗')
+    notify.notifyError(errorMessage, 0)
   } finally {
     isLoading.value = false
   }

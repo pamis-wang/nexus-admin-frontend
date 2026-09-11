@@ -1,7 +1,7 @@
 <template>
   <x-breadcrumb
     :items="[
-      { label: '首頁', icon: 'home', to: { name: 'home' } },
+      { label: '首頁', icon: 'mdi-home', to: { name: 'home' } },
       { label: '系統管理' },
       { label: '角色管理', to: { name: 'roleManagementList' } },
       { label: '編輯角色' },
@@ -21,18 +21,18 @@
       <q-form class="q-gutter-md" @submit="handleSubmit" @reset="handleReset">
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6">
-            <q-input
-              v-model="formData.name"
-              label="角色名稱 *"
-              :rules="[(value) => !!value?.trim() || '請輸入角色名稱']"
-              maxlength="50"
-              counter
-              outlined
-              dense
-            />
+            <q-input v-model="formData.name" label="角色名稱" :rules="[(value) => !!value?.trim() || '請輸入角色名稱']" maxlength="50" counter outlined dense>
+              <template #prepend>
+                <q-icon name="mdi-asterisk" color="negative" size="8px" />
+              </template>
+            </q-input>
           </div>
           <div class="col-12 col-md-6">
-            <q-input :model-value="formData.userCount" label="用戶人數" outlined dense readonly hint="由系統統計，不可修改" />
+            <q-input :model-value="formData.userCount" label="用戶人數" outlined dense readonly hint="由系統統計，不可修改">
+              <template #prepend>
+                <div style="width: 8px" />
+              </template>
+            </q-input>
           </div>
         </div>
 
@@ -40,12 +40,14 @@
 
         <RolePermissionMatrix :tree-nodes="treeNodes" :has-permission="hasPermission" :is-loading="isLoading" @update="updatePermission" />
 
-        <q-separator class="q-my-md" />
+        <q-separator />
 
-        <div class="row q-gutter-sm justify-end">
-          <q-btn flat label="取消" color="grey" @click="handleCancel" />
-          <q-btn flat label="重設" color="warning" type="reset" />
-          <q-btn unelevated label="儲存" color="primary" type="submit" :loading="isSubmitting" />
+        <div class="q-pa-md q-mt-lg">
+          <div class="row q-gutter-sm justify-center">
+            <q-btn flat label="取消" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
+            <q-btn flat label="重設" color="grey" size="md" class="q-px-xl" type="reset" />
+            <q-btn unelevated label="儲存" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />
+          </div>
         </div>
       </q-form>
     </q-card-section>
@@ -57,6 +59,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import { useRolePermissionMatrix } from '@/pages/RoleManagement/composables/useRolePermissionMatrix'
 import RolePermissionMatrix from '@/pages/RoleManagement/components/RolePermissionMatrix.vue'
@@ -67,6 +70,7 @@ import type { RoleManagementDetailFormData } from '@/pages/RoleManagement/types'
 const route = useRoute()
 const router = useRouter()
 const dialog = useDialog()
+const notify = useNotify()
 const logger = useLogger({ prefix: 'RoleManagementEdit', enabled: import.meta.env.DEV })
 const { isLoading, treeNodes, loadResources, loadRolePermissions, hasPermission, updatePermission, resetPermissions, buildPermissionItems } =
   useRolePermissionMatrix()
@@ -137,12 +141,12 @@ async function handleSubmit() {
     })
 
     if (response.success) {
-      dialog.showSuccess(`角色「${formData.name.trim()}」已更新`)
+      notify.notifySuccess(`角色「${formData.name.trim()}」已更新`)
       router.push({ name: 'roleManagementList' })
       return
     }
 
-    dialog.showError(response.result.error?.message || '更新角色失敗', '更新失敗')
+    notify.notifyError(response.result.error?.message || '更新角色失敗', 0)
   } catch (error) {
     const failure = error as ResponseStructure<null>
     const errorMessage = failure.errorMessage || '未知錯誤'
@@ -151,7 +155,7 @@ async function handleSubmit() {
     if (failure.status === 409) {
       dialog.showWarning('這個角色在你編輯期間已被其他人修改，或名稱與現有角色重複，請重新載入後再調整。', '版本衝突')
     } else {
-      dialog.showError(errorMessage, '更新失敗')
+      notify.notifyError(errorMessage, 0)
     }
   } finally {
     isSubmitting.value = false

@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 
 import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import { getAdminResourceTree, replaceAdminResourceTree } from '@/services/admin/adminResourceService'
 import type { AdminResourceTreeNodeRequest, AdminResourceTreeNodeResponse } from '@/services/admin/adminResourceService'
@@ -28,6 +29,7 @@ const PATH_SEPARATOR = '>'
 export function useMenuSettingsTree() {
   const logger = useLogger({ prefix: 'MenuSettingsTree', enabled: import.meta.env.DEV })
   const dialog = useDialog()
+  const notify = useNotify()
 
   /** 扁平化後的全部節點，畫面操作都以這份為準 */
   const rows = ref<MenuSettingsRow[]>([])
@@ -88,12 +90,12 @@ export function useMenuSettingsTree() {
         applyTreeResponse(response.result.data.version, response.result.data.items)
         logger.info('資源樹載入成功', { count: rows.value.length, version: version.value })
       } else if (response.result.error) {
-        dialog.showWarning(response.result.error.message, '載入失敗')
+        notify.notifyError(response.result.error.message, 0)
       }
     } catch (error) {
       const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
       logger.error('載入資源樹失敗', errorMessage)
-      dialog.showError(errorMessage, '載入選單設定失敗')
+      notify.notifyError(errorMessage, 0)
     } finally {
       isLoading.value = false
     }
@@ -125,7 +127,7 @@ export function useMenuSettingsTree() {
         return true
       }
 
-      dialog.showError(response.result.error?.message || '儲存選單設定失敗')
+      notify.notifyError(response.result.error?.message || '儲存選單設定失敗', 0)
       return false
     } catch (error) {
       const failure = error as ResponseStructure<null>
@@ -135,9 +137,9 @@ export function useMenuSettingsTree() {
       if (failure.status === 409) {
         dialog.showWarning('這份選單設定在你編輯期間已被其他人修改，請重新載入後再調整。', '版本衝突')
       } else if (failure.status === 403) {
-        dialog.showWarning(errorMessage, '不允許的變更')
+        notify.notifyError(errorMessage, 0)
       } else {
-        dialog.showError(errorMessage, '儲存選單設定失敗')
+        notify.notifyError(errorMessage, 0)
       }
 
       return false
@@ -280,13 +282,13 @@ export function useMenuSettingsTree() {
     const level = parent === null ? 1 : parent.level + 1
 
     if (level > MAX_LEVEL) {
-      dialog.showWarning(`資源層級最多 ${MAX_LEVEL} 層`)
+      notify.notifyWarning(`資源層級最多 ${MAX_LEVEL} 層`)
       return null
     }
 
     const siblings = childrenOf(parentRowKey)
     if (siblings.length >= MAX_SIBLINGS) {
-      dialog.showWarning(`同一層最多 ${MAX_SIBLINGS} 筆`)
+      notify.notifyWarning(`同一層最多 ${MAX_SIBLINGS} 筆`)
       return null
     }
 
@@ -423,13 +425,13 @@ export function useMenuSettingsTree() {
 
     const targetLevel = target === null ? 1 : target.level + 1
     if (targetLevel + subtreeHeightOf(rowKey) - 1 > MAX_LEVEL) {
-      dialog.showWarning(`搬移後會超過 ${MAX_LEVEL} 層`)
+      notify.notifyWarning(`搬移後會超過 ${MAX_LEVEL} 層`)
       return false
     }
 
     const siblings = childrenOf(targetParentRowKey)
     if (siblings.length >= MAX_SIBLINGS) {
-      dialog.showWarning(`目標層級已有 ${siblings.length} 筆，同一層最多 ${MAX_SIBLINGS} 筆`)
+      notify.notifyWarning(`目標層級已有 ${siblings.length} 筆，同一層最多 ${MAX_SIBLINGS} 筆`)
       return false
     }
 

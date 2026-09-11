@@ -2,7 +2,7 @@
   <q-toolbar v-bind:class="layoutStore.getTopbarColorClass()">
     <!-- 左側區域：根據佈局模式顯示不同內容 -->
     <!-- Vertical Layout: 顯示選單按鈕 -->
-    <q-btn v-if="layoutStore.layoutConfig.layout === 'vertical'" dense flat round icon="menu" @click="$emit('toggleLeftDrawer')" />
+    <q-btn v-if="layoutStore.layoutConfig.layout === 'vertical'" dense flat round icon="mdi-menu" @click="$emit('toggleLeftDrawer')" />
 
     <!-- Horizontal Layout: 顯示品牌標誌 -->
     <div v-if="layoutStore.layoutConfig.layout === 'horizontal'" class="flex items-center q-mr-md">
@@ -22,7 +22,7 @@
       <template v-slot:label>
         <div class="row items-center no-wrap q-gutter-x-sm">
           <q-avatar>
-            <q-icon name="person" color="white" size="sm" class="bg-primary rounded-borders" />
+            <q-icon name="mdi-account" color="white" size="sm" class="bg-primary rounded-borders" />
           </q-avatar>
           <div>{{ displayName }}</div>
         </div>
@@ -56,7 +56,7 @@
         <q-item clickable v-close-popup v-bind:disable="isLoggingOut" @click="handleLogout">
           <q-item-section>
             <q-item-label class="flex items-center">
-              <q-icon name="logout" size="xs" class="q-mr-sm" />
+              <q-icon name="mdi-logout" size="xs" class="q-mr-sm" />
               登出
             </q-item-label>
           </q-item-section>
@@ -73,7 +73,7 @@ import { storeToRefs } from 'pinia'
 import { useLayoutStore } from '@/stores/useLayout'
 import { useUserStore } from '@/stores/useUser'
 import { useAuthentication } from '@/composables/useAuthentication'
-import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import logoLockupBlue from '@/assets/images/nexus-lockup-blue.svg'
 import logoLockupWhite from '@/assets/images/nexus-lockup-white.svg'
 import type { LayoutConfig } from '@/types/layout'
@@ -93,7 +93,7 @@ const route = useRoute()
 const router = useRouter()
 const layoutStore = useLayoutStore()
 const userStore = useUserStore()
-const dialog = useDialog()
+const notify = useNotify()
 const { userProfile, assignedRoles, activeRoles, permissionMode } = storeToRefs(userStore)
 const { isLoggingOut, isSwitchingActiveRoles, logout, switchActiveRoles } = useAuthentication()
 
@@ -147,9 +147,12 @@ async function handleRoleClick(roleId: string) {
 
   const result = await switchActiveRoles(nextRoleIds)
   if (!result.success) {
-    dialog.showError(result.message, '切換角色失敗')
+    notify.notifyError(result.message, 0)
     return
   }
+
+  // 切換後選單與可進入的頁面都會變，沒有回饋使用者不會知道這次點擊生效了
+  notify.notifySuccess(`生效角色已切換為「${activeRoles.value.map((role) => role.name).join('、')}」`)
 
   // 換角色之後目前這一頁可能已經沒有權限了，留在原地會看到自己無權操作的畫面
   const resourceName = route.meta.resourceName

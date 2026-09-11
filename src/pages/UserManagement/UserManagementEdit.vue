@@ -1,7 +1,7 @@
 <template>
   <x-breadcrumb
     :items="[
-      { label: '首頁', icon: 'home', to: { name: 'home' } },
+      { label: '首頁', icon: 'mdi-home', to: { name: 'home' } },
       { label: '系統管理' },
       { label: '用戶管理', to: { name: 'userManagementList' } },
       { label: '編輯用戶' },
@@ -23,21 +23,33 @@
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6">
             <!-- 後端允許修改帳號，但後台目前不開放；送出時仍要原樣帶回，PUT 是完整替換 -->
-            <q-input :model-value="formData.account" label="登入帳號" outlined dense readonly hint="目前不開放在後台修改" />
+            <q-input :model-value="formData.account" label="登入帳號" outlined dense readonly hint="目前不開放在後台修改">
+              <template #prepend>
+                <div style="width: 8px" />
+              </template>
+            </q-input>
           </div>
           <div class="col-12 col-md-6">
             <q-input
               v-model="formData.email"
               type="email"
-              label="電子信箱 *"
+              label="電子信箱"
               :rules="[(value) => !!value?.trim() || '請輸入電子信箱', (value) => EMAIL_PATTERN.test(value ?? '') || '電子信箱格式不正確']"
               maxlength="100"
               outlined
               dense
-            />
+            >
+              <template #prepend>
+                <q-icon name="mdi-asterisk" color="negative" size="8px" />
+              </template>
+            </q-input>
           </div>
           <div class="col-12 col-md-6">
-            <q-input v-model="formData.fullName" label="姓名" maxlength="50" outlined dense />
+            <q-input v-model="formData.fullName" label="姓名" maxlength="50" outlined dense>
+              <template #prepend>
+                <div style="width: 8px" />
+              </template>
+            </q-input>
           </div>
           <div class="col-12 col-md-6">
             <UserRoleSelector v-model="formData.roleIds" @load-failed="handleRoleLoadFailed" />
@@ -46,12 +58,14 @@
 
         <div class="text-caption text-grey-7">帳號的停用狀態目前不開放在後台變更，列表與本頁都只顯示狀態，儲存時會把載入當下的值原樣帶回。</div>
 
-        <q-separator class="q-my-md" />
+        <q-separator />
 
-        <div class="row q-gutter-sm justify-end">
-          <q-btn flat label="取消" color="grey" @click="handleCancel" />
-          <q-btn flat label="重設" color="warning" type="reset" />
-          <q-btn unelevated label="儲存" color="primary" type="submit" :loading="isSubmitting" />
+        <div class="q-pa-md q-mt-lg">
+          <div class="row q-gutter-sm justify-center">
+            <q-btn flat label="取消" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
+            <q-btn flat label="重設" color="grey" size="md" class="q-px-xl" type="reset" />
+            <q-btn unelevated label="儲存" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />
+          </div>
         </div>
       </q-form>
     </q-card-section>
@@ -63,6 +77,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import UserRoleSelector from '@/pages/UserManagement/components/UserRoleSelector.vue'
 import { getAdminUserById, updateAdminUser, updateAdminUserRoles } from '@/services/admin/adminUserService'
@@ -72,6 +87,7 @@ import type { UserManagementEditFormData } from '@/pages/UserManagement/types'
 const route = useRoute()
 const router = useRouter()
 const dialog = useDialog()
+const notify = useNotify()
 const logger = useLogger({ prefix: 'UserManagementEdit', enabled: import.meta.env.DEV })
 
 /** 電子信箱格式，與後端的 [EmailAddress] 一致地只做基本檢查 */
@@ -143,13 +159,13 @@ async function handleSubmit() {
     })
 
     if (!response.success) {
-      dialog.showError(response.result.error?.message || '更新用戶失敗', '更新失敗')
+      notify.notifyError(response.result.error?.message || '更新用戶失敗', 0)
       return
     }
 
     const isRolesUpdated = await updateRoles()
     if (isRolesUpdated) {
-      dialog.showSuccess(`用戶「${formData.account}」已更新`)
+      notify.notifySuccess(`用戶「${formData.account}」已更新`)
     }
     router.push({ name: 'userManagementList' })
   } catch (error) {
@@ -159,9 +175,9 @@ async function handleSubmit() {
 
     if (failure.status === 409) {
       // 後端對帳號與電子信箱都會擋重複，但帳號在這裡唯讀、不可能撞到別人，實際只會是信箱
-      dialog.showWarning(errorMessage, '電子信箱重複')
+      notify.notifyError(errorMessage, 0)
     } else {
-      dialog.showError(errorMessage, '更新失敗')
+      notify.notifyError(errorMessage, 0)
     }
   } finally {
     isSubmitting.value = false
@@ -199,7 +215,7 @@ function handleReset() {
 }
 
 function handleRoleLoadFailed(message: string) {
-  dialog.showWarning(message, '載入角色清單失敗')
+  notify.notifyError(message, 0)
 }
 
 function handleCancel() {
