@@ -54,6 +54,8 @@ export interface UserManagementRoleOption {
   value: string
   /** 角色名稱 */
   label: string
+  /** 是否為系統預設角色；選項上會標記，與列表、檢視頁的標籤同一套語彙 */
+  isSystemDefault: boolean
 }
 
 /** 帳號狀態的篩選值 */
