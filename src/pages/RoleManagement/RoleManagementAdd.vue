@@ -18,15 +18,11 @@
       <q-form class="q-gutter-md" @submit="handleSubmit">
         <div class="row">
           <div class="col-12 col-md-6">
-            <q-input
-              v-model="formData.name"
-              label="角色名稱 *"
-              :rules="[(value) => !!value?.trim() || '請輸入角色名稱']"
-              maxlength="50"
-              counter
-              outlined
-              dense
-            />
+            <q-input v-model="formData.name" label="角色名稱" :rules="[(value) => !!value?.trim() || '請輸入角色名稱']" maxlength="50" counter outlined dense>
+              <template #prepend>
+                <q-icon name="mdi-asterisk" color="negative" size="8px" />
+              </template>
+            </q-input>
           </div>
         </div>
 
@@ -34,12 +30,14 @@
 
         <RolePermissionMatrix :tree-nodes="treeNodes" :has-permission="hasPermission" :is-loading="isLoading" @update="updatePermission" />
 
-        <q-separator class="q-my-md" />
+        <q-separator />
 
-        <div class="row q-gutter-sm justify-end">
-          <q-btn flat label="取消" color="grey" @click="handleCancel" />
-          <q-btn flat label="清空權限" color="warning" @click="clearAllPermissions" />
-          <q-btn unelevated label="儲存" color="primary" type="submit" :loading="isSubmitting" />
+        <div class="q-pa-md q-mt-lg">
+          <div class="row q-gutter-sm justify-center">
+            <q-btn flat label="取消" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
+            <q-btn flat label="清空權限" color="grey" size="md" class="q-px-xl" @click="clearAllPermissions" />
+            <q-btn unelevated label="儲存" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />
+          </div>
         </div>
       </q-form>
     </q-card-section>

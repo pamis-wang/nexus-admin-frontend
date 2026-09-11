@@ -13,6 +13,11 @@
     outlined
     dense
   >
+    <!-- 非必填欄位的等寬佔位，左緣才會跟同列的必填欄位對齊 -->
+    <template #prepend>
+      <div style="width: 8px" />
+    </template>
+
     <!-- 照 QSelect 預設的選項結構，只多掛系統預設標記；多選模式沒有勾選框，選取狀態由 itemProps 帶 -->
     <template #option="scope">
       <q-item :key="scope.index" v-bind="scope.itemProps">

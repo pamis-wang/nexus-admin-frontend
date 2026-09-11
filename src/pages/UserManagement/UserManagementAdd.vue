@@ -28,38 +28,52 @@
           <div class="col-12 col-md-6">
             <q-input
               v-model="formData.account"
-              label="登入帳號 *"
+              label="登入帳號"
               :rules="[(value) => !!value?.trim() || '請輸入登入帳號']"
               maxlength="50"
               counter
               outlined
               dense
-            />
+            >
+              <template #prepend>
+                <q-icon name="mdi-asterisk" color="negative" size="8px" />
+              </template>
+            </q-input>
           </div>
           <div class="col-12 col-md-6">
             <q-input
               v-model="formData.email"
               type="email"
-              label="電子信箱 *"
+              label="電子信箱"
               :rules="[(value) => !!value?.trim() || '請輸入電子信箱', (value) => EMAIL_PATTERN.test(value ?? '') || '電子信箱格式不正確']"
               maxlength="100"
               outlined
               dense
-            />
+            >
+              <template #prepend>
+                <q-icon name="mdi-asterisk" color="negative" size="8px" />
+              </template>
+            </q-input>
           </div>
           <div class="col-12 col-md-6">
-            <q-input v-model="formData.fullName" label="姓名" maxlength="50" outlined dense />
+            <q-input v-model="formData.fullName" label="姓名" maxlength="50" outlined dense>
+              <template #prepend>
+                <div style="width: 8px" />
+              </template>
+            </q-input>
           </div>
           <div class="col-12 col-md-6">
             <UserRoleSelector v-model="formData.roleIds" @load-failed="handleRoleLoadFailed" />
           </div>
         </div>
 
-        <q-separator class="q-my-md" />
+        <q-separator />
 
-        <div class="row q-gutter-sm justify-end">
-          <q-btn flat label="取消" color="grey" @click="handleCancel" />
-          <q-btn unelevated label="儲存" color="primary" type="submit" :loading="isSubmitting" />
+        <div class="q-pa-md q-mt-lg">
+          <div class="row q-gutter-sm justify-center">
+            <q-btn flat label="取消" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
+            <q-btn unelevated label="儲存" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />
+          </div>
         </div>
       </q-form>
     </q-card-section>
