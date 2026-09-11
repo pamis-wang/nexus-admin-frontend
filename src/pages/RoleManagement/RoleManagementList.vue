@@ -7,7 +7,7 @@
       <q-card-section class="q-pa-sm">
         <div class="row justify-between items-center">
           <div class="text-h6 text-primary">
-            <q-icon name="mdi-shield-account" class="q-mr-sm" />
+            <q-icon name="mdi-account-group" class="q-mr-sm" />
             角色管理
           </div>
           <div class="row q-gutter-sm">

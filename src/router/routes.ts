@@ -35,13 +35,13 @@ export const featureRoutes: RouteRecordRaw[] = [
       {
         path: 'users',
         name: 'userManagementList',
-        meta: { title: '使用者管理', icon: 'mdi-account-group', resourceName: '系統管理>使用者管理' },
+        meta: { title: '用戶管理', icon: 'mdi-account-circle', resourceName: '系統管理>用戶管理' },
         component: () => import('@/pages/PlaceholderPage.vue'),
       },
       {
         path: 'roles',
         name: 'roleManagementList',
-        meta: { title: '角色管理', icon: 'mdi-shield-account', resourceName: '系統管理>角色管理' },
+        meta: { title: '角色管理', icon: 'mdi-account-group', resourceName: '系統管理>角色管理' },
         component: () => import('@/pages/RoleManagement/RoleManagementList.vue'),
       },
       {

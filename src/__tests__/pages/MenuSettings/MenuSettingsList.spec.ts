@@ -14,7 +14,7 @@ vi.mock('@/services/admin/adminResourceService', () => ({
   replaceAdminResourceTree: (data: ReplaceAdminResourceTreeRequest) => replaceAdminResourceTreeMock(data),
 }))
 
-/** 測試樹：系統管理底下有綁定資源代碼的「使用者管理」與沒有代碼的「選單設定」 */
+/** 測試樹：系統管理底下有綁定資源代碼的「用戶管理」與沒有代碼的「選單設定」 */
 function buildTreeResponse(): ResponseStructure<AdminResourceTreeResponse> {
   return {
     result: {
@@ -34,7 +34,7 @@ function buildTreeResponse(): ResponseStructure<AdminResourceTreeResponse> {
                 id: 'id-users',
                 parentId: 'id-system',
                 level: 2,
-                resourceName: '系統管理>使用者管理',
+                resourceName: '系統管理>用戶管理',
                 resourceCode: 'admin_users',
                 displayOrder: 10100,
                 isEnabled: true,
@@ -103,10 +103,10 @@ describe('MenuSettingsList', () => {
 
     expect(wrapper.findAll('tbody tr')).toHaveLength(3)
 
-    const userRow = findRowByText(wrapper, '使用者管理')
+    const userRow = findRowByText(wrapper, '用戶管理')
 
     expect(userRow?.text()).toContain('admin_users')
-    expect(userRow?.text()).toContain('系統管理>使用者管理')
+    expect(userRow?.text()).toContain('系統管理>用戶管理')
     expect(userRow?.text()).toContain('第 2 層')
   })
 
