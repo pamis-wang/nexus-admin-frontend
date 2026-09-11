@@ -22,16 +22,8 @@
       <q-form class="q-gutter-md" @submit="handleSubmit" @reset="handleReset">
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6">
-            <q-input
-              v-model="formData.account"
-              label="登入帳號 *"
-              :rules="[(value) => !!value?.trim() || '請輸入登入帳號']"
-              maxlength="50"
-              counter
-              outlined
-              dense
-              hint="修改後該用戶要改用新帳號登入"
-            />
+            <!-- 後端允許修改帳號，但後台目前不開放；送出時仍要原樣帶回，PUT 是完整替換 -->
+            <q-input :model-value="formData.account" label="登入帳號" outlined dense readonly hint="目前不開放在後台修改" />
           </div>
           <div class="col-12 col-md-6">
             <q-input
@@ -166,8 +158,8 @@ async function handleSubmit() {
     logger.error('更新用戶失敗', { status: failure.status, errorMessage })
 
     if (failure.status === 409) {
-      // 帳號與電子信箱都可能撞號，後端的訊息會指明是哪一個
-      dialog.showWarning(errorMessage, '資料重複')
+      // 後端對帳號與電子信箱都會擋重複，但帳號在這裡唯讀、不可能撞到別人，實際只會是信箱
+      dialog.showWarning(errorMessage, '電子信箱重複')
     } else {
       dialog.showError(errorMessage, '更新失敗')
     }
@@ -201,7 +193,6 @@ function handleReset() {
   if (original === null) {
     return
   }
-  formData.account = original.account
   formData.email = original.email
   formData.fullName = original.fullName
   formData.roleIds = [...original.roleIds]

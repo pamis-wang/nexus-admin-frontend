@@ -80,7 +80,7 @@ export interface CreateAdminUserRequest {
 
 /** 更新用戶請求 */
 export interface UpdateAdminUserRequest {
-  /** 登入帳號；PUT 是完整替換，沒帶會被寫成空字串，未修改時也要把原值帶回 */
+  /** 登入帳號；PUT 是完整替換，沒帶會被寫成空字串，後台目前不開放修改、一律帶回載入當下的值 */
   account: string
   /** 電子信箱 */
   email: string
