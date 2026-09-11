@@ -116,11 +116,13 @@
 
         <!-- 顯示狀態 -->
         <q-td class="text-center">
-          <q-toggle
+          <x-switch
             :model-value="element.row.isEnabled"
             size="sm"
-            color="positive"
-            :label="element.row.isEnabled ? '顯示' : '隱藏'"
+            active-text="顯示"
+            inactive-text="隱藏"
+            active-color="positive"
+            inactive-color="grey"
             @update:model-value="(value: boolean) => emit('toggleEnabled', element.row.rowKey, value)"
           />
         </q-td>
