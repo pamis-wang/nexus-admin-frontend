@@ -90,7 +90,7 @@
         <!-- 資源代碼：後端種子資料維護的端點權限判斷鍵，畫面唯讀 -->
         <q-td>
           <template v-if="element.row.resourceCode === null">
-            <span class="text-caption text-grey-5">—</span>
+            <span class="text-caption text-grey-5">-</span>
           </template>
           <template v-else>
             <q-badge color="grey-3" text-color="dark" class="text-caption">
@@ -107,7 +107,7 @@
             <q-btn flat dense round size="sm" icon="mdi-chevron-up" @click="emit('nudge', element.row.rowKey, -1)">
               <q-tooltip>上移</q-tooltip>
             </q-btn>
-            <span class="text-caption text-grey-7">{{ element.row.displayOrder || '—' }}</span>
+            <span class="text-caption text-grey-7">{{ element.row.displayOrder || '-' }}</span>
             <q-btn flat dense round size="sm" icon="mdi-chevron-down" @click="emit('nudge', element.row.rowKey, 1)">
               <q-tooltip>下移</q-tooltip>
             </q-btn>

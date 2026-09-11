@@ -151,7 +151,7 @@ const pagination = ref<XPagination>({ sortBy: 'account', descending: false, page
 const columns: XTableColumn[] = [
   { name: 'number', align: 'center', label: '項次', field: '', style: 'width: 60px' },
   { name: 'account', align: 'left', label: '帳號', field: (row) => row.account },
-  { name: 'fullName', align: 'left', label: '姓名', field: (row) => row.fullName || '—' },
+  { name: 'fullName', align: 'left', label: '姓名', field: (row) => row.fullName || '-' },
   { name: 'email', align: 'left', label: '電子信箱', field: (row) => row.email },
   { name: 'roleNames', align: 'left', label: '角色', field: '' },
   { name: 'loginState', align: 'center', label: '登入狀態', field: '', style: 'width: 150px' },

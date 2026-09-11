@@ -70,7 +70,7 @@
               <q-badge v-if="login.verifiedAt === null" color="grey-5" class="q-ml-sm">未驗證</q-badge>
               <q-badge v-if="login.requiresReset" color="warning" text-color="dark" class="q-ml-sm">待重設密碼</q-badge>
             </q-td>
-            <q-td>{{ login.providerEmail || '—' }}</q-td>
+            <q-td>{{ login.providerEmail || '-' }}</q-td>
             <q-td class="text-center">
               <q-badge :color="login.isUsable ? 'positive' : 'grey-6'">{{ login.isUsable ? '可用' : '不可用' }}</q-badge>
             </q-td>
@@ -79,7 +79,7 @@
             </q-td>
             <q-td>
               <q-badge v-if="login.lockedUntil !== null" color="negative">{{ formatDateTime(login.lockedUntil) }}</q-badge>
-              <span v-else class="text-grey-6">—</span>
+              <span v-else class="text-grey-6">-</span>
             </q-td>
             <q-td>{{ formatDateTime(login.lastUsedAt) }}</q-td>
           </q-tr>
@@ -120,8 +120,8 @@ const user = ref<AdminUserResponse | null>(null)
 const isLoading = ref(true)
 
 const basicFields = computed(() => [
-  { label: '電子信箱', value: user.value?.email ?? '—' },
-  { label: '姓名', value: user.value?.fullName || '—' },
+  { label: '電子信箱', value: user.value?.email ?? '-' },
+  { label: '姓名', value: user.value?.fullName || '-' },
   { label: '啟用時間', value: formatDateTime(user.value?.activateAt ?? null) },
   { label: '最後登入時間', value: formatDateTime(user.value?.lastLoginAt ?? null) },
 ])
@@ -166,7 +166,7 @@ async function loadUser() {
  */
 function formatDateTime(value: string | null): string {
   if (value === null) {
-    return '—'
+    return '-'
   }
 
   const date = new Date(value)
