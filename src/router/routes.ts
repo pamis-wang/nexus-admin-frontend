@@ -43,6 +43,14 @@ export const featureRoutes: RouteRecordRaw[] = [
         meta: { title: '角色管理', icon: 'mdi-shield-account', resourceName: '系統管理>角色管理' },
         component: () => import('@/pages/PlaceholderPage.vue'),
       },
+      {
+        // resourceName 對齊後端 AdminResourceSeed 的「系統管理>資源管理」（權限判斷鍵 admin_resources 綁在該筆），
+        // 與畫面顯示的 title 刻意不同名
+        path: 'menu-settings',
+        name: 'menuSettingsList',
+        meta: { title: '選單設定', icon: 'mdi-file-tree', resourceName: '系統管理>資源管理' },
+        component: () => import('@/pages/MenuSettings/MenuSettingsList.vue'),
+      },
     ],
   },
   {
