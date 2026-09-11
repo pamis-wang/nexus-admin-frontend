@@ -8,8 +8,8 @@
     </q-toolbar>
 
     <q-list>
-      <template v-for="item in featureRoutes" :key="item.name">
-        <!-- 無子選單的項目，或有子選單但子選單都沒有 title（視為無子選單） -->
+      <template v-for="item in visibleMenuRoutes" :key="item.name">
+        <!-- 無子選單的項目 -->
         <template v-if="!hasVisibleChildren(item)">
           <q-item clickable v-ripple exact :to="{ name: item.name }">
             <q-item-section avatar>
@@ -24,7 +24,7 @@
             <q-list>
               <!-- 第二層選單 -->
               <template v-for="child in item.children" :key="child.name">
-                <!-- 無子選單的項目，或有子選單但子選單都沒有 title（視為無子選單） -->
+                <!-- 無子選單的項目 -->
                 <template v-if="!hasVisibleChildren(child)">
                   <q-item clickable v-ripple :to="{ name: child.name }" :active="isMenuItemActive(child.name)">
                     <q-item-section avatar>
@@ -69,7 +69,8 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useLayoutStore } from '@/stores/useLayout'
-import { featureRoutes } from '@/router/routes'
+import { useUserStore } from '@/stores/useUser'
+import { filterMenuRoutesByPermission, menuRoutes } from '@/router/routes'
 import logoMarkBlue from '@/assets/images/nexus-mark-blue.svg'
 import logoMarkWhite from '@/assets/images/nexus-mark-white.svg'
 import logoLockupBlue from '@/assets/images/nexus-lockup-blue.svg'
@@ -78,6 +79,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 const route = useRoute()
 const layoutStore = useLayoutStore()
+const userStore = useUserStore()
 
 interface Props {
   miniModeState: boolean
@@ -88,6 +90,8 @@ const props = defineProps<Props>()
 
 const expansionStates = ref<Record<string, boolean>>({})
 
+/** 目前這位使用者看得到的選單，隨生效角色變動 */
+const visibleMenuRoutes = computed(() => filterMenuRoutesByPermission(menuRoutes, (resourceName) => userStore.hasPermission(resourceName)))
 // 選單背景是亮色時用藍色版標誌，暗色／品牌色背景用白色版以維持對比
 const isLightMenu = computed(() => layoutStore.layoutConfig.menuColor === 'light')
 const logoMarkSrc = computed(() => (isLightMenu.value ? logoMarkBlue : logoMarkWhite))
@@ -97,7 +101,7 @@ const logoLockupSrc = computed(() => (isLightMenu.value ? logoLockupBlue : logoL
 watch(
   () => route.path,
   () => {
-    featureRoutes.forEach((item) => {
+    visibleMenuRoutes.value.forEach((item) => {
       if (item.children && isChildRouteActive(item)) {
         expansionStates.value[String(item.name)] = true
       }
@@ -124,7 +128,7 @@ function isMenuItemActive(routeName: string | symbol | null | undefined): boolea
   if (!routeName) return false
   if (route.name === routeName) return true
   // 用 resourceName 判斷：當前路由與選單項目屬於同一個資源群組
-  const targetResourceName = findRouteResourceName(featureRoutes, routeName)
+  const targetResourceName = findRouteResourceName(visibleMenuRoutes.value, routeName)
   if (!targetResourceName) return false
   return route.meta?.resourceName === targetResourceName
 }
@@ -136,9 +140,9 @@ function isChildRouteActive(item: RouteRecordRaw): boolean {
   return item.children ? check(item.children) : false
 }
 
+/** 是否有子選單；menuRoutes 已把非選單節點剔掉，這裡只需看還剩不剩 */
 function hasVisibleChildren(route: RouteRecordRaw): boolean {
-  if (!route.children || route.children.length === 0) return false
-  return route.children.some((child) => child.meta?.title !== undefined && child.meta?.title !== '')
+  return route.children !== undefined && route.children.length > 0
 }
 </script>
 

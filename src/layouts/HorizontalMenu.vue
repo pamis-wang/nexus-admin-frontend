@@ -1,8 +1,8 @@
 <template>
   <div class="row q-gutter-xs" v-bind:class="layoutStore.getMenuColorClass()">
-    <template v-for="item in featureRoutes" :key="item.name">
+    <template v-for="item in visibleMenuRoutes" :key="item.name">
       <!-- 無子選單的項目 (一層選單) -->
-      <template v-if="item.children === undefined">
+      <template v-if="!hasSubMenu(item)">
         <q-btn class="col q-my-none q-py-md" flat no-caps :label="item.meta?.title" :icon="item.meta?.icon" :to="{ name: item.name }" />
       </template>
 
@@ -33,7 +33,7 @@
               <q-list dense>
                 <template v-for="child in item.children" :key="child.name">
                   <!-- 第二層沒有子選單的項目 -->
-                  <template v-if="child.children === undefined">
+                  <template v-if="!hasSubMenu(child)">
                     <q-item clickable v-close-popup :to="{ name: child.name }">
                       <q-item-section avatar v-if="child.meta?.icon">
                         <q-icon :name="child.meta.icon" />
@@ -78,11 +78,22 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useLayoutStore } from '@/stores/useLayout'
-import { featureRoutes } from '@/router/routes'
+import { useUserStore } from '@/stores/useUser'
+import { filterMenuRoutesByPermission, menuRoutes } from '@/router/routes'
 import type { RouteRecordRaw } from 'vue-router'
 
 const layoutStore = useLayoutStore()
+const userStore = useUserStore()
+
+/** 目前這位使用者看得到的選單，隨生效角色變動 */
+const visibleMenuRoutes = computed(() => filterMenuRoutesByPermission(menuRoutes, (resourceName) => userStore.hasPermission(resourceName)))
+
+/** 是否有子選單；menuRoutes 已把非選單節點剔掉，這裡只需看還剩不剩 */
+function hasSubMenu(route: RouteRecordRaw): boolean {
+  return route.children !== undefined && route.children.length > 0
+}
 
 /** 檢查是否有第三層選單 */
 function hasThirdLevel(route: RouteRecordRaw): boolean {
