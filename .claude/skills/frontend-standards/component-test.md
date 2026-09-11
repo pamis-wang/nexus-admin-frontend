@@ -1,6 +1,6 @@
 # Quasar 元件測試
 
-> 來源：development-standards — `frontend-standards/10.測試規範.md`
+> 來源：development-standards — `frontend-standards/11.測試規範.md`
 
 Vitest ＋ `@vue/test-utils`。以下五條都是**預設做法會靜默失敗**的地方——照做，不要憑框架直覺寫。
 

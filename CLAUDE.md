@@ -54,6 +54,7 @@ UI：**Quasar（後台）｜Tailwind CSS（前台）** ← 複製到專案後刪
 - **非必要不拆分元件。** 只有真正會被重用、單一元件職責過大、或模板過長難讀才拆。
 - **重複出現 3 次以上**才考慮抽組合函式，且**抽取前先與主管討論，不可自行重構**。
 - 雙向綁定用 **`defineModel`**（Vue 3.4+），不手寫 `props` ＋ `emit('update:xxx')`。
+- **純導頁的按鈕用 `:to`（Quasar）或 `<RouterLink>`（Tailwind），不用 `@click` ＋ `router.push`**——使用者要能中鍵／Ctrl 另開分頁、右鍵複製連結。路由位置抽成 `buildXxxRoute` 函數並回傳 `RouteLocationRaw`；導頁前要先驗證、確認或送 API 的才用 `router.push`。
 - props 視為**唯讀**，不在子元件內直接修改；要回傳變更用 emit 或 `defineModel`。
 - store 解構：state／getter 用 **`storeToRefs`** 保留響應性；action 可直接解構。
 - 全域 store 只放「真正需跨頁面、跨元件共享」的狀態（登入用戶、權限、版面設定）；區域狀態用組合函式表達。
@@ -62,7 +63,9 @@ UI：**Quasar（後台）｜Tailwind CSS（前台）** ← 複製到專案後刪
 ## 樣式
 
 - 元件樣式一律 **`<style scoped>`**，避免污染全域。
-- **不寫死設計值**：顏色、字級、間距一律用 token——後台改 `quasar-variables.sass`，前台用 `tailwind.config.js` 的 `theme.extend`。模板只引用語意 token（`text-primary`、`text-h1`），不寫 `#B3A093` 或 `text-[#B3A093]`。
+- **不寫死設計值**：顏色、字級、間距一律用 token——後台改專案的 Quasar 變數檔（路徑查 `vite.config.ts` 的 `sassVariables`），前台用 `tailwind.config.js` 的 `theme.extend`。模板只引用語意 token（`text-primary`、`text-h1`），不寫 `#B3A093` 或 `text-[#B3A093]`。
+- **後台：有對應的 `x-` 共用元件就用它**——表格 `x-table`、表單分區 `x-section-header-bar`、頁面標題 `x-page-header`、麵包屑 `x-breadcrumb`、表格列操作 `x-icon`，不手刻 `q-table`，也不用 `q-separator` ＋ 小標題當分區。
+- **後台：顏色一律用 Quasar 語意色名**（`primary`／`negative`／`warning`…）、圖示一律 `mdi-` 前綴。動作圖示對照表、按鈕四階、版面三段與對話框／通知的選用照 skill 的 `ui-conventions.md`。
 
 ## 測試
 
@@ -84,6 +87,7 @@ UI：**Quasar（後台）｜Tailwind CSS（前台）** ← 複製到專案後刪
 | 模組層常數 | `UPPER_SNAKE_CASE`（`BASE_API_URL`） |
 | 路由 `path` | kebab-case 複數（`user-management`） |
 | 路由 `name` | camelCase（`userEdit`） |
+| 路由位置產生函式 | `buildXxxRoute`，回傳 `RouteLocationRaw`（`buildEditRoute`） |
 
 - 固定識別欄位（ID）用**路由參數**，不用 query string：`users/:userId`。
 - 頁面元件一律**動態 import** 懶載入。

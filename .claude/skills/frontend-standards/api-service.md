@@ -128,7 +128,7 @@ const response = await getUsers()
 if (response.status === 200 && response.result.data) {
   rows.value = response.result.data
 } else if (response.result.error) {
-  dialog.showWarning(response.result.error.message, '載入失敗')
+  notify.notifyError(response.result.error.message)
 }
 ```
 
@@ -136,9 +136,9 @@ if (response.status === 200 && response.result.data) {
 
 ```ts
 if (response.success) {
-  dialog.showSuccess('新增成功')
+  notify.notifySuccess('新增成功')
 } else {
-  dialog.showError(response.result.error?.message || '新增失敗')
+  notify.notifyError(response.result.error?.message || '新增失敗')
 }
 ```
 
