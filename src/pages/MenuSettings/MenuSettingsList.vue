@@ -1,96 +1,94 @@
 <template>
-  <div class="q-pa-md">
-    <x-breadcrumb :items="[{ label: '首頁', icon: 'home', to: { name: 'home' } }, { label: '系統管理' }, { label: '選單設定' }]" />
+  <x-breadcrumb :items="[{ label: '首頁', icon: 'home', to: { name: 'home' } }, { label: '系統管理' }, { label: '選單設定' }]" />
 
-    <q-card flat bordered class="q-mt-xs">
-      <!-- 頁面標題 -->
-      <q-card-section class="q-pa-sm row items-center q-gutter-sm">
-        <q-icon name="mdi-file-tree" size="sm" color="primary" />
-        <div class="text-h6">選單設定</div>
-      </q-card-section>
+  <q-card flat bordered class="q-mt-xs">
+    <!-- 頁面標題 -->
+    <q-card-section class="q-pa-sm row items-center q-gutter-sm">
+      <q-icon name="mdi-file-tree" size="sm" color="primary" />
+      <div class="text-h6">選單設定</div>
+    </q-card-section>
 
-      <q-separator />
+    <q-separator />
 
-      <!-- 小提醒 -->
-      <q-banner class="bg-info text-white q-mx-sm q-my-sm" rounded dense>
-        <template #avatar>
-          <q-icon name="info" />
-        </template>
-        <div class="text-caption">※ 儲存是整棵樹一次送出，新增、改名、顯示狀態與順序的變更會一併寫入。</div>
-        <div class="text-caption">※ 拖曳只能調整同一層的順序；要換到別的層級請用該列的「移到其他層級」。</div>
-        <div class="text-caption">※ 完整資源名稱由層級名稱自動組成，改名或搬移時底下子項目的名稱會一起重寫。</div>
-        <div class="text-caption">※ 資源代碼由後端種子資料維護，畫面唯讀；本頁不提供刪除資源的功能。</div>
-      </q-banner>
+    <!-- 小提醒 -->
+    <q-banner class="bg-info text-white q-mx-sm q-my-sm" rounded dense>
+      <template #avatar>
+        <q-icon name="info" />
+      </template>
+      <div class="text-caption">※ 儲存是整棵樹一次送出，新增、改名、顯示狀態與順序的變更會一併寫入。</div>
+      <div class="text-caption">※ 拖曳只能調整同一層的順序；要換到別的層級請用該列的「移到其他層級」。</div>
+      <div class="text-caption">※ 完整資源名稱由層級名稱自動組成，改名或搬移時底下子項目的名稱會一起重寫。</div>
+      <div class="text-caption">※ 資源代碼由後端種子資料維護，畫面唯讀；本頁不提供刪除資源的功能。</div>
+    </q-banner>
 
-      <!-- 未儲存變更 -->
-      <q-banner v-if="hasChanges" class="bg-warning text-dark q-mx-sm q-mb-sm" rounded dense>
-        <template #avatar>
-          <q-icon name="warning" />
-        </template>
-        <div class="text-caption">
-          有未儲存的變更：新增 {{ changeSummary.addedCount }} 筆、更新 {{ changeSummary.updatedCount }} 筆、位置變動 {{ changeSummary.movedCount }} 筆
-        </div>
-        <template #action>
-          <q-btn flat dense color="dark" label="全部還原" icon="undo" @click="handleReset" />
-        </template>
-      </q-banner>
-
-      <!-- 工具列 -->
-      <div class="row items-center q-pa-sm q-gutter-sm">
-        <q-input v-model="keyword" dense outlined clearable placeholder="搜尋選單名稱或資源代碼" style="min-width: 240px">
-          <template #prepend>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-
-        <q-btn outline color="primary" label="全部展開" icon="unfold_more" :disable="isFiltering" @click="handleExpandAll" />
-        <q-btn outline color="primary" label="全部收合" icon="unfold_less" :disable="isFiltering" @click="handleCollapseAll" />
-
-        <q-space />
-
-        <q-btn label="新增第一層" color="primary" icon="add" @click="handleAddRoot" />
-        <q-btn label="儲存" color="primary" icon="save" :disable="!hasChanges" :loading="isSaving" @click="handleSave" />
+    <!-- 未儲存變更 -->
+    <q-banner v-if="hasChanges" class="bg-warning text-dark q-mx-sm q-mb-sm" rounded dense>
+      <template #avatar>
+        <q-icon name="warning" />
+      </template>
+      <div class="text-caption">
+        有未儲存的變更：新增 {{ changeSummary.addedCount }} 筆、更新 {{ changeSummary.updatedCount }} 筆、位置變動 {{ changeSummary.movedCount }} 筆
       </div>
+      <template #action>
+        <q-btn flat dense color="dark" label="全部還原" icon="undo" @click="handleReset" />
+      </template>
+    </q-banner>
 
-      <!-- 搜尋提示：全量替換的坑，送出一律用完整的樹 -->
-      <div v-if="isFiltering" class="q-px-sm q-pb-sm text-caption text-grey-7">
-        搜尋只影響畫面顯示，儲存時送出的仍是完整的樹（共 {{ rows.length }} 筆）；搜尋狀態下暫時無法拖曳排序。
-      </div>
+    <!-- 工具列 -->
+    <div class="row items-center q-pa-sm q-gutter-sm">
+      <q-input v-model="keyword" dense outlined clearable placeholder="搜尋選單名稱或資源代碼" style="min-width: 240px">
+        <template #prepend>
+          <q-icon name="search" />
+        </template>
+      </q-input>
 
-      <q-inner-loading :showing="isLoading">
-        <q-spinner-oval size="50px" color="primary" />
-      </q-inner-loading>
+      <q-btn outline color="primary" label="全部展開" icon="unfold_more" :disable="isFiltering" @click="handleExpandAll" />
+      <q-btn outline color="primary" label="全部收合" icon="unfold_less" :disable="isFiltering" @click="handleCollapseAll" />
 
-      <div v-show="!isLoading" class="q-mx-sm q-mb-md menu-settings-table">
-        <MenuSettingsTreeTable
-          :key="tableRenderKey"
-          v-model:editing-name="editingName"
-          :rows="tableRows"
-          :editing-row-key="editingRowKey"
-          :can-drag="!isFiltering"
-          :show-indent="!isFiltering"
-          @toggle-expand="handleToggleExpand"
-          @start-edit="handleStartEdit"
-          @commit-edit="handleCommitEdit"
-          @cancel-edit="handleCancelEdit"
-          @toggle-enabled="handleToggleEnabled"
-          @nudge="handleNudge"
-          @add-child="handleAddChild"
-          @request-move="handleRequestMove"
-          @drag-move="handleDragMove"
-        />
-      </div>
-    </q-card>
+      <q-space />
 
-    <MenuSettingsMoveDialog
-      v-model="isMoveDialogVisible"
-      :node-name="moveRow?.name"
-      :node-full-path="moveRow === null ? '' : fullPathOf(moveRow)"
-      :descendant-count="moveRow === null ? 0 : descendantsOf(moveRow.rowKey).length"
-      :targets="moveTargets"
-      @confirm="handleConfirmMove"
-    />
-  </div>
+      <q-btn label="新增第一層" color="primary" icon="add" @click="handleAddRoot" />
+      <q-btn label="儲存" color="primary" icon="save" :disable="!hasChanges" :loading="isSaving" @click="handleSave" />
+    </div>
+
+    <!-- 搜尋提示：全量替換的坑，送出一律用完整的樹 -->
+    <div v-if="isFiltering" class="q-px-sm q-pb-sm text-caption text-grey-7">
+      搜尋只影響畫面顯示，儲存時送出的仍是完整的樹（共 {{ rows.length }} 筆）；搜尋狀態下暫時無法拖曳排序。
+    </div>
+
+    <q-inner-loading :showing="isLoading">
+      <q-spinner-oval size="50px" color="primary" />
+    </q-inner-loading>
+
+    <div v-show="!isLoading" class="q-mx-sm q-mb-md menu-settings-table">
+      <MenuSettingsTreeTable
+        :key="tableRenderKey"
+        v-model:editing-name="editingName"
+        :rows="tableRows"
+        :editing-row-key="editingRowKey"
+        :can-drag="!isFiltering"
+        :show-indent="!isFiltering"
+        @toggle-expand="handleToggleExpand"
+        @start-edit="handleStartEdit"
+        @commit-edit="handleCommitEdit"
+        @cancel-edit="handleCancelEdit"
+        @toggle-enabled="handleToggleEnabled"
+        @nudge="handleNudge"
+        @add-child="handleAddChild"
+        @request-move="handleRequestMove"
+        @drag-move="handleDragMove"
+      />
+    </div>
+  </q-card>
+
+  <MenuSettingsMoveDialog
+    v-model="isMoveDialogVisible"
+    :node-name="moveRow?.name"
+    :node-full-path="moveRow === null ? '' : fullPathOf(moveRow)"
+    :descendant-count="moveRow === null ? 0 : descendantsOf(moveRow.rowKey).length"
+    :targets="moveTargets"
+    @confirm="handleConfirmMove"
+  />
 </template>
 
 <script setup lang="ts">
