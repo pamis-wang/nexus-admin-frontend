@@ -1,5 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router'
 import { roleManagementRoutes } from '@/router/roleManagement.routes'
+import { userManagementRoutes } from '@/router/userManagement.routes'
 
 /**
  * 路由配置主檔案
@@ -36,7 +37,7 @@ export const featureRoutes: RouteRecordRaw[] = [
         path: 'users',
         name: 'userManagementList',
         meta: { title: '用戶管理', icon: 'mdi-account-circle', resourceName: '系統管理>用戶管理' },
-        component: () => import('@/pages/PlaceholderPage.vue'),
+        component: () => import('@/pages/UserManagement/UserManagementList.vue'),
       },
       {
         path: 'roles',
@@ -103,7 +104,7 @@ export const mainRoutes: RouteRecordRaw[] = [
     component: () => import('@/layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
     // featureRoutes 是選單來源，只放選單項目；只從列表進入的子頁另外掛在後面
-    children: [...featureRoutes, ...roleManagementRoutes],
+    children: [...featureRoutes, ...roleManagementRoutes, ...userManagementRoutes],
   },
 ]
 
