@@ -64,12 +64,14 @@
 import { onMounted, ref } from 'vue'
 
 import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import { deleteAdminRoleById, getAdminRoles } from '@/services/admin/adminRoleService'
 import type { ResponseStructure } from '@/services/axiosService'
 import type { RoleManagementRow } from '@/pages/RoleManagement/types'
 
 const dialog = useDialog()
+const notify = useNotify()
 const logger = useLogger({ prefix: 'RoleManagementList', enabled: import.meta.env.DEV })
 
 const isLoading = ref(false)
@@ -101,12 +103,12 @@ async function loadRoles() {
       }))
       pagination.value.rowsCount = rows.value.length
     } else if (response.result.error) {
-      dialog.showWarning(response.result.error.message, '載入失敗')
+      notify.notifyError(response.result.error.message, 0)
     }
   } catch (error) {
     const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
     logger.error('載入角色列表失敗', errorMessage)
-    dialog.showError(errorMessage, '載入角色列表失敗')
+    notify.notifyError(errorMessage, 0)
   } finally {
     isLoading.value = false
   }
@@ -138,23 +140,23 @@ async function deleteRole(row: RoleManagementRow) {
     const response = await deleteAdminRoleById(row.id)
 
     if (response.success) {
-      dialog.showSuccess(`角色「${row.name}」已刪除`)
+      notify.notifySuccess(`角色「${row.name}」已刪除`)
       await loadRoles()
       return
     }
 
-    dialog.showError(response.result.error?.message || '刪除角色失敗', '刪除失敗')
+    notify.notifyError(response.result.error?.message || '刪除角色失敗', 0)
   } catch (error) {
     const failure = error as ResponseStructure<null>
     const errorMessage = failure.errorMessage || '未知錯誤'
     logger.error('刪除角色失敗', { status: failure.status, errorMessage })
 
     if (failure.status === 403) {
-      dialog.showWarning(errorMessage, '不允許刪除')
+      notify.notifyError(errorMessage, 0)
     } else if (failure.status === 409) {
-      dialog.showWarning(errorMessage, '角色使用中')
+      notify.notifyError(errorMessage, 0)
     } else {
-      dialog.showError(errorMessage, '刪除失敗')
+      notify.notifyError(errorMessage, 0)
     }
   } finally {
     isLoading.value = false

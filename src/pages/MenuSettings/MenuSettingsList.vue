@@ -96,6 +96,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import { useMenuSettingsTree } from '@/pages/MenuSettings/composables/useMenuSettingsTree'
 import MenuSettingsMoveDialog from '@/pages/MenuSettings/components/MenuSettingsMoveDialog.vue'
@@ -103,6 +104,7 @@ import MenuSettingsTreeTable from '@/pages/MenuSettings/components/MenuSettingsT
 import type { MenuSettingsDragMove, MenuSettingsRow, MenuSettingsTableRow } from '@/pages/MenuSettings/types'
 
 const dialog = useDialog()
+const notify = useNotify()
 const logger = useLogger({ prefix: 'MenuSettings', enabled: import.meta.env.DEV })
 const {
   rows,
@@ -192,7 +194,7 @@ async function handleSave() {
       editingRowKey.value = null
       editingName.value = ''
       handleExpandAll()
-      dialog.showSuccess('選單設定已儲存')
+      notify.notifySuccess('選單設定已儲存')
     }
   })
 }
@@ -246,11 +248,11 @@ function handleStartEdit(rowKey: string) {
 function handleCommitEdit(rowKey: string) {
   const name = editingName.value.trim()
   if (name.length === 0) {
-    dialog.showWarning('選單名稱不可空白')
+    notify.notifyWarning('選單名稱不可空白')
     return
   }
   if (name.includes('>')) {
-    dialog.showWarning('選單名稱不可包含「>」，該符號是階層分隔用的')
+    notify.notifyWarning('選單名稱不可包含「>」，該符號是階層分隔用的')
     return
   }
 

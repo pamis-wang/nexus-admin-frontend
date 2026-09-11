@@ -13,6 +13,8 @@ vi.mock('@/services/admin/adminResourceService', () => ({
 
 const showWarningMock = vi.fn<(...args: unknown[]) => void>()
 const showErrorMock = vi.fn<(...args: unknown[]) => void>()
+const notifyWarningMock = vi.fn<(...args: unknown[]) => void>()
+const notifyErrorMock = vi.fn<(...args: unknown[]) => void>()
 
 vi.mock('@/composables/useDialog', () => ({
   useDialog: () => ({
@@ -21,6 +23,15 @@ vi.mock('@/composables/useDialog', () => ({
     showWarning: (...args: unknown[]) => showWarningMock(...args),
     showError: (...args: unknown[]) => showErrorMock(...args),
     showInfo: vi.fn<(...args: unknown[]) => void>(),
+  }),
+}))
+
+vi.mock('@/composables/useNotify', () => ({
+  useNotify: () => ({
+    notifySuccess: vi.fn<(...args: unknown[]) => void>(),
+    notifyWarning: (...args: unknown[]) => notifyWarningMock(...args),
+    notifyError: (...args: unknown[]) => notifyErrorMock(...args),
+    notifyInfo: vi.fn<(...args: unknown[]) => void>(),
   }),
 }))
 
@@ -84,6 +95,8 @@ describe('useMenuSettingsTree - 載入', () => {
     replaceAdminResourceTreeMock.mockReset()
     showWarningMock.mockReset()
     showErrorMock.mockReset()
+    notifyWarningMock.mockReset()
+    notifyErrorMock.mockReset()
   })
 
   it('把嵌套樹攤平成扁平陣列，並保留版本戳記與資源代碼', async () => {
@@ -123,7 +136,7 @@ describe('useMenuSettingsTree - 載入', () => {
 
     await tree.loadTree()
 
-    expect(showErrorMock).toHaveBeenCalledWith('資料庫連線失敗', '載入選單設定失敗')
+    expect(notifyErrorMock).toHaveBeenCalledWith('資料庫連線失敗', 0)
     expect(tree.isLoading.value).toBe(false)
   })
 })
@@ -134,6 +147,8 @@ describe('useMenuSettingsTree - 丟棄未送出的新增列', () => {
     replaceAdminResourceTreeMock.mockReset()
     showWarningMock.mockReset()
     showErrorMock.mockReset()
+    notifyWarningMock.mockReset()
+    notifyErrorMock.mockReset()
   })
 
   it('移除節點時連同子孫一起移除，並重編同層順序', async () => {
@@ -171,6 +186,8 @@ describe('useMenuSettingsTree - 編輯與搬移', () => {
     replaceAdminResourceTreeMock.mockReset()
     showWarningMock.mockReset()
     showErrorMock.mockReset()
+    notifyWarningMock.mockReset()
+    notifyErrorMock.mockReset()
   })
 
   it('新增的節點沒有 id，並排在同層最後', async () => {
@@ -191,7 +208,7 @@ describe('useMenuSettingsTree - 編輯與搬移', () => {
     const fourthLevel = thirdLevel === null ? null : tree.addRow(thirdLevel.rowKey)
 
     expect(fourthLevel).toBeNull()
-    expect(showWarningMock).toHaveBeenCalledWith('資源層級最多 3 層')
+    expect(notifyWarningMock).toHaveBeenCalledWith('資源層級最多 3 層')
   })
 
   it('同層上移會交換 position，已在第一個位置時回 false', async () => {
@@ -226,7 +243,7 @@ describe('useMenuSettingsTree - 編輯與搬移', () => {
     await tree.loadTree()
 
     expect(tree.moveRowTo('id-a1', 'id-b1')).toBe(false)
-    expect(showWarningMock).toHaveBeenCalledWith('搬移後會超過 3 層')
+    expect(notifyWarningMock).toHaveBeenCalledWith('搬移後會超過 3 層')
   })
 
   it('還原變更會回到上次載入的狀態', async () => {
@@ -247,6 +264,8 @@ describe('useMenuSettingsTree - 送出前驗證', () => {
     replaceAdminResourceTreeMock.mockReset()
     showWarningMock.mockReset()
     showErrorMock.mockReset()
+    notifyWarningMock.mockReset()
+    notifyErrorMock.mockReset()
   })
 
   it('名稱空白時不通過', async () => {
@@ -295,6 +314,8 @@ describe('useMenuSettingsTree - 整批替換', () => {
     replaceAdminResourceTreeMock.mockReset()
     showWarningMock.mockReset()
     showErrorMock.mockReset()
+    notifyWarningMock.mockReset()
+    notifyErrorMock.mockReset()
   })
 
   it('送出的是完整的嵌套樹，resourceName 為完整路徑且不含 resourceCode', async () => {
@@ -383,6 +404,6 @@ describe('useMenuSettingsTree - 整批替換', () => {
     const isSuccess = await tree.saveTree()
 
     expect(isSuccess).toBe(false)
-    expect(showWarningMock).toHaveBeenCalledWith('沒有權限修改後台資源', '不允許的變更')
+    expect(notifyErrorMock).toHaveBeenCalledWith('沒有權限修改後台資源', 0)
   })
 })

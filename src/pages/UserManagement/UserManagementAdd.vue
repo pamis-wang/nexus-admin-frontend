@@ -71,6 +71,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import UserRoleSelector from '@/pages/UserManagement/components/UserRoleSelector.vue'
 import { createAdminUser, updateAdminUserRoles } from '@/services/admin/adminUserService'
@@ -79,6 +80,7 @@ import type { UserManagementCreateFormData } from '@/pages/UserManagement/types'
 
 const router = useRouter()
 const dialog = useDialog()
+const notify = useNotify()
 const logger = useLogger({ prefix: 'UserManagementAdd', enabled: import.meta.env.DEV })
 
 /** 電子信箱格式，與後端的 [EmailAddress] 一致地只做基本檢查 */
@@ -104,7 +106,7 @@ async function handleSubmit() {
     })
 
     if (!response.success || response.result.data?.id == null) {
-      dialog.showError(response.result.error?.message || '新增用戶失敗', '新增失敗')
+      notify.notifyError(response.result.error?.message || '新增用戶失敗', 0)
       return
     }
 
@@ -119,9 +121,9 @@ async function handleSubmit() {
     logger.error('新增用戶失敗', { status: failure.status, errorMessage })
 
     if (failure.status === 409) {
-      dialog.showWarning(errorMessage, '帳號或電子信箱重複')
+      notify.notifyError(errorMessage, 0)
     } else {
-      dialog.showError(errorMessage, '新增失敗')
+      notify.notifyError(errorMessage, 0)
     }
   } finally {
     isSubmitting.value = false
@@ -154,7 +156,7 @@ async function assignRoles(userId: string, account: string): Promise<boolean> {
 }
 
 function handleRoleLoadFailed(message: string) {
-  dialog.showWarning(message, '載入角色清單失敗')
+  notify.notifyError(message, 0)
 }
 
 function handleCancel() {

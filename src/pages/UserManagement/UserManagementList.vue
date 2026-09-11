@@ -126,13 +126,13 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 
-import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import { getAdminUsers } from '@/services/admin/adminUserService'
 import type { ResponseStructure } from '@/services/axiosService'
 import type { UserManagementAccountStatusOption, UserManagementFilter, UserManagementRow } from '@/pages/UserManagement/types'
 
-const dialog = useDialog()
+const notify = useNotify()
 const logger = useLogger({ prefix: 'UserManagementList', enabled: import.meta.env.DEV })
 
 const isLoading = ref(false)
@@ -207,12 +207,12 @@ async function loadUsers() {
         isLocked: user.logins.some((login) => login.lockedUntil !== null),
       }))
     } else if (response.result.error) {
-      dialog.showWarning(response.result.error.message, '載入失敗')
+      notify.notifyError(response.result.error.message, 0)
     }
   } catch (error) {
     const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
     logger.error('載入用戶列表失敗', errorMessage)
-    dialog.showError(errorMessage, '載入用戶列表失敗')
+    notify.notifyError(errorMessage, 0)
   } finally {
     isLoading.value = false
   }

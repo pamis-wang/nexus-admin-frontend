@@ -63,6 +63,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import UserRoleSelector from '@/pages/UserManagement/components/UserRoleSelector.vue'
 import { getAdminUserById, updateAdminUser, updateAdminUserRoles } from '@/services/admin/adminUserService'
@@ -72,6 +73,7 @@ import type { UserManagementEditFormData } from '@/pages/UserManagement/types'
 const route = useRoute()
 const router = useRouter()
 const dialog = useDialog()
+const notify = useNotify()
 const logger = useLogger({ prefix: 'UserManagementEdit', enabled: import.meta.env.DEV })
 
 /** 電子信箱格式，與後端的 [EmailAddress] 一致地只做基本檢查 */
@@ -143,13 +145,13 @@ async function handleSubmit() {
     })
 
     if (!response.success) {
-      dialog.showError(response.result.error?.message || '更新用戶失敗', '更新失敗')
+      notify.notifyError(response.result.error?.message || '更新用戶失敗', 0)
       return
     }
 
     const isRolesUpdated = await updateRoles()
     if (isRolesUpdated) {
-      dialog.showSuccess(`用戶「${formData.account}」已更新`)
+      notify.notifySuccess(`用戶「${formData.account}」已更新`)
     }
     router.push({ name: 'userManagementList' })
   } catch (error) {
@@ -159,9 +161,9 @@ async function handleSubmit() {
 
     if (failure.status === 409) {
       // 後端對帳號與電子信箱都會擋重複，但帳號在這裡唯讀、不可能撞到別人，實際只會是信箱
-      dialog.showWarning(errorMessage, '電子信箱重複')
+      notify.notifyError(errorMessage, 0)
     } else {
-      dialog.showError(errorMessage, '更新失敗')
+      notify.notifyError(errorMessage, 0)
     }
   } finally {
     isSubmitting.value = false
@@ -199,7 +201,7 @@ function handleReset() {
 }
 
 function handleRoleLoadFailed(message: string) {
-  dialog.showWarning(message, '載入角色清單失敗')
+  notify.notifyError(message, 0)
 }
 
 function handleCancel() {

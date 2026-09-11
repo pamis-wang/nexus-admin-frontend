@@ -50,7 +50,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import { useRolePermissionMatrix } from '@/pages/RoleManagement/composables/useRolePermissionMatrix'
 import RolePermissionMatrix from '@/pages/RoleManagement/components/RolePermissionMatrix.vue'
@@ -59,7 +59,7 @@ import type { ResponseStructure } from '@/services/axiosService'
 import type { RoleManagementFormData } from '@/pages/RoleManagement/types'
 
 const router = useRouter()
-const dialog = useDialog()
+const notify = useNotify()
 const logger = useLogger({ prefix: 'RoleManagementAdd', enabled: import.meta.env.DEV })
 const { isLoading, treeNodes, loadResources, hasPermission, updatePermission, clearAllPermissions, buildPermissionItems } = useRolePermissionMatrix()
 
@@ -69,7 +69,7 @@ const isSubmitting = ref(false)
 onMounted(async () => {
   const isSuccess = await loadResources()
   if (!isSuccess) {
-    dialog.showWarning('載入資源清單失敗，權限設定可能不完整，請重新整理後再試。', '載入失敗')
+    notify.notifyError('載入資源清單失敗，權限設定可能不完整，請重新整理後再試。', 0)
   }
 })
 
@@ -83,21 +83,21 @@ async function handleSubmit() {
     })
 
     if (response.success) {
-      dialog.showSuccess(`角色「${formData.name.trim()}」已新增`)
+      notify.notifySuccess(`角色「${formData.name.trim()}」已新增`)
       router.push({ name: 'roleManagementList' })
       return
     }
 
-    dialog.showError(response.result.error?.message || '新增角色失敗', '新增失敗')
+    notify.notifyError(response.result.error?.message || '新增角色失敗', 0)
   } catch (error) {
     const failure = error as ResponseStructure<null>
     const errorMessage = failure.errorMessage || '未知錯誤'
     logger.error('新增角色失敗', { status: failure.status, errorMessage })
 
     if (failure.status === 409) {
-      dialog.showWarning(errorMessage, '角色名稱重複')
+      notify.notifyError(errorMessage, 0)
     } else {
-      dialog.showError(errorMessage, '新增失敗')
+      notify.notifyError(errorMessage, 0)
     }
   } finally {
     isSubmitting.value = false

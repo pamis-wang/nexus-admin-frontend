@@ -57,6 +57,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
 import { useRolePermissionMatrix } from '@/pages/RoleManagement/composables/useRolePermissionMatrix'
 import RolePermissionMatrix from '@/pages/RoleManagement/components/RolePermissionMatrix.vue'
@@ -67,6 +68,7 @@ import type { RoleManagementDetailFormData } from '@/pages/RoleManagement/types'
 const route = useRoute()
 const router = useRouter()
 const dialog = useDialog()
+const notify = useNotify()
 const logger = useLogger({ prefix: 'RoleManagementEdit', enabled: import.meta.env.DEV })
 const { isLoading, treeNodes, loadResources, loadRolePermissions, hasPermission, updatePermission, resetPermissions, buildPermissionItems } =
   useRolePermissionMatrix()
@@ -137,12 +139,12 @@ async function handleSubmit() {
     })
 
     if (response.success) {
-      dialog.showSuccess(`角色「${formData.name.trim()}」已更新`)
+      notify.notifySuccess(`角色「${formData.name.trim()}」已更新`)
       router.push({ name: 'roleManagementList' })
       return
     }
 
-    dialog.showError(response.result.error?.message || '更新角色失敗', '更新失敗')
+    notify.notifyError(response.result.error?.message || '更新角色失敗', 0)
   } catch (error) {
     const failure = error as ResponseStructure<null>
     const errorMessage = failure.errorMessage || '未知錯誤'
@@ -151,7 +153,7 @@ async function handleSubmit() {
     if (failure.status === 409) {
       dialog.showWarning('這個角色在你編輯期間已被其他人修改，或名稱與現有角色重複，請重新載入後再調整。', '版本衝突')
     } else {
-      dialog.showError(errorMessage, '更新失敗')
+      notify.notifyError(errorMessage, 0)
     }
   } finally {
     isSubmitting.value = false
