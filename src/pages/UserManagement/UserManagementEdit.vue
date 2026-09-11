@@ -1,62 +1,60 @@
 <template>
-  <div class="q-pa-md">
-    <x-breadcrumb
-      :items="[
-        { label: '首頁', icon: 'home', to: { name: 'home' } },
-        { label: '系統管理' },
-        { label: '用戶管理', to: { name: 'userManagementList' } },
-        { label: '編輯用戶' },
-      ]"
-    />
+  <x-breadcrumb
+    :items="[
+      { label: '首頁', icon: 'home', to: { name: 'home' } },
+      { label: '系統管理' },
+      { label: '用戶管理', to: { name: 'userManagementList' } },
+      { label: '編輯用戶' },
+    ]"
+  />
 
-    <x-loading-state :loading="isLoadingUser" message="載入用戶資料中..." />
+  <x-loading-state :loading="isLoadingUser" message="載入用戶資料中..." />
 
-    <q-card v-if="!isLoadingUser" flat bordered class="q-mt-xs">
-      <q-card-section>
-        <div class="text-h6 text-primary q-mb-md">
-          <q-icon name="mdi-account-edit-outline" class="q-mr-sm" />
-          編輯用戶
-          <q-badge v-if="isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
-          <q-badge v-if="formData.isDisabled" color="grey-6" class="q-ml-sm">已停用</q-badge>
+  <q-card v-if="!isLoadingUser" flat bordered class="q-mt-xs">
+    <q-card-section>
+      <div class="text-h6 text-primary q-mb-md">
+        <q-icon name="mdi-account-edit-outline" class="q-mr-sm" />
+        編輯用戶
+        <q-badge v-if="isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+        <q-badge v-if="formData.isDisabled" color="grey-6" class="q-ml-sm">已停用</q-badge>
+      </div>
+
+      <q-form class="q-gutter-md" @submit="handleSubmit" @reset="handleReset">
+        <div class="row q-col-gutter-md">
+          <div class="col-12 col-md-6">
+            <q-input :model-value="formData.account" label="登入帳號" outlined dense readonly hint="帳號建立後不可修改" />
+          </div>
+          <div class="col-12 col-md-6">
+            <q-input
+              v-model="formData.email"
+              type="email"
+              label="電子信箱 *"
+              :rules="[(value) => !!value?.trim() || '請輸入電子信箱', (value) => EMAIL_PATTERN.test(value ?? '') || '電子信箱格式不正確']"
+              maxlength="100"
+              outlined
+              dense
+            />
+          </div>
+          <div class="col-12 col-md-6">
+            <q-input v-model="formData.fullName" label="姓名" maxlength="50" outlined dense />
+          </div>
+          <div class="col-12 col-md-6">
+            <UserRoleSelector v-model="formData.roleIds" @load-failed="handleRoleLoadFailed" />
+          </div>
         </div>
 
-        <q-form class="q-gutter-md" @submit="handleSubmit" @reset="handleReset">
-          <div class="row q-col-gutter-md">
-            <div class="col-12 col-md-6">
-              <q-input :model-value="formData.account" label="登入帳號" outlined dense readonly hint="帳號建立後不可修改" />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-input
-                v-model="formData.email"
-                type="email"
-                label="電子信箱 *"
-                :rules="[(value) => !!value?.trim() || '請輸入電子信箱', (value) => EMAIL_PATTERN.test(value ?? '') || '電子信箱格式不正確']"
-                maxlength="100"
-                outlined
-                dense
-              />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-input v-model="formData.fullName" label="姓名" maxlength="50" outlined dense />
-            </div>
-            <div class="col-12 col-md-6">
-              <UserRoleSelector v-model="formData.roleIds" @load-failed="handleRoleLoadFailed" />
-            </div>
-          </div>
+        <div class="text-caption text-grey-7">帳號的啟用與停用請在列表頁切換，該處會套用「不能停用自己」與「系統預設帳號不可停用」的規則。</div>
 
-          <div class="text-caption text-grey-7">帳號的啟用與停用請在列表頁切換，該處會套用「不能停用自己」與「系統預設帳號不可停用」的規則。</div>
+        <q-separator class="q-my-md" />
 
-          <q-separator class="q-my-md" />
-
-          <div class="row q-gutter-sm justify-end">
-            <q-btn flat label="取消" color="grey" @click="handleCancel" />
-            <q-btn flat label="重設" color="warning" type="reset" />
-            <q-btn unelevated label="儲存" color="primary" type="submit" :loading="isSubmitting" />
-          </div>
-        </q-form>
-      </q-card-section>
-    </q-card>
-  </div>
+        <div class="row q-gutter-sm justify-end">
+          <q-btn flat label="取消" color="grey" @click="handleCancel" />
+          <q-btn flat label="重設" color="warning" type="reset" />
+          <q-btn unelevated label="儲存" color="primary" type="submit" :loading="isSubmitting" />
+        </div>
+      </q-form>
+    </q-card-section>
+  </q-card>
 </template>
 
 <script setup lang="ts">

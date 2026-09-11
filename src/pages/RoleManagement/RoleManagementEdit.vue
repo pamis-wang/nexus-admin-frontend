@@ -1,57 +1,55 @@
 <template>
-  <div class="q-pa-md">
-    <x-breadcrumb
-      :items="[
-        { label: '首頁', icon: 'home', to: { name: 'home' } },
-        { label: '系統管理' },
-        { label: '角色管理', to: { name: 'roleManagementList' } },
-        { label: '編輯角色' },
-      ]"
-    />
+  <x-breadcrumb
+    :items="[
+      { label: '首頁', icon: 'home', to: { name: 'home' } },
+      { label: '系統管理' },
+      { label: '角色管理', to: { name: 'roleManagementList' } },
+      { label: '編輯角色' },
+    ]"
+  />
 
-    <x-loading-state :loading="isLoadingRole" message="載入角色資料中..." />
+  <x-loading-state :loading="isLoadingRole" message="載入角色資料中..." />
 
-    <q-card v-if="!isLoadingRole" flat bordered class="q-mt-xs">
-      <q-card-section>
-        <div class="text-h6 text-primary q-mb-md">
-          <q-icon name="mdi-shield-edit-outline" class="q-mr-sm" />
-          編輯角色
-          <q-badge v-if="formData.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+  <q-card v-if="!isLoadingRole" flat bordered class="q-mt-xs">
+    <q-card-section>
+      <div class="text-h6 text-primary q-mb-md">
+        <q-icon name="mdi-shield-edit-outline" class="q-mr-sm" />
+        編輯角色
+        <q-badge v-if="formData.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+      </div>
+
+      <q-form class="q-gutter-md" @submit="handleSubmit" @reset="handleReset">
+        <div class="row q-col-gutter-md">
+          <div class="col-12 col-md-6">
+            <q-input
+              v-model="formData.name"
+              label="角色名稱 *"
+              :rules="[(value) => !!value?.trim() || '請輸入角色名稱']"
+              maxlength="50"
+              counter
+              outlined
+              dense
+            />
+          </div>
+          <div class="col-12 col-md-6">
+            <q-input :model-value="formData.userCount" label="用戶人數" outlined dense readonly hint="由系統統計，不可修改" />
+          </div>
         </div>
 
-        <q-form class="q-gutter-md" @submit="handleSubmit" @reset="handleReset">
-          <div class="row q-col-gutter-md">
-            <div class="col-12 col-md-6">
-              <q-input
-                v-model="formData.name"
-                label="角色名稱 *"
-                :rules="[(value) => !!value?.trim() || '請輸入角色名稱']"
-                maxlength="50"
-                counter
-                outlined
-                dense
-              />
-            </div>
-            <div class="col-12 col-md-6">
-              <q-input :model-value="formData.userCount" label="用戶人數" outlined dense readonly hint="由系統統計，不可修改" />
-            </div>
-          </div>
+        <q-separator class="q-my-md" />
 
-          <q-separator class="q-my-md" />
+        <RolePermissionMatrix :tree-nodes="treeNodes" :has-permission="hasPermission" :is-loading="isLoading" @update="updatePermission" />
 
-          <RolePermissionMatrix :tree-nodes="treeNodes" :has-permission="hasPermission" :is-loading="isLoading" @update="updatePermission" />
+        <q-separator class="q-my-md" />
 
-          <q-separator class="q-my-md" />
-
-          <div class="row q-gutter-sm justify-end">
-            <q-btn flat label="取消" color="grey" @click="handleCancel" />
-            <q-btn flat label="重設" color="warning" type="reset" />
-            <q-btn unelevated label="儲存" color="primary" type="submit" :loading="isSubmitting" />
-          </div>
-        </q-form>
-      </q-card-section>
-    </q-card>
-  </div>
+        <div class="row q-gutter-sm justify-end">
+          <q-btn flat label="取消" color="grey" @click="handleCancel" />
+          <q-btn flat label="重設" color="warning" type="reset" />
+          <q-btn unelevated label="儲存" color="primary" type="submit" :loading="isSubmitting" />
+        </div>
+      </q-form>
+    </q-card-section>
+  </q-card>
 </template>
 
 <script setup lang="ts">
