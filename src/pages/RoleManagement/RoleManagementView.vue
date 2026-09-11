@@ -1,7 +1,7 @@
 <template>
   <x-breadcrumb
     :items="[
-      { label: '首頁', icon: 'home', to: { name: 'home' } },
+      { label: '首頁', icon: 'mdi-home', to: { name: 'home' } },
       { label: '系統管理' },
       { label: '角色管理', to: { name: 'roleManagementList' } },
       { label: '檢視權限' },

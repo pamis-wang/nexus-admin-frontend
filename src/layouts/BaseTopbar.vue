@@ -2,7 +2,7 @@
   <q-toolbar v-bind:class="layoutStore.getTopbarColorClass()">
     <!-- 左側區域：根據佈局模式顯示不同內容 -->
     <!-- Vertical Layout: 顯示選單按鈕 -->
-    <q-btn v-if="layoutStore.layoutConfig.layout === 'vertical'" dense flat round icon="menu" @click="$emit('toggleLeftDrawer')" />
+    <q-btn v-if="layoutStore.layoutConfig.layout === 'vertical'" dense flat round icon="mdi-menu" @click="$emit('toggleLeftDrawer')" />
 
     <!-- Horizontal Layout: 顯示品牌標誌 -->
     <div v-if="layoutStore.layoutConfig.layout === 'horizontal'" class="flex items-center q-mr-md">
@@ -22,7 +22,7 @@
       <template v-slot:label>
         <div class="row items-center no-wrap q-gutter-x-sm">
           <q-avatar>
-            <q-icon name="person" color="white" size="sm" class="bg-primary rounded-borders" />
+            <q-icon name="mdi-account" color="white" size="sm" class="bg-primary rounded-borders" />
           </q-avatar>
           <div>{{ displayName }}</div>
         </div>
@@ -56,7 +56,7 @@
         <q-item clickable v-close-popup v-bind:disable="isLoggingOut" @click="handleLogout">
           <q-item-section>
             <q-item-label class="flex items-center">
-              <q-icon name="logout" size="xs" class="q-mr-sm" />
+              <q-icon name="mdi-logout" size="xs" class="q-mr-sm" />
               登出
             </q-item-label>
           </q-item-section>

@@ -114,11 +114,12 @@ describe('MenuSettingsList', () => {
     const wrapper = await mountMenuSettingsList()
 
     // admin_resources 沒有軟刪除欄位，刪掉救不回來，所以整頁都不該出現垃圾桶
-    const iconNames = wrapper.findAll('tbody tr').flatMap((row) => row.findAll('i.q-icon').map((icon) => icon.text()))
+    // mdi 圖示沒有 ligature 文字，圖示身分只能從 class 判斷
+    const iconClasses = wrapper.findAll('tbody tr').flatMap((row) => row.findAll('i.q-icon').flatMap((icon) => icon.classes()))
 
-    expect(iconNames).not.toContain('delete')
-    expect(iconNames).toContain('edit')
-    expect(iconNames).toContain('drive_file_move')
+    expect(iconClasses).not.toContain('mdi-trash-can-outline')
+    expect(iconClasses).toContain('mdi-file-document-edit-outline')
+    expect(iconClasses).toContain('mdi-folder-move-outline')
     expect(wrapper.findAll('tbody tr button.disabled')).toHaveLength(0)
   })
 

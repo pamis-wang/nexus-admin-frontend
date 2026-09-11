@@ -1,5 +1,5 @@
 <template>
-  <x-breadcrumb :items="[{ label: '首頁', icon: 'home', to: { name: 'home' } }, { label: '系統管理' }, { label: '角色管理' }]" />
+  <x-breadcrumb :items="[{ label: '首頁', icon: 'mdi-home', to: { name: 'home' } }, { label: '系統管理' }, { label: '角色管理' }]" />
 
   <!-- 功能操作區 -->
   <q-card flat bordered class="q-mt-xs">

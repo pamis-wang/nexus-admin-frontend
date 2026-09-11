@@ -4,7 +4,7 @@
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6">移到其他層級</div>
         <q-space />
-        <q-btn v-close-popup icon="close" flat round dense />
+        <q-btn v-close-popup icon="mdi-close" flat round dense />
       </q-card-section>
 
       <q-card-section class="q-pb-none">

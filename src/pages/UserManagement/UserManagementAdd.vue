@@ -1,7 +1,7 @@
 <template>
   <x-breadcrumb
     :items="[
-      { label: '首頁', icon: 'home', to: { name: 'home' } },
+      { label: '首頁', icon: 'mdi-home', to: { name: 'home' } },
       { label: '系統管理' },
       { label: '用戶管理', to: { name: 'userManagementList' } },
       { label: '新增用戶' },
@@ -17,7 +17,7 @@
 
       <q-banner class="bg-info text-white q-mb-md" rounded dense>
         <template #avatar>
-          <q-icon name="info" />
+          <q-icon name="mdi-information-outline" />
         </template>
         <div class="text-caption">※ 這裡只建立帳號本身。新帳號尚未綁定登入方式，需另行啟用後才能登入。</div>
         <div class="text-caption">※ 帳號建立後不可修改，電子信箱與姓名之後仍可在編輯頁調整。</div>
