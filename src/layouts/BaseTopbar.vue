@@ -73,7 +73,7 @@ import { storeToRefs } from 'pinia'
 import { useLayoutStore } from '@/stores/useLayout'
 import { useUserStore } from '@/stores/useUser'
 import { useAuthentication } from '@/composables/useAuthentication'
-import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 import logoLockupBlue from '@/assets/images/nexus-lockup-blue.svg'
 import logoLockupWhite from '@/assets/images/nexus-lockup-white.svg'
 import type { LayoutConfig } from '@/types/layout'
@@ -93,7 +93,7 @@ const route = useRoute()
 const router = useRouter()
 const layoutStore = useLayoutStore()
 const userStore = useUserStore()
-const dialog = useDialog()
+const notify = useNotify()
 const { userProfile, assignedRoles, activeRoles, permissionMode } = storeToRefs(userStore)
 const { isLoggingOut, isSwitchingActiveRoles, logout, switchActiveRoles } = useAuthentication()
 
@@ -147,9 +147,12 @@ async function handleRoleClick(roleId: string) {
 
   const result = await switchActiveRoles(nextRoleIds)
   if (!result.success) {
-    dialog.showError(result.message, '切換角色失敗')
+    notify.notifyError(result.message, 0)
     return
   }
+
+  // 切換後選單與可進入的頁面都會變，沒有回饋使用者不會知道這次點擊生效了
+  notify.notifySuccess(`生效角色已切換為「${activeRoles.value.map((role) => role.name).join('、')}」`)
 
   // 換角色之後目前這一頁可能已經沒有權限了，留在原地會看到自己無權操作的畫面
   const resourceName = route.meta.resourceName
