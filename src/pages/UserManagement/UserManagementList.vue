@@ -100,22 +100,8 @@
 
         <template #body-cell-isDisabled="props">
           <q-td :props="props">
-            <!-- XSwitch 沒有插槽，提示掛在外層 span 上；停用的按鈕本身也收不到滑鼠事件 -->
-            <span>
-              <x-switch
-                :model-value="!props.row.isDisabled"
-                size="sm"
-                active-text="啟用"
-                inactive-text="停用"
-                active-color="positive"
-                inactive-color="grey"
-                :disable="isToggleDisabled(props.row)"
-                @update:model-value="(value: boolean) => handleToggleDisabled(props.row, value)"
-              />
-              <q-tooltip v-if="isToggleDisabled(props.row)">
-                {{ props.row.isSystemDefault ? '系統預設帳號不允許停用' : '不能停用自己的帳號' }}
-              </q-tooltip>
-            </span>
+            <!-- 只顯示狀態，不提供切換；與檢視頁、編輯頁的標籤用同一組樣式 -->
+            <q-badge :color="props.row.isDisabled ? 'grey-6' : 'positive'">{{ props.row.isDisabled ? '已停用' : '啟用中' }}</q-badge>
           </q-td>
         </template>
 
@@ -142,14 +128,12 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 
 import { useDialog } from '@/composables/useDialog'
 import { useLogger } from '@/composables/useLogger'
-import { getAdminUsers, updateAdminUserDisabledState } from '@/services/admin/adminUserService'
+import { getAdminUsers } from '@/services/admin/adminUserService'
 import type { ResponseStructure } from '@/services/axiosService'
-import { useUserStore } from '@/stores/useUser'
 import type { UserManagementAccountStatusOption, UserManagementFilter, UserManagementRow } from '@/pages/UserManagement/types'
 
 const dialog = useDialog()
 const logger = useLogger({ prefix: 'UserManagementList', enabled: import.meta.env.DEV })
-const userStore = useUserStore()
 
 const isLoading = ref(false)
 const rows = ref<UserManagementRow[]>([])
@@ -165,13 +149,12 @@ const columns: XTableColumn[] = [
   { name: 'isDisabled', align: 'center', label: '帳號狀態', field: '', style: 'width: 120px' },
   { name: 'action', align: 'center', label: '操作', field: '', style: 'width: 120px' },
 ]
+// 用詞與表格裡的狀態標籤一致，避免同一欄位在篩選與列表上叫不同名字
 const accountStatusOptions: UserManagementAccountStatusOption[] = [
-  { value: 'enabled', label: '啟用' },
-  { value: 'disabled', label: '停用' },
+  { value: 'enabled', label: '啟用中' },
+  { value: 'disabled', label: '已停用' },
 ]
 
-/** 目前登入者的唯一編號，用來擋掉「停用自己」 */
-const currentUserId = computed(() => userStore.userProfile?.id ?? '')
 /** 角色篩選的選項，取自目前列表裡出現過的角色名稱 */
 const roleNameOptions = computed<string[]>(() => {
   const roleNames = new Set<string>()
@@ -280,65 +263,5 @@ function clearFilter() {
   filter.email = null
   filter.roleName = null
   filter.accountStatus = null
-}
-
-/**
- * 是否不給切換
- *
- * 後端只擋停用：系統預設帳號與自己的帳號不能停用，但都可以啟用回來。
- * @param row 用戶列
- */
-function isToggleDisabled(row: UserManagementRow): boolean {
-  if (row.isDisabled) {
-    return false
-  }
-  return row.isSystemDefault || row.id === currentUserId.value
-}
-
-/**
- * 切換啟停用狀態
- * @param row 用戶列
- * @param isEnabled 切換後是否為啟用
- */
-function handleToggleDisabled(row: UserManagementRow, isEnabled: boolean) {
-  const isDisabled = !isEnabled
-  const action = isDisabled ? '停用' : '啟用'
-  const message = isDisabled ? `確定要停用「${row.account}」嗎？停用後該帳號會立即失去全部權限。` : `確定要啟用「${row.account}」嗎？`
-
-  dialog.showConfirm(message, `${action}帳號`).onOk(() => {
-    updateDisabledState(row, isDisabled)
-  })
-}
-
-/**
- * 送出啟停用變更
- * @param row 用戶列
- * @param isDisabled 是否停用
- */
-async function updateDisabledState(row: UserManagementRow, isDisabled: boolean) {
-  isLoading.value = true
-  try {
-    const response = await updateAdminUserDisabledState(row.id, { isDisabled })
-
-    if (response.success) {
-      dialog.showSuccess(`「${row.account}」已${isDisabled ? '停用' : '啟用'}`)
-      await loadUsers()
-      return
-    }
-
-    dialog.showError(response.result.error?.message || '更新帳號狀態失敗', '更新失敗')
-  } catch (error) {
-    const failure = error as ResponseStructure<null>
-    const errorMessage = failure.errorMessage || '未知錯誤'
-    logger.error('更新帳號狀態失敗', { status: failure.status, errorMessage })
-
-    if (failure.status === 403) {
-      dialog.showWarning(errorMessage, '不允許的操作')
-    } else {
-      dialog.showError(errorMessage, '更新失敗')
-    }
-  } finally {
-    isLoading.value = false
-  }
 }
 </script>

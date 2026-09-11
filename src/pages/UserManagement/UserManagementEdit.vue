@@ -43,7 +43,7 @@
           </div>
         </div>
 
-        <div class="text-caption text-grey-7">帳號的啟用與停用請在列表頁切換，該處會套用「不能停用自己」與「系統預設帳號不可停用」的規則。</div>
+        <div class="text-caption text-grey-7">帳號的停用狀態目前不開放在後台變更，列表與本頁都只顯示狀態，儲存時會把載入當下的值原樣帶回。</div>
 
         <q-separator class="q-my-md" />
 

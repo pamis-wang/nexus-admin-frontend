@@ -1,46 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
-import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createWebHistory } from 'vue-router'
 import { QSelect } from 'quasar'
 import customPlugin from '@/plugins/custom'
 import quasarPlugin from '@/plugins/quasar'
 import UserManagementList from '@/pages/UserManagement/UserManagementList.vue'
-import { useUserStore } from '@/stores/useUser'
-import type { AdminUserResponse, UpdateAdminUserDisabledStateRequest } from '@/services/admin/adminUserService'
-import type { ResponseStructure, UpdatedResponse } from '@/services/axiosService'
+import type { AdminUserResponse } from '@/services/admin/adminUserService'
+import type { ResponseStructure } from '@/services/axiosService'
 
 const getAdminUsersMock = vi.fn<() => Promise<ResponseStructure<AdminUserResponse[]>>>()
-const updateAdminUserDisabledStateMock = vi.fn<(userId: string, data: UpdateAdminUserDisabledStateRequest) => Promise<ResponseStructure<UpdatedResponse>>>()
 
 vi.mock('@/services/admin/adminUserService', () => ({
   getAdminUsers: () => getAdminUsersMock(),
-  updateAdminUserDisabledState: (userId: string, data: UpdateAdminUserDisabledStateRequest) => updateAdminUserDisabledStateMock(userId, data),
 }))
-
-const showConfirmMock = vi.fn<(...args: unknown[]) => void>()
 
 vi.mock('@/composables/useDialog', () => ({
   useDialog: () => ({
     showSuccess: vi.fn<(...args: unknown[]) => void>(),
-    // 測試一律當成使用者按了確認
-    showConfirm: (...args: unknown[]) => {
-      showConfirmMock(...args)
-      return {
-        onOk: (callback: () => void) => {
-          callback()
-          return { onCancel: vi.fn<() => void>() }
-        },
-      }
-    },
     showWarning: vi.fn<(...args: unknown[]) => void>(),
     showError: vi.fn<(...args: unknown[]) => void>(),
     showInfo: vi.fn<(...args: unknown[]) => void>(),
   }),
 }))
-
-/** 目前登入者 */
-const CURRENT_USER_ID = 'user-self'
 
 /** 組一筆用戶，只有測試在意的欄位需要指定 */
 function buildUser(id: string, account: string, options: Partial<AdminUserResponse> = {}): AdminUserResponse {
@@ -61,16 +42,16 @@ function buildUser(id: string, account: string, options: Partial<AdminUserRespon
 
 /**
  * 測試用戶：
- * - nexus_system：系統預設、啟用中（不可停用）
- * - self：目前登入者（不可停用）
+ * - nexus_system：系統預設、啟用中
+ * - nexus_admin：一般用戶，沒有姓名也沒有角色
  * - editor：一般用戶，有姓名與角色、登入方式鎖定中
  * - newcomer：一般用戶，尚未綁定登入方式
- * - retired：系統預設但已停用（可以啟用回來），角色與 editor 不同
+ * - retired：系統預設且已停用，角色與 editor 不同
  */
 function buildUsers(): AdminUserResponse[] {
   return [
     buildUser('user-system', 'nexus_system', { isSystemDefault: true }),
-    buildUser(CURRENT_USER_ID, 'nexus_admin'),
+    buildUser('user-admin', 'nexus_admin'),
     buildUser('user-editor', 'editor', {
       fullName: '王小明',
       roleMappings: [{ adminId: 'user-editor', adminName: 'editor', roleId: 'role-1', roleName: '編輯者' }],
@@ -100,15 +81,6 @@ function buildUsers(): AdminUserResponse[] {
 
 /** 掛載列表頁並等待資料載入 */
 async function mountUserManagementList() {
-  setActivePinia(createPinia())
-  await useUserStore().storageUser('access-token', 'refresh-token', {
-    id: CURRENT_USER_ID,
-    account: 'nexus_admin',
-    email: 'admin@example.com',
-    fullName: null,
-    roles: [],
-  })
-
   const router = createRouter({
     history: createWebHistory(),
     routes: [
@@ -156,8 +128,6 @@ function findClearFilterButton(wrapper: VueWrapper) {
 describe('UserManagementList', () => {
   beforeEach(() => {
     getAdminUsersMock.mockReset()
-    updateAdminUserDisabledStateMock.mockReset()
-    showConfirmMock.mockReset()
     getAdminUsersMock.mockResolvedValue({
       result: { data: buildUsers(), error: null },
       status: 200,
@@ -177,34 +147,12 @@ describe('UserManagementList', () => {
     expect(findRowByAccount(wrapper, 'nexus_system')?.text()).toContain('系統預設')
   })
 
-  it('系統預設帳號與自己的帳號不給停用', async () => {
+  it('帳號狀態只以標籤顯示，不提供切換', async () => {
     const wrapper = await mountUserManagementList()
 
-    expect(findRowByAccount(wrapper, 'nexus_system')?.find('.x-switch').classes()).toContain('disabled')
-    expect(findRowByAccount(wrapper, 'nexus_admin')?.find('.x-switch').classes()).toContain('disabled')
-    expect(findRowByAccount(wrapper, 'editor')?.find('.x-switch').classes()).not.toContain('disabled')
-  })
-
-  it('已停用的系統預設帳號仍可以啟用回來', async () => {
-    const wrapper = await mountUserManagementList()
-
-    expect(findRowByAccount(wrapper, 'retired')?.find('.x-switch').classes()).not.toContain('disabled')
-  })
-
-  it('切換停用會先確認，確認後以 disabled-state 端點送出', async () => {
-    updateAdminUserDisabledStateMock.mockResolvedValue({
-      result: { data: { id: 'user-editor', updatedAt: '2026-09-11T00:00:00+00:00' }, error: null },
-      status: 200,
-      statusText: 'OK',
-      success: true,
-      timestamp: Date.now(),
-    })
-    const wrapper = await mountUserManagementList()
-
-    await findRowByAccount(wrapper, 'editor')?.find('.x-switch').trigger('click')
-
-    expect(showConfirmMock).toHaveBeenCalled()
-    await vi.waitFor(() => expect(updateAdminUserDisabledStateMock).toHaveBeenCalledWith('user-editor', { isDisabled: true }))
+    expect(findRowByAccount(wrapper, 'editor')?.text()).toContain('啟用中')
+    expect(findRowByAccount(wrapper, 'retired')?.text()).toContain('已停用')
+    expect(wrapper.find('.x-switch').exists()).toBe(false)
   })
 
   it('沒有任何條件時不顯示筆數與清除篩選', async () => {
