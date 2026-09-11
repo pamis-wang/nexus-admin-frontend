@@ -71,6 +71,41 @@ describe('router 導航守衛', () => {
   })
 })
 
+describe('錯誤頁路由', () => {
+  beforeEach(async () => {
+    setActivePinia(createPinia())
+    await useUserStore().clearUser()
+  })
+
+  it('未登入時，不存在的網址導向 404 而不是登入頁', async () => {
+    await router.push('/this-page-does-not-exist')
+
+    expect(router.currentRoute.value.name).toBe('error404')
+  })
+
+  it('已登入時，不存在的網址一樣導向 404', async () => {
+    await useUserStore().storageUser('access-token', 'refresh-token', mockUserProfile)
+
+    await router.push('/this-page-does-not-exist')
+
+    expect(router.currentRoute.value.name).toBe('error404')
+  })
+
+  it('403 在版面內，未登入時會先被導去登入頁', async () => {
+    await router.push({ name: 'error403' })
+
+    expect(router.currentRoute.value.name).toBe('login')
+  })
+
+  it('403 在版面內，已登入時可以正常進入', async () => {
+    await useUserStore().storageUser('access-token', 'refresh-token', mockUserProfile)
+
+    await router.push({ name: 'error403' })
+
+    expect(router.currentRoute.value.name).toBe('error403')
+  })
+})
+
 describe('系統管理路由', () => {
   // 合併到 system.routes.ts 之後網址必須完全不變，否則既有連結與書籤會斷
   it('網址解析到原本的路由名稱', () => {

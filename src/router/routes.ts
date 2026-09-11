@@ -39,10 +39,37 @@ export const featureRoutes: RouteRecordRaw[] = [
  */
 export const menuRoutes: RouteRecordRaw[] = buildMenuRoutes(featureRoutes)
 
+/**
+ * 版面外的錯誤頁
+ *
+ * 404 不要求登入：打錯網址的人不一定登入，掛進版面會被守衛導去登入頁，反而看不到錯在哪。
+ */
+export const errorRoutes: RouteRecordRaw[] = [
+  {
+    path: '/error-404',
+    name: 'error404',
+    component: () => import('@/pages/Error/ErrorPage404.vue'),
+  },
+]
+
+/**
+ * 版面內的錯誤頁
+ *
+ * 403 只會發生在已登入的情況，放在版面內保留選單，使用者可以直接轉往有權限的功能。
+ * 不設 title 所以不會進選單，也不設 resourceName 所以不會被權限守衛再擋一次。
+ */
+const inLayoutErrorRoutes: RouteRecordRaw[] = [
+  {
+    path: 'error-403',
+    name: 'error403',
+    component: () => import('@/pages/Error/ErrorPage403.vue'),
+  },
+]
+
 /** Catch All 路由必須單獨定義並放在最後 */
 export const catchAllRoute: RouteRecordRaw = {
   path: '/:catchAll(.*)*',
-  redirect: { name: 'home' },
+  redirect: { name: 'error404' },
 }
 
 /** 主要應用路由 */
@@ -51,11 +78,11 @@ export const mainRoutes: RouteRecordRaw[] = [
     path: '/',
     component: () => import('@/layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
-    children: featureRoutes,
+    children: [...featureRoutes, ...inLayoutErrorRoutes],
   },
 ]
 
-export const allRoutes: RouteRecordRaw[] = [...authRoutes, ...mainRoutes, catchAllRoute]
+export const allRoutes: RouteRecordRaw[] = [...authRoutes, ...errorRoutes, ...mainRoutes, catchAllRoute]
 
 /**
  * 遞迴篩出選單項目
