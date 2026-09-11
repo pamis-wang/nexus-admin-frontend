@@ -21,8 +21,9 @@ const PATH_SEPARATOR = '>'
  * 不在樹中的既有資源會被刪除，parentId／level／displayOrder 由嵌套位置重算，
  * 但 resourceName 不會重算 —— 所以改名或搬移後，本層與所有子孫的完整路徑都由前端重寫。
  *
- * resourceCode 是端點權限的判斷鍵，唯讀且只能由種子資料或維運工具維護：有值的節點刪掉會讓
- * 宣告該代碼的端點永久回 403，後端會直接拒絕，因此畫面上先擋住不給刪。
+ * 這個版本的 admin_resources 沒有軟刪除欄位，因此整頁不提供刪除資源的功能，送出的樹一律含全部既有節點：
+ * removeRow 只用在「新增了一列但取消命名」這種丟棄未送出資料的情況，changeSummary 也因此只算
+ * 新增／更新／位置變動。
  */
 export function useMenuSettingsTree() {
   const logger = useLogger({ prefix: 'MenuSettingsTree', enabled: import.meta.env.DEV })
@@ -40,7 +41,6 @@ export function useMenuSettingsTree() {
   let newRowSeq = 1
 
   const changeSummary = computed<MenuSettingsChangeSummary>(() => {
-    const currentIds = new Set(rows.value.filter((row) => row.id !== null).map((row) => row.id))
     const originalMap = new Map(originalRows.value.map((row) => [row.id, row]))
 
     let addedCount = 0
@@ -66,14 +66,11 @@ export function useMenuSettingsTree() {
       }
     })
 
-    const deletedCount = originalRows.value.filter((row) => row.id !== null && !currentIds.has(row.id)).length
-
     return {
       addedCount,
       updatedCount,
-      deletedCount,
       movedCount,
-      hasChanges: addedCount > 0 || updatedCount > 0 || deletedCount > 0 || movedCount > 0,
+      hasChanges: addedCount > 0 || updatedCount > 0 || movedCount > 0,
     }
   })
 
@@ -228,30 +225,6 @@ export function useMenuSettingsTree() {
   }
 
   /**
-   * 不可刪除的原因；可刪除時回 null
-   *
-   * 綁定 resourceCode 的節點是端點權限的判斷鍵，後端會回 403；連帶刪除的子孫也一樣要檢查。
-   * @param rowKey 要檢查的節點
-   */
-  function deleteBlockReasonOf(rowKey: string): string | null {
-    const row = findRow(rowKey)
-    if (row === null) {
-      return null
-    }
-
-    if (row.resourceCode !== null) {
-      return `已綁定端點權限代碼「${row.resourceCode}」，不允許刪除`
-    }
-
-    const lockedDescendants = descendantsOf(rowKey).filter((child) => child.resourceCode !== null)
-    if (lockedDescendants.length > 0) {
-      return `底下 ${lockedDescendants.length} 個項目綁定端點權限代碼，不允許刪除`
-    }
-
-    return null
-  }
-
-  /**
    * 依畫面展開狀態攤平成表格列
    * @param expandedRowKeys 已展開的節點；null 表示全部展開
    */
@@ -335,20 +308,16 @@ export function useMenuSettingsTree() {
   }
 
   /**
-   * 刪除節點，連同其子孫
-   * @param rowKey 要刪除的節點
-   * @returns 是否真的刪除了；綁定端點權限代碼時不刪並回 false
+   * 把節點連同子孫移出畫面上的樹
+   *
+   * 頁面唯一的使用時機是「新增了一列但取消命名」，用來丟棄還沒送出的空白列——
+   * 這個版本沒有刪除既有資源的功能，既有節點不會走到這裡。
+   * @param rowKey 要移除的節點
    */
-  function removeRow(rowKey: string): boolean {
+  function removeRow(rowKey: string) {
     const row = findRow(rowKey)
     if (row === null) {
-      return false
-    }
-
-    const blockReason = deleteBlockReasonOf(rowKey)
-    if (blockReason !== null) {
-      logger.warn('節點不可刪除', { rowKey, blockReason })
-      return false
+      return
     }
 
     const removedKeys = new Set([rowKey, ...descendantsOf(rowKey).map((child) => child.rowKey)])
@@ -356,8 +325,7 @@ export function useMenuSettingsTree() {
 
     rows.value = rows.value.filter((item) => !removedKeys.has(item.rowKey))
     renumber(parentRowKey)
-    logger.info('刪除節點', { rowKey, removedCount: removedKeys.size })
-    return true
+    logger.info('移除節點', { rowKey, removedCount: removedKeys.size })
   }
 
   /**
@@ -541,7 +509,7 @@ export function useMenuSettingsTree() {
 
     const blankRow = rows.value.find((row) => row.name.trim().length === 0)
     if (blankRow !== undefined) {
-      return { isValid: false, message: '有選單名稱是空白的，請先填寫或刪除該筆。' }
+      return { isValid: false, message: '有選單名稱是空白的，請先填寫；未命名的新增列可在編輯狀態按取消收掉。' }
     }
 
     const separatorRow = rows.value.find((row) => row.name.includes(PATH_SEPARATOR))
@@ -571,14 +539,6 @@ export function useMenuSettingsTree() {
         return { isValid: false, message: `資源名稱「${path}」重複，整棵樹內的完整名稱必須唯一。` }
       }
       seenPaths.add(path)
-    }
-
-    // 有 resourceCode 的節點被刪掉後端會回 403。畫面上已擋掉刪除入口，這裡是送出前的最後一道防線
-    const currentIds = new Set(rows.value.filter((row) => row.id !== null).map((row) => row.id))
-    const lockedRemovedRows = originalRows.value.filter((row) => row.id !== null && row.resourceCode !== null && !currentIds.has(row.id))
-    if (lockedRemovedRows.length > 0) {
-      const names = lockedRemovedRows.map((row) => `${row.name}（${row.resourceCode}）`).join('、')
-      return { isValid: false, message: `以下資源綁定端點權限代碼，不允許刪除：${names}。請按「全部還原」後重新調整。` }
     }
 
     return { isValid: true, message: null }
@@ -626,7 +586,6 @@ export function useMenuSettingsTree() {
     findRow,
     descendantsOf,
     fullPathOf,
-    deleteBlockReasonOf,
     visibleRows,
     moveTargetsFor,
     validateTree,

@@ -128,7 +128,7 @@ describe('useMenuSettingsTree - 載入', () => {
   })
 })
 
-describe('useMenuSettingsTree - 綁定端點權限的節點不可刪除', () => {
+describe('useMenuSettingsTree - 丟棄未送出的新增列', () => {
   beforeEach(() => {
     getAdminResourceTreeMock.mockReset()
     replaceAdminResourceTreeMock.mockReset()
@@ -136,31 +136,7 @@ describe('useMenuSettingsTree - 綁定端點權限的節點不可刪除', () => 
     showErrorMock.mockReset()
   })
 
-  it('節點自己有資源代碼時回報不可刪除', async () => {
-    const tree = await mountTreeWithSampleData()
-
-    expect(tree.deleteBlockReasonOf('id-users')).toBe('已綁定端點權限代碼「admin_users」，不允許刪除')
-    expect(tree.removeRow('id-users')).toBe(false)
-    expect(tree.rows.value).toHaveLength(4)
-  })
-
-  it('子孫有資源代碼時，父節點也不可刪除', async () => {
-    const tree = await mountTreeWithSampleData()
-
-    expect(tree.deleteBlockReasonOf('id-system')).toBe('底下 1 個項目綁定端點權限代碼，不允許刪除')
-    expect(tree.removeRow('id-system')).toBe(false)
-  })
-
-  it('自己與子孫都沒有資源代碼時可以刪除', async () => {
-    const tree = await mountTreeWithSampleData()
-
-    expect(tree.deleteBlockReasonOf('id-menu')).toBeNull()
-    expect(tree.removeRow('id-menu')).toBe(true)
-    expect(tree.findRow('id-menu')).toBeNull()
-    expect(tree.changeSummary.value.deletedCount).toBe(1)
-  })
-
-  it('刪除節點時連同子孫一起刪除，並重編同層順序', async () => {
+  it('移除節點時連同子孫一起移除，並重編同層順序', async () => {
     getAdminResourceTreeMock.mockResolvedValue(
       buildTreeResponse('v1', [
         buildNode('id-a', 'A', { children: [buildNode('id-a1', 'A>A1', { children: [buildNode('id-a1x', 'A>A1>A1X')] })] }),
@@ -171,9 +147,21 @@ describe('useMenuSettingsTree - 綁定端點權限的節點不可刪除', () => 
     const tree = useMenuSettingsTree()
     await tree.loadTree()
 
-    expect(tree.removeRow('id-a')).toBe(true)
+    tree.removeRow('id-a')
+
     expect(tree.rows.value.map((row) => row.rowKey)).toEqual(['id-b', 'id-c'])
     expect(tree.childrenOf(null).map((row) => row.position)).toEqual([1, 2])
+  })
+
+  it('丟棄還沒命名的新增列不算變更，也不會被擋下', async () => {
+    const tree = await mountTreeWithSampleData()
+    const created = tree.addRow(null)
+    if (created !== null) {
+      tree.removeRow(created.rowKey)
+    }
+
+    expect(tree.validateTree()).toEqual({ isValid: true, message: null })
+    expect(tree.hasChanges.value).toBe(false)
   })
 })
 
@@ -268,7 +256,7 @@ describe('useMenuSettingsTree - 送出前驗證', () => {
     const validation = tree.validateTree()
 
     expect(validation.isValid).toBe(false)
-    expect(validation.message).toBe('有選單名稱是空白的，請先填寫或刪除該筆。')
+    expect(validation.message).toBe('有選單名稱是空白的，請先填寫；未命名的新增列可在編輯狀態按取消收掉。')
   })
 
   it('完整資源名稱重複時不通過', async () => {
@@ -379,15 +367,15 @@ describe('useMenuSettingsTree - 整批替換', () => {
     expect(tree.isSaving.value).toBe(false)
   })
 
-  it('刪除綁定端點權限的節點（403）時提示不允許的變更', async () => {
+  it('後端回 403 時提示不允許的變更', async () => {
     const tree = await mountTreeWithSampleData()
     tree.renameRow('id-menu', '選單管理')
     const forbidden: ResponseStructure<null> = {
-      result: { data: null, error: { code: 403, message: '以下資源綁定了端點權限的判斷鍵，不允許刪除：系統管理>使用者管理（admin_users）' } },
+      result: { data: null, error: { code: 403, message: '沒有權限修改後台資源' } },
       status: 403,
       statusText: 'Forbidden',
       success: false,
-      errorMessage: '以下資源綁定了端點權限的判斷鍵，不允許刪除：系統管理>使用者管理（admin_users）',
+      errorMessage: '沒有權限修改後台資源',
       timestamp: Date.now(),
     }
     replaceAdminResourceTreeMock.mockRejectedValue(forbidden)
@@ -395,6 +383,6 @@ describe('useMenuSettingsTree - 整批替換', () => {
     const isSuccess = await tree.saveTree()
 
     expect(isSuccess).toBe(false)
-    expect(showWarningMock).toHaveBeenCalledWith('以下資源綁定了端點權限的判斷鍵，不允許刪除：系統管理>使用者管理（admin_users）', '不允許的變更')
+    expect(showWarningMock).toHaveBeenCalledWith('沒有權限修改後台資源', '不允許的變更')
   })
 })

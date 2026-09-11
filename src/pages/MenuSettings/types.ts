@@ -10,7 +10,7 @@ export interface MenuSettingsRow {
   level: number
   /** 這一層的顯示名稱（不含父路徑） */
   name: string
-  /** 資源代碼，唯讀；有值代表綁定端點權限，該節點不允許刪除 */
+  /** 資源代碼，唯讀；有值代表綁定端點權限，只能由後端種子資料維護 */
   resourceCode: string | null
   /** 是否啟用 */
   isEnabled: boolean
@@ -30,8 +30,6 @@ export interface MenuSettingsTableRow {
   childCount: number
   /** 是否已展開 */
   isExpanded: boolean
-  /** 不可刪除的原因；可刪除時為 null */
-  deleteBlockReason: string | null
 }
 
 /** 拖曳結果：把某節點放到同層某節點之後 */
@@ -56,8 +54,6 @@ export interface MenuSettingsChangeSummary {
   addedCount: number
   /** 改名或啟用狀態變動的筆數 */
   updatedCount: number
-  /** 刪除筆數（含被連帶刪除的子孫） */
-  deletedCount: number
   /** 位置變動筆數（同層排序或跨層搬移） */
   movedCount: number
   /** 是否有任何未儲存變更 */

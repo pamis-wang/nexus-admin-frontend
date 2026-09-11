@@ -16,10 +16,10 @@
         <template #avatar>
           <q-icon name="info" />
         </template>
-        <div class="text-caption">※ 儲存是整棵樹一次送出，畫面上被刪除的項目儲存後就會連同角色權限設定一起刪掉。</div>
+        <div class="text-caption">※ 儲存是整棵樹一次送出，新增、改名、顯示狀態與順序的變更會一併寫入。</div>
         <div class="text-caption">※ 拖曳只能調整同一層的順序；要換到別的層級請用該列的「移到其他層級」。</div>
         <div class="text-caption">※ 完整資源名稱由層級名稱自動組成，改名或搬移時底下子項目的名稱會一起重寫。</div>
-        <div class="text-caption">※ 有資源代碼的項目綁定了端點權限，刪除會讓該端點永久回 403，因此不提供刪除。</div>
+        <div class="text-caption">※ 資源代碼由後端種子資料維護，畫面唯讀；本頁不提供刪除資源的功能。</div>
       </q-banner>
 
       <!-- 未儲存變更 -->
@@ -28,8 +28,7 @@
           <q-icon name="warning" />
         </template>
         <div class="text-caption">
-          有未儲存的變更：新增 {{ changeSummary.addedCount }} 筆、更新 {{ changeSummary.updatedCount }} 筆、刪除 {{ changeSummary.deletedCount }} 筆、位置變動
-          {{ changeSummary.movedCount }} 筆
+          有未儲存的變更：新增 {{ changeSummary.addedCount }} 筆、更新 {{ changeSummary.updatedCount }} 筆、位置變動 {{ changeSummary.movedCount }} 筆
         </div>
         <template #action>
           <q-btn flat dense color="dark" label="全部還原" icon="undo" @click="handleReset" />
@@ -78,7 +77,6 @@
           @nudge="handleNudge"
           @add-child="handleAddChild"
           @request-move="handleRequestMove"
-          @remove="handleRemove"
           @drag-move="handleDragMove"
         />
       </div>
@@ -120,7 +118,6 @@ const {
   findRow,
   descendantsOf,
   fullPathOf,
-  deleteBlockReasonOf,
   visibleRows,
   moveTargetsFor,
   validateTree,
@@ -160,7 +157,6 @@ const tableRows = computed<MenuSettingsTableRow[]>(() => {
     fullPath: fullPathOf(row),
     childCount: childrenOf(row.rowKey).length,
     isExpanded: expandedRowKeys.value.has(row.rowKey),
-    deleteBlockReason: deleteBlockReasonOf(row.rowKey),
   }))
 })
 
@@ -190,13 +186,7 @@ async function handleSave() {
   }
 
   const summary = changeSummary.value
-  const message = [
-    `即將以整棵樹一次送出：新增 ${summary.addedCount} 筆、更新 ${summary.updatedCount} 筆、刪除 ${summary.deletedCount} 筆、位置變動 ${summary.movedCount} 筆。`,
-    summary.deletedCount > 0 ? '被刪除的資源連同其角色權限設定會一併移除。' : '',
-    '確定要儲存嗎？',
-  ]
-    .filter((line) => line.length > 0)
-    .join(' ')
+  const message = `即將以整棵樹一次送出：新增 ${summary.addedCount} 筆、更新 ${summary.updatedCount} 筆、位置變動 ${summary.movedCount} 筆。確定要儲存嗎？`
 
   dialog.showConfirm(message, '儲存選單設定').onOk(async () => {
     const isSuccess = await saveTree()
@@ -323,40 +313,6 @@ function handleAddChild(parentRowKey: string) {
     expandedRowKeys.value.add(parentRowKey)
     handleStartEdit(created.rowKey)
   }
-}
-
-/**
- * 刪除節點，連同其子孫
- * @param rowKey 要刪除的節點
- */
-function handleRemove(rowKey: string) {
-  const row = findRow(rowKey)
-  if (row === null) {
-    return
-  }
-
-  const blockReason = deleteBlockReasonOf(rowKey)
-  if (blockReason !== null) {
-    dialog.showWarning(`「${fullPathOf(row)}」${blockReason}。資源代碼只能由後端維護，刪掉後沒有補回的入口。`, '不可刪除')
-    return
-  }
-
-  const descendantCount = descendantsOf(rowKey).length
-  const message = [
-    `確定要刪除「${fullPathOf(row)}」嗎？`,
-    descendantCount > 0 ? `底下 ${descendantCount} 個子項目也會一起刪除。` : '',
-    '儲存後才會真的寫入，儲存前都能按「全部還原」取消。',
-  ]
-    .filter((line) => line.length > 0)
-    .join(' ')
-
-  dialog.showConfirm(message, '刪除選單項目').onOk(() => {
-    if (editingRowKey.value === rowKey) {
-      editingRowKey.value = null
-      editingName.value = ''
-    }
-    removeRow(rowKey)
-  })
 }
 
 /**

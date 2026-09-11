@@ -96,7 +96,7 @@
             <q-badge color="grey-3" text-color="dark" class="text-caption">
               <q-icon name="lock" size="xs" class="q-mr-xs" />
               {{ element.row.resourceCode }}
-              <q-tooltip>已綁定端點權限，這筆資源不可刪除</q-tooltip>
+              <q-tooltip>已綁定端點權限，由後端種子資料維護，畫面不可修改</q-tooltip>
             </q-badge>
           </template>
         </q-td>
@@ -147,14 +147,6 @@
             <q-btn flat dense round color="primary" icon="drive_file_move" @click="emit('requestMove', element.row.rowKey)">
               <q-tooltip>移到其他層級</q-tooltip>
             </q-btn>
-            <!-- 禁用的按鈕收不到滑鼠事件，提示掛在外層 span 上才顯示得出來 -->
-            <span v-if="element.deleteBlockReason !== null">
-              <q-btn flat dense round disable color="grey" icon="delete" />
-              <q-tooltip>{{ element.deleteBlockReason }}</q-tooltip>
-            </span>
-            <q-btn v-else flat dense round color="negative" icon="delete" @click="emit('remove', element.row.rowKey)">
-              <q-tooltip>刪除</q-tooltip>
-            </q-btn>
           </template>
         </q-td>
       </q-tr>
@@ -188,7 +180,6 @@ const emit = defineEmits<{
   nudge: [rowKey: string, offset: number]
   addChild: [rowKey: string]
   requestMove: [rowKey: string]
-  remove: [rowKey: string]
   dragMove: [payload: MenuSettingsDragMove]
 }>()
 

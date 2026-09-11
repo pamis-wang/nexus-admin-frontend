@@ -110,14 +110,16 @@ describe('MenuSettingsList', () => {
     expect(userRow?.text()).toContain('第 2 層')
   })
 
-  it('綁定資源代碼的列不提供刪除，沒有代碼的列可以刪除', async () => {
+  it('沒有任何列提供刪除入口，其餘操作照常提供', async () => {
     const wrapper = await mountMenuSettingsList()
 
-    const userRow = findRowByText(wrapper, '使用者管理')
-    const menuRow = findRowByText(wrapper, '選單設定')
+    // admin_resources 沒有軟刪除欄位，刪掉救不回來，所以整頁都不該出現垃圾桶
+    const iconNames = wrapper.findAll('tbody tr').flatMap((row) => row.findAll('i.q-icon').map((icon) => icon.text()))
 
-    expect(userRow?.findAll('button.disabled')).toHaveLength(1)
-    expect(menuRow?.findAll('button.disabled')).toHaveLength(0)
+    expect(iconNames).not.toContain('delete')
+    expect(iconNames).toContain('edit')
+    expect(iconNames).toContain('drive_file_move')
+    expect(wrapper.findAll('tbody tr button.disabled')).toHaveLength(0)
   })
 
   it('尚未變更時儲存按鈕停用，也不顯示未儲存提示', async () => {
