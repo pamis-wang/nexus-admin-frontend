@@ -1,72 +1,63 @@
 <template>
-  <div class="q-pa-md">
-    <x-breadcrumb :items="[{ label: '首頁', icon: 'home', to: { name: 'home' } }, { label: '系統管理' }, { label: '角色管理' }]" />
+  <x-breadcrumb :items="[{ label: '首頁', icon: 'home', to: { name: 'home' } }, { label: '系統管理' }, { label: '角色管理' }]" />
 
-    <!-- 功能操作區 -->
-    <q-card flat bordered class="q-mt-xs">
-      <q-card-section class="q-pa-sm">
-        <div class="row justify-between items-center">
-          <div class="text-h6 text-primary">
-            <q-icon name="mdi-account-group" class="q-mr-sm" />
-            角色管理
-          </div>
-          <div class="row q-gutter-sm">
-            <q-btn unelevated color="primary" icon="mdi-plus" label="新增角色" :to="{ name: 'roleManagementAdd' }" />
-            <q-btn flat color="grey" icon="mdi-refresh" label="重新整理" :loading="isLoading" @click="loadRoles" />
-          </div>
+  <!-- 功能操作區 -->
+  <q-card flat bordered class="q-mt-xs">
+    <q-card-section class="q-pa-sm">
+      <div class="row justify-between items-center">
+        <div class="text-h6 text-primary">
+          <q-icon name="mdi-account-group" class="q-mr-sm" />
+          角色管理
         </div>
-      </q-card-section>
-    </q-card>
+        <div class="row q-gutter-sm">
+          <q-btn unelevated color="primary" icon="mdi-plus" label="新增角色" :to="{ name: 'roleManagementAdd' }" />
+          <q-btn flat color="grey" icon="mdi-refresh" label="重新整理" :loading="isLoading" @click="loadRoles" />
+        </div>
+      </div>
+    </q-card-section>
+  </q-card>
 
-    <!-- 角色列表 -->
-    <q-card flat bordered class="q-mt-xs">
-      <q-card-section class="q-pa-sm">
-        <x-table v-model:pagination="pagination" :rows="rows" :columns="columns" :loading="isLoading" row-key="id">
-          <template #body-cell-number="props">
-            <q-td :props="props">{{ props.rowIndex + 1 }}</q-td>
-          </template>
+  <!-- 角色列表 -->
+  <q-card flat bordered class="q-mt-xs">
+    <q-card-section class="q-pa-sm">
+      <x-table v-model:pagination="pagination" :rows="rows" :columns="columns" :loading="isLoading" row-key="id">
+        <template #body-cell-number="props">
+          <q-td :props="props">{{ props.rowIndex + 1 }}</q-td>
+        </template>
 
-          <template #body-cell-name="props">
-            <q-td :props="props">
-              <span>{{ props.value }}</span>
-              <q-badge v-if="props.row.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
-            </q-td>
-          </template>
+        <template #body-cell-name="props">
+          <q-td :props="props">
+            <span>{{ props.value }}</span>
+            <q-badge v-if="props.row.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+          </q-td>
+        </template>
 
-          <template #body-cell-action="props">
-            <q-td :props="props">
-              <x-icon
-                tooltip="檢視權限"
-                color="info"
-                icon="mdi-eye-outline"
-                flat
-                dense
-                :to="{ name: 'roleManagementView', params: { roleId: props.row.id } }"
-              />
-              <x-icon
-                tooltip="編輯角色"
-                color="primary"
-                icon="mdi-file-document-edit-outline"
-                flat
-                dense
-                :to="{ name: 'roleManagementEdit', params: { roleId: props.row.id } }"
-              />
-              <!-- 系統預設角色後端會回 403，直接不給刪 -->
-              <x-icon
-                v-if="!props.row.isSystemDefault"
-                tooltip="刪除角色"
-                color="negative"
-                icon="mdi-trash-can-outline"
-                flat
-                dense
-                @click="handleDelete(props.row)"
-              />
-            </q-td>
-          </template>
-        </x-table>
-      </q-card-section>
-    </q-card>
-  </div>
+        <template #body-cell-action="props">
+          <q-td :props="props">
+            <x-icon tooltip="檢視權限" color="info" icon="mdi-eye-outline" flat dense :to="{ name: 'roleManagementView', params: { roleId: props.row.id } }" />
+            <x-icon
+              tooltip="編輯角色"
+              color="primary"
+              icon="mdi-file-document-edit-outline"
+              flat
+              dense
+              :to="{ name: 'roleManagementEdit', params: { roleId: props.row.id } }"
+            />
+            <!-- 系統預設角色後端會回 403，直接不給刪 -->
+            <x-icon
+              v-if="!props.row.isSystemDefault"
+              tooltip="刪除角色"
+              color="negative"
+              icon="mdi-trash-can-outline"
+              flat
+              dense
+              @click="handleDelete(props.row)"
+            />
+          </q-td>
+        </template>
+      </x-table>
+    </q-card-section>
+  </q-card>
 </template>
 
 <script setup lang="ts">

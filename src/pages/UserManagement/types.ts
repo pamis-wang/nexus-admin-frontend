@@ -54,4 +54,35 @@ export interface UserManagementRoleOption {
   value: string
   /** 角色名稱 */
   label: string
+  /** 是否為系統預設角色；選項上會標記，與列表、檢視頁的標籤同一套語彙 */
+  isSystemDefault: boolean
+}
+
+/** 帳號狀態的篩選值 */
+export type UserManagementAccountStatus = 'enabled' | 'disabled'
+
+/**
+ * 用戶列表的篩選條件
+ *
+ * 文字欄位一律可空：q-input 的 clearable 清空時會把值設成 null，不是空字串。
+ */
+export interface UserManagementFilter {
+  /** 帳號關鍵字 */
+  account: string | null
+  /** 姓名關鍵字 */
+  fullName: string | null
+  /** 電子信箱關鍵字 */
+  email: string | null
+  /** 角色名稱；null 表示不限 */
+  roleName: string | null
+  /** 帳號狀態；null 表示不限 */
+  accountStatus: UserManagementAccountStatus | null
+}
+
+/** 帳號狀態的下拉選項 */
+export interface UserManagementAccountStatusOption {
+  /** 篩選值 */
+  value: UserManagementAccountStatus
+  /** 顯示文字 */
+  label: string
 }
