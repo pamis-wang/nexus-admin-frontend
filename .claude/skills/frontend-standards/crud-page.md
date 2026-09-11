@@ -1,6 +1,6 @@
 # 從零做一個 CRUD 頁面
 
-> 來源：development-standards @ `d76e95f` — `frontend-standards/09.開發實作指南.md`
+> 來源：development-standards @ `9c740b0` — `frontend-standards/10.開發實作指南.md`
 
 以「使用者管理（User）」為例。**順序不可跳**：service 先建好，型別才穩定，頁面才有東西可串。
 
@@ -15,6 +15,8 @@
       ↓
 5. 表單頁：新增／編輯 + 送出
 ```
+
+後台專案的畫面長相（圖示、按鈕階級、版面三段、表單分區、表格欄位、對話框與通知）照 `ui-conventions.md`——這份只講順序與串接。
 
 ---
 
@@ -94,20 +96,32 @@ export interface UserFormData {
 
 ## 4　列表頁
 
+操作欄的導頁按鈕用 `:to` 帶路由位置，不要 `@click` ＋ `router.push`——中鍵／Ctrl 才能另開分頁。沒有對應網址的操作（刪除、複製、重新整理）才用 `@click`。
+
+```vue
+<template v-slot:body-cell-action="props">
+  <x-icon tooltip="編輯" icon="mdi-file-document-edit-outline" color="warning" flat dense :to="buildEditRoute(props.row.id)" />
+  <x-icon tooltip="刪除" icon="mdi-trash-can-outline" color="negative" flat dense @click="confirmDelete(props.row)" />
+</template>
+```
+
+> Quasar 解析 `to` 失敗（路由 `name` 或參數名打錯）不會拋錯，只會退回成沒有 `href` 的按鈕、點了沒反應。改完要實際點過每一顆。
+
 `<script setup>` 依固定分區排序：import → const → interface → lifecycle → async function → function。
 
 ```vue
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import type { RouteLocationRaw } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
+import { useNotify } from '@/composables/useNotify'
 
 import { getUsers, deleteUser, type UserResponse } from '@/services/user/userService'
 import type { ResponseStructure } from '@/services/axiosService'
 
-const router = useRouter()
 const dialog = useDialog()
+const notify = useNotify()
 
 const loading = ref<boolean>(false)
 const rows = ref<UserResponse[]>([])
@@ -123,20 +137,23 @@ async function loadUsers() {
     if (response.status === 200 && response.result.data) {
       rows.value = response.result.data
     } else if (response.result.error) {
-      dialog.showWarning(response.result.error.message, '載入失敗')
+      notify.notifyError(response.result.error.message)
     }
   } catch (error) {
-    dialog.showError((error as ResponseStructure<null>).errorMessage || '未知錯誤', '載入失敗')
+    notify.notifyError((error as ResponseStructure<null>).errorMessage || '未知錯誤')
   } finally {
     loading.value = false
   }
 }
 
-function navigateToEdit(userId: string) {
-  router.push({ name: 'userEdit', params: { userId } })
+/** 編輯用戶頁的路由位置 */
+function buildEditRoute(userId: string): RouteLocationRaw {
+  return { name: 'userEdit', params: { userId } }
 }
 </script>
 ```
+
+範例省略了 `confirmDelete`（模板上那顆刪除鈕呼叫的函數）——它用 `dialog.showConfirm`，寫法見 `ui-conventions.md` 的〈對話框與通知〉。
 
 注意四件事：
 
@@ -157,10 +174,10 @@ async function onSubmit() {
   try {
     const response = await createUser({ account: form.account, email: form.email })
     if (response.success) {
-      dialog.showSuccess('新增成功')
+      notify.notifySuccess('新增成功')
       router.push({ name: 'users' })
     } else {
-      dialog.showError(response.result.error?.message || '新增失敗')
+      notify.notifyError(response.result.error?.message || '新增失敗')
     }
   } finally {
     loading.value = false
@@ -192,5 +209,6 @@ async function onSubmit() {
 - [ ] 頁面 `types.ts` 沒有 import service 型別
 - [ ] 沒有用 `Omit`／`Pick`／`Partial`
 - [ ] 衍生值用 `computed`，沒有 deep watch 整包物件
+- [ ] 導頁按鈕用 `:to`，只有「先驗證／確認／送 API 再導頁」才用 `router.push`
 - [ ] 元件樣式有 `scoped`，顏色字級走 token 沒寫死
 - [ ] `npm run lint` 與 `npm run type-check` 通過
