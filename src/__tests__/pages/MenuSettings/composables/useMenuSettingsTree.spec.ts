@@ -56,14 +56,14 @@ function buildTreeResponse(version: string | null, items: AdminResourceTreeNodeR
 /**
  * 固定的測試樹：
  * 系統管理（無代碼）
- *   ├─ 使用者管理（有代碼 admin_users）
+ *   ├─ 用戶管理（有代碼 admin_users）
  *   └─ 選單設定（無代碼）
  * 內容管理（無代碼）
  */
 function buildSampleTree(): AdminResourceTreeNodeResponse[] {
   return [
     buildNode('id-system', '系統管理', {
-      children: [buildNode('id-users', '系統管理>使用者管理', { resourceCode: 'admin_users' }), buildNode('id-menu', '系統管理>選單設定')],
+      children: [buildNode('id-users', '系統管理>用戶管理', { resourceCode: 'admin_users' }), buildNode('id-menu', '系統管理>選單設定')],
     }),
     buildNode('id-content', '內容管理'),
   ]
@@ -94,7 +94,7 @@ describe('useMenuSettingsTree - 載入', () => {
 
     const userRow = tree.findRow('id-users')
 
-    expect(userRow?.name).toBe('使用者管理')
+    expect(userRow?.name).toBe('用戶管理')
     expect(userRow?.resourceCode).toBe('admin_users')
     expect(userRow?.level).toBe(2)
     expect(userRow?.parentRowKey).toBe('id-system')
@@ -308,7 +308,7 @@ describe('useMenuSettingsTree - 整批替換', () => {
         resourceName: '系統管理',
         isEnabled: true,
         children: [
-          { id: 'id-users', resourceName: '系統管理>使用者管理', isEnabled: true, children: [] },
+          { id: 'id-users', resourceName: '系統管理>用戶管理', isEnabled: true, children: [] },
           { id: 'id-menu', resourceName: '系統管理>選單設定', isEnabled: true, children: [] },
         ],
       },
@@ -322,7 +322,7 @@ describe('useMenuSettingsTree - 整批替換', () => {
     replaceAdminResourceTreeMock.mockResolvedValue(
       buildTreeResponse('2026-09-02T00:00:00+00:00', [
         buildNode('id-system', '系統管理', {
-          children: [buildNode('id-users', '系統管理>使用者管理', { resourceCode: 'admin_users' }), buildNode('id-menu', '系統管理>選單管理')],
+          children: [buildNode('id-users', '系統管理>用戶管理', { resourceCode: 'admin_users' }), buildNode('id-menu', '系統管理>選單管理')],
         }),
         buildNode('id-content', '內容管理'),
       ]),
