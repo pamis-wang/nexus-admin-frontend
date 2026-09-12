@@ -20,25 +20,25 @@ export const systemRoutes: RouteRecordRaw = {
       path: 'users',
       name: 'userManagementList',
       meta: { title: '用戶管理', icon: 'mdi-account-circle', resourceName: '系統管理>用戶管理' },
-      component: () => import('@/pages/UserManagement/UserManagementList.vue'),
+      component: () => import('@/pages/AdminUserManagement/AdminUserManagementList.vue'),
     },
     {
       path: 'users/new',
       name: 'userManagementAdd',
       meta: { resourceName: '系統管理>用戶管理' },
-      component: () => import('@/pages/UserManagement/UserManagementAdd.vue'),
+      component: () => import('@/pages/AdminUserManagement/AdminUserManagementAdd.vue'),
     },
     {
       path: 'users/:userId',
       name: 'userManagementView',
       meta: { resourceName: '系統管理>用戶管理' },
-      component: () => import('@/pages/UserManagement/UserManagementView.vue'),
+      component: () => import('@/pages/AdminUserManagement/AdminUserManagementView.vue'),
     },
     {
       path: 'users/:userId/edit',
       name: 'userManagementEdit',
       meta: { resourceName: '系統管理>用戶管理' },
-      component: () => import('@/pages/UserManagement/UserManagementEdit.vue'),
+      component: () => import('@/pages/AdminUserManagement/AdminUserManagementEdit.vue'),
     },
 
     // 角色管理
@@ -46,25 +46,25 @@ export const systemRoutes: RouteRecordRaw = {
       path: 'roles',
       name: 'roleManagementList',
       meta: { title: '角色管理', icon: 'mdi-account-group', resourceName: '系統管理>角色管理' },
-      component: () => import('@/pages/RoleManagement/RoleManagementList.vue'),
+      component: () => import('@/pages/AdminRoleManagement/AdminRoleManagementList.vue'),
     },
     {
       path: 'roles/new',
       name: 'roleManagementAdd',
       meta: { resourceName: '系統管理>角色管理' },
-      component: () => import('@/pages/RoleManagement/RoleManagementAdd.vue'),
+      component: () => import('@/pages/AdminRoleManagement/AdminRoleManagementAdd.vue'),
     },
     {
       path: 'roles/:roleId',
       name: 'roleManagementView',
       meta: { resourceName: '系統管理>角色管理' },
-      component: () => import('@/pages/RoleManagement/RoleManagementView.vue'),
+      component: () => import('@/pages/AdminRoleManagement/AdminRoleManagementView.vue'),
     },
     {
       path: 'roles/:roleId/edit',
       name: 'roleManagementEdit',
       meta: { resourceName: '系統管理>角色管理' },
-      component: () => import('@/pages/RoleManagement/RoleManagementEdit.vue'),
+      component: () => import('@/pages/AdminRoleManagement/AdminRoleManagementEdit.vue'),
     },
 
     // 選單設定
@@ -74,7 +74,7 @@ export const systemRoutes: RouteRecordRaw = {
       path: 'menu-settings',
       name: 'menuSettingsList',
       meta: { title: '選單設定', icon: 'mdi-file-tree', resourceName: '系統管理>資源管理' },
-      component: () => import('@/pages/MenuSettings/MenuSettingsList.vue'),
+      component: () => import('@/pages/AdminResourceManagement/AdminResourceManagementList.vue'),
     },
   ],
 }
