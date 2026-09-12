@@ -11,7 +11,7 @@
       <template v-for="item in visibleMenuRoutes" :key="item.name">
         <!-- 無子選單的項目 -->
         <template v-if="!hasVisibleChildren(item)">
-          <q-item clickable v-ripple exact :to="{ name: item.name }">
+          <q-item clickable v-ripple exact :to="{ name: item.name }" :data-tour="buildMenuAnchor(item.name)">
             <q-item-section avatar>
               <q-icon :name="item.meta?.icon" />
             </q-item-section>
@@ -20,13 +20,19 @@
         </template>
         <!-- 有子選單的項目 -->
         <template v-else>
-          <q-expansion-item v-model="expansionStates[String(item.name)]" :icon="item.meta?.icon" :label="item.meta?.title" :content-inset-level="0.5">
+          <q-expansion-item
+            v-model="expansionStates[String(item.name)]"
+            :icon="item.meta?.icon"
+            :label="item.meta?.title"
+            :content-inset-level="0.5"
+            :data-tour="buildMenuAnchor(item.name)"
+          >
             <q-list>
               <!-- 第二層選單 -->
               <template v-for="child in item.children" :key="child.name">
                 <!-- 無子選單的項目 -->
                 <template v-if="!hasVisibleChildren(child)">
-                  <q-item clickable v-ripple :to="{ name: child.name }" :active="isMenuItemActive(child.name)">
+                  <q-item clickable v-ripple :to="{ name: child.name }" :active="isMenuItemActive(child.name)" :data-tour="buildMenuAnchor(child.name)">
                     <q-item-section avatar>
                       <q-icon v-if="child.meta?.icon" :name="child.meta?.icon" />
                     </q-item-section>
@@ -40,11 +46,18 @@
                     :icon="child.meta?.icon"
                     :label="child.meta?.title"
                     :content-inset-level="0.5"
+                    :data-tour="buildMenuAnchor(child.name)"
                   >
                     <q-list>
                       <!-- 第三層選單 -->
                       <template v-for="grandChild in child.children" :key="grandChild.name">
-                        <q-item clickable v-ripple :to="{ name: grandChild.name }" :active="isMenuItemActive(grandChild.name)">
+                        <q-item
+                          clickable
+                          v-ripple
+                          :to="{ name: grandChild.name }"
+                          :active="isMenuItemActive(grandChild.name)"
+                          :data-tour="buildMenuAnchor(grandChild.name)"
+                        >
                           <q-item-section avatar>
                             <q-icon v-if="grandChild.meta?.icon" :name="grandChild.meta?.icon" />
                           </q-item-section>
@@ -143,6 +156,17 @@ function isChildRouteActive(item: RouteRecordRaw): boolean {
 /** 是否有子選單；menuRoutes 已把非選單節點剔掉，這裡只需看還剩不剩 */
 function hasVisibleChildren(route: RouteRecordRaw): boolean {
   return route.children !== undefined && route.children.length > 0
+}
+
+/**
+ * 組出選單項目的導覽錨點；以路由名稱為準，重構版面不會影響錨點
+ * @param routeName 選單項目的路由名稱
+ * @returns 錨點名稱；沒有路由名稱時為 undefined，該項目不掛錨點
+ */
+function buildMenuAnchor(routeName: string | symbol | null | undefined): string | undefined {
+  if (!routeName) return undefined
+
+  return `menu-${String(routeName)}`
 }
 </script>
 

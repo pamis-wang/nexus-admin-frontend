@@ -15,7 +15,7 @@
         新增用戶
       </div>
 
-      <q-banner class="bg-info text-white q-mb-md" rounded dense>
+      <q-banner class="bg-info text-white q-mb-md" rounded dense data-tour="user-form-notice">
         <template #avatar>
           <q-icon name="mdi-information-outline" />
         </template>
@@ -24,7 +24,7 @@
       </q-banner>
 
       <q-form class="q-gutter-md" @submit="handleSubmit">
-        <div class="row q-col-gutter-md">
+        <div class="row q-col-gutter-md" data-tour="user-form-basic">
           <div class="col-12 col-md-6">
             <q-input
               v-model="formData.account"
@@ -62,14 +62,14 @@
               </template>
             </q-input>
           </div>
-          <div class="col-12 col-md-6">
+          <div class="col-12 col-md-6" data-tour="user-form-roles">
             <UserRoleSelector v-model="formData.roleIds" @load-failed="handleRoleLoadFailed" />
           </div>
         </div>
 
         <q-separator />
 
-        <div class="q-pa-md q-mt-lg">
+        <div class="q-pa-md q-mt-lg" data-tour="user-form-submit">
           <div class="row q-gutter-sm justify-center">
             <q-btn flat label="取消" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
             <q-btn unelevated label="儲存" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />

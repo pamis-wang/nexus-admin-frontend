@@ -1,16 +1,28 @@
 <template>
+  <!--
+    導覽錨點只掛在第一層：第二層以下包在 q-menu 裡，選單沒被點開時不在 DOM 上，
+    導覽找不到就只能空等到逾時。系統導覽的選單步驟一律指向第一層，兩種版面都找得到。
+  -->
   <div class="row q-gutter-xs" v-bind:class="layoutStore.getMenuColorClass()">
     <template v-for="item in visibleMenuRoutes" :key="item.name">
       <!-- 無子選單的項目 (一層選單) -->
       <template v-if="!hasSubMenu(item)">
-        <q-btn class="col q-my-none q-py-md" flat no-caps :label="item.meta?.title" :icon="item.meta?.icon" :to="{ name: item.name }" />
+        <q-btn
+          class="col q-my-none q-py-md"
+          flat
+          no-caps
+          :label="item.meta?.title"
+          :icon="item.meta?.icon"
+          :to="{ name: item.name }"
+          :data-tour="buildMenuAnchor(item.name)"
+        />
       </template>
 
       <!-- 有子選單的項目 -->
       <template v-else>
         <!-- 兩層選單：子項目都沒有 children -->
         <template v-if="!hasThirdLevel(item)">
-          <q-btn class="col q-my-none q-py-md" flat no-caps :label="item.meta?.title" :icon="item.meta?.icon">
+          <q-btn class="col q-my-none q-py-md" flat no-caps :label="item.meta?.title" :icon="item.meta?.icon" :data-tour="buildMenuAnchor(item.name)">
             <q-menu fit>
               <q-list dense>
                 <template v-for="child in item.children" :key="child.name">
@@ -28,7 +40,7 @@
 
         <!-- 三層選單：至少有一個子項目有 children -->
         <template v-else>
-          <q-btn class="col q-my-none q-py-md" flat no-caps :label="item.meta?.title" :icon="item.meta?.icon">
+          <q-btn class="col q-my-none q-py-md" flat no-caps :label="item.meta?.title" :icon="item.meta?.icon" :data-tour="buildMenuAnchor(item.name)">
             <q-menu fit>
               <q-list dense>
                 <template v-for="child in item.children" :key="child.name">
@@ -99,5 +111,16 @@ function hasSubMenu(route: RouteRecordRaw): boolean {
 function hasThirdLevel(route: RouteRecordRaw): boolean {
   if (!route.children) return false
   return route.children.some((child) => child.children && child.children.length > 0)
+}
+
+/**
+ * 組出選單項目的導覽錨點；與垂直版面同一套命名，導覽定義不必分版面
+ * @param routeName 選單項目的路由名稱
+ * @returns 錨點名稱；沒有路由名稱時為 undefined，該項目不掛錨點
+ */
+function buildMenuAnchor(routeName: string | symbol | null | undefined): string | undefined {
+  if (!routeName) return undefined
+
+  return `menu-${String(routeName)}`
 }
 </script>

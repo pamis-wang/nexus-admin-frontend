@@ -1,0 +1,33 @@
+{
+  "id": "getting-started",
+  "name": "新手上路：先看這一份",
+  "order": 10,
+  "requiresRouteName": null,
+  "resourceName": null,
+  "steps": [
+    {
+      "anchor": null,
+      "title": "操作說明就在系統裡，不在另一份文件裡",
+      "description": "這套系統的操作導覽和畫面綁在一起維護：畫面改了，導覽會跟著改，改壞了測試會擋下來。所以不會發生手冊上寫的按鈕在系統裡找不到、或是文件停留在半年前版本的情況。接下來兩步說明你之後要怎麼找到它們。",
+      "routeName": null,
+      "side": null,
+      "align": null
+    },
+    {
+      "anchor": "topbar-tour-entry",
+      "title": "需要操作說明時回到這裡",
+      "description": "每個功能都有自己的導覽，全部列在這個選單裡，需要時自己點開，不會主動跳出來打斷你。交接業務、代理他人職務，或隔很久沒碰某個功能時特別用得上；選單也會標示哪些你還沒看過。清單只列出你這個角色有權限的功能，看不到的代表你現在沒有那個權限，不是導覽漏寫。",
+      "routeName": null,
+      "side": "bottom",
+      "align": "end"
+    },
+    {
+      "anchor": "topbar-user-menu",
+      "title": "你目前的生效角色決定看得到哪些功能",
+      "description": "系統依「生效角色」決定選單與操作權限。同一個帳號可能被指派多個角色，這裡可以切換：聯集模式下能同時生效多個角色，取消勾選就是暫時降權；稽核模式下一次只有一個角色生效。如果找不到預期中的功能，先確認這裡有沒有切錯，再回報權限問題——多數「功能不見了」其實是角色沒切。",
+      "routeName": null,
+      "side": "bottom",
+      "align": "end"
+    }
+  ]
+}

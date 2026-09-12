@@ -1,0 +1,33 @@
+{
+  "id": "role-management-overview",
+  "name": "角色管理：看懂這個畫面",
+  "order": 40,
+  "requiresRouteName": null,
+  "resourceName": "系統管理>角色管理",
+  "steps": [
+    {
+      "anchor": "menu-systemManagement",
+      "title": "權限是掛在角色上，不是掛在人身上",
+      "description": "從「系統管理 → 角色管理」進來。系統不會針對某一個人設定權限，而是先定義好角色（例如業務、審核人員、稽核），再把角色指派給人。所以「讓某人多看一個功能」有兩種作法：改他的角色，或幫他加一個角色——不要為了一個人的特例去改整個角色的權限，那會連帶影響所有用這個角色的人。",
+      "routeName": "roleManagementList",
+      "side": "right",
+      "align": "start"
+    },
+    {
+      "anchor": "role-result-table",
+      "title": "「用戶人數」是改動前要先看的數字",
+      "description": "這一欄是目前有多少人正在用這個角色，也就是你改動它的權限時會一次影響多少人。數字大的角色改之前要更謹慎。標示為「系統預設」的角色由系統建立，不能刪除，權限也不建議大幅調整——那類角色通常是系統運作的前提。",
+      "routeName": "roleManagementList",
+      "side": "top",
+      "align": "center"
+    },
+    {
+      "anchor": "role-row-actions",
+      "title": "刪不掉通常不是故障，是還有人在用",
+      "description": "「檢視權限」用唯讀的方式看這個角色能做什麼，適合在調整前先確認現況。刪除只有在角色沒有被任何人使用時才會出現作用：只要用戶人數不是零，系統會直接擋下來並告訴你還有幾個人在用，請先把那些人改成其他角色再回來刪。系統預設角色則完全不提供刪除。",
+      "routeName": "roleManagementList",
+      "side": "left",
+      "align": "start"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "id": "user-management-overview",
+  "name": "用戶管理：看懂這個畫面",
+  "order": 20,
+  "requiresRouteName": null,
+  "resourceName": "系統管理>用戶管理",
+  "steps": [
+    {
+      "anchor": "menu-systemManagement",
+      "title": "用戶管理負責帳號本身，不負責權限內容",
+      "description": "從「系統管理 → 用戶管理」進來。這裡管的是「誰可以登入系統」：開帳號、調整基本資料、指派角色。至於某個角色能看到哪些功能、能不能刪資料，那是「角色管理」的範圍。要調整權限請到角色管理改角色，不要為了給權限而多開一個帳號。",
+      "routeName": "userManagementList",
+      "side": "right",
+      "align": "start"
+    },
+    {
+      "anchor": "user-filter-section",
+      "title": "這些欄位是即時篩選，不會重新查詢資料庫",
+      "description": "五個條件之間是「而且」的關係，輸入的當下就在已載入的清單上過濾，所以不用按查詢鈕、也不會有等待。反過來說，篩選只看得到目前已載入的資料——如果覺得某個帳號應該存在卻找不到，先用右上角的「重新整理」重新取一次資料，再判斷是不是真的沒有。右側會顯示「找到幾筆／共幾筆」，數字對不上時就是還有篩選沒清掉。",
+      "routeName": "userManagementList",
+      "side": "bottom",
+      "align": "start"
+    },
+    {
+      "anchor": "user-result-table",
+      "title": "「登入狀態」和「帳號狀態」講的是兩件事",
+      "description": "「帳號狀態」是管理者設定的：已停用代表帳號還在、資料也還在，只是不能登入。「登入狀態」是帳號實際的登入能力：「尚未綁定登入方式」代表帳號建好了但還沒啟用，這是新帳號的正常狀態，不是故障；「鎖定中」則是連續登入失敗被系統鎖住。標示為「系統預設」的帳號由系統建立，請不要拿來當一般使用者帳號。",
+      "routeName": "userManagementList",
+      "side": "top",
+      "align": "center"
+    },
+    {
+      "anchor": "user-row-actions",
+      "title": "後台只能改資料與角色，不能刪帳號也不能停用",
+      "description": "這裡只有「檢視」和「編輯」。編輯頁能改的是電子信箱、姓名與角色；登入帳號建立後就不開放修改，帳號的停用狀態目前也不開放在後台變更——那牽涉到不能停用自己、系統預設帳號不可停用這類防護，後台這支端點沒有做，所以刻意不給改。要停用或刪除帳號，請循管道請系統管理員處理。",
+      "routeName": "userManagementList",
+      "side": "left",
+      "align": "start"
+    }
+  ]
+}

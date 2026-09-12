@@ -10,7 +10,7 @@
           用戶管理
         </div>
         <div class="row q-gutter-sm">
-          <q-btn unelevated color="primary" icon="mdi-plus" label="新增用戶" :to="{ name: 'userManagementAdd' }" />
+          <q-btn unelevated color="primary" icon="mdi-plus" label="新增用戶" :to="{ name: 'userManagementAdd' }" data-tour="user-add-button" />
           <q-btn flat color="grey" icon="mdi-refresh" label="重新整理" :loading="isLoading" @click="loadUsers" />
         </div>
       </div>
@@ -18,7 +18,7 @@
   </q-card>
 
   <!-- 篩選條件；全部在前端比對，不另外打 API -->
-  <q-card flat bordered class="q-mt-xs">
+  <q-card flat bordered class="q-mt-xs" data-tour="user-filter-section">
     <q-card-section class="q-pa-sm">
       <div class="row items-center q-gutter-sm">
         <q-input v-model="filter.account" placeholder="搜尋帳號" outlined dense clearable style="width: 180px">
@@ -66,7 +66,7 @@
 
   <!-- 用戶列表 -->
   <q-card flat bordered class="q-mt-xs">
-    <q-card-section class="q-pa-sm">
+    <q-card-section class="q-pa-sm" data-tour="user-result-table">
       <x-table v-model:pagination="paginationWithCount" :rows="filteredRows" :columns="columns" :loading="isLoading" row-key="id">
         <template #body-cell-number="props">
           <q-td :props="props">{{ props.rowIndex + 1 }}</q-td>
@@ -106,7 +106,8 @@
         </template>
 
         <template #body-cell-action="props">
-          <q-td :props="props">
+          <!-- 只有第一列帶錨點，避免每一列都產生同名錨點 -->
+          <q-td :props="props" :data-tour="props.rowIndex === 0 ? 'user-row-actions' : undefined">
             <x-icon
               tooltip="檢視"
               color="primary"
