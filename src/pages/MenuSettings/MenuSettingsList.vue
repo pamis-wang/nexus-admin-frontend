@@ -11,7 +11,7 @@
     <q-separator />
 
     <!-- 小提醒 -->
-    <q-banner class="bg-info text-white q-mx-sm q-my-sm" rounded dense>
+    <q-banner class="bg-info text-white q-mx-sm q-my-sm" rounded dense data-tour="menu-settings-notice">
       <template #avatar>
         <q-icon name="mdi-information-outline" />
       </template>
@@ -35,7 +35,7 @@
     </q-banner>
 
     <!-- 工具列 -->
-    <div class="row items-center q-pa-sm q-gutter-sm">
+    <div class="row items-center q-pa-sm q-gutter-sm" data-tour="menu-settings-toolbar">
       <q-input v-model="keyword" dense outlined clearable placeholder="搜尋選單名稱或資源代碼" style="min-width: 240px">
         <template #prepend>
           <q-icon name="mdi-magnify" />
@@ -48,7 +48,15 @@
       <q-space />
 
       <q-btn label="新增第一層" color="primary" icon="mdi-plus" @click="handleAddRoot" />
-      <q-btn label="儲存" color="primary" icon="mdi-content-save-outline" :disable="!hasChanges" :loading="isSaving" @click="handleSave" />
+      <q-btn
+        label="儲存"
+        color="primary"
+        icon="mdi-content-save-outline"
+        :disable="!hasChanges"
+        :loading="isSaving"
+        data-tour="menu-settings-save"
+        @click="handleSave"
+      />
     </div>
 
     <!-- 搜尋提示：全量替換的坑，送出一律用完整的樹 -->
@@ -60,7 +68,7 @@
       <q-spinner-oval size="50px" color="primary" />
     </q-inner-loading>
 
-    <div v-show="!isLoading" class="q-mx-sm q-mb-md menu-settings-table">
+    <div v-show="!isLoading" class="q-mx-sm q-mb-md menu-settings-table" data-tour="menu-settings-tree">
       <MenuSettingsTreeTable
         :key="tableRenderKey"
         v-model:editing-name="editingName"

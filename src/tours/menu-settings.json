@@ -1,0 +1,49 @@
+{
+  "id": "menu-settings",
+  "name": "選單設定：調整系統選單",
+  "order": 60,
+  "requiresRouteName": null,
+  "resourceName": "系統管理>資源管理",
+  "steps": [
+    {
+      "anchor": "menu-systemManagement",
+      "title": "這棵樹是全系統權限的基準",
+      "description": "從「系統管理 → 選單設定」進來。這裡維護的是「資源」——角色管理那張權限表的項目就是從這棵樹來的：在這裡新增一個節點，角色管理裡就會多一列可以勾權限。左側選單看得到什麼，則是由你對這些資源有沒有權限決定的。所以這一頁的改動會往外擴散到角色與選單，調整前先想一下影響範圍。",
+      "routeName": "menuSettingsList",
+      "side": "right",
+      "align": "start"
+    },
+    {
+      "anchor": "menu-settings-notice",
+      "title": "四件事先知道，可以少踩幾個坑",
+      "description": "最關鍵的是第三點：完整資源名稱由層級名稱自動組成，所以改一個節點的名字或把它搬到別層，底下所有子項目的名稱都會一起重寫。而權限正是靠這個完整名稱對應到各個功能頁面的——名稱一改，原本對得上的頁面就對不上了，那個功能會直接從選單消失、直接輸入網址進去也會被擋在權限外。既有節點請盡量不要改名或搬移，真的要改就得同步請工程人員調整程式裡的對應。",
+      "routeName": "menuSettingsList",
+      "side": "bottom",
+      "align": "start"
+    },
+    {
+      "anchor": "menu-settings-toolbar",
+      "title": "搜尋會關掉拖曳，這是刻意的",
+      "description": "搜尋只影響畫面顯示，不會改變要儲存的內容——儲存送出的永遠是完整的樹。也因為搜尋後看到的順序不是真正的順序，這時拖曳會被停用，避免你照著篩選後的畫面排出錯誤的次序。要調整順序請先清掉搜尋。「新增第一層」加的是最上層的選單群組，要在既有節點底下加子項目，請用該列自己的新增。",
+      "routeName": "menuSettingsList",
+      "side": "bottom",
+      "align": "start"
+    },
+    {
+      "anchor": "menu-settings-tree",
+      "title": "拖曳只在同一層有效，換層級要用選單裡的功能",
+      "description": "拖曳能做的只有調整同一層之間的先後順序。要把一個節點移到別的層級底下，請用該列的「移到其他層級」——那個對話框會告訴你會一起搬走幾個子項目、名稱會如何重寫，也會擋掉搬進自己子孫裡這種無效的移動。每一列還可以就地改名和切換顯示狀態；被停用的節點在角色管理的權限表上仍然看得到，只是會標示「選單已停用」，權限設定不會因此消失。",
+      "routeName": "menuSettingsList",
+      "side": "top",
+      "align": "center"
+    },
+    {
+      "anchor": "menu-settings-save",
+      "title": "改了很多步，但只有這一下會寫進系統",
+      "description": "新增、改名、切換顯示、拖曳排序，在按下儲存之前都只存在於畫面上。畫面上方會出現黃色提示，列出你目前累積了幾筆新增、幾筆更新、幾筆位置變動，旁邊的「全部還原」可以一次退回載入時的狀態。反過來說，中途離開或重新整理，這些變更就沒了——改完記得儲存。",
+      "routeName": "menuSettingsList",
+      "side": "bottom",
+      "align": "end"
+    }
+  ]
+}
