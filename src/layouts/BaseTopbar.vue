@@ -11,6 +11,36 @@
 
     <q-toolbar-title></q-toolbar-title>
 
+    <!-- 系統導覽入口：導覽不會自動跳出，任何頁面都能從這裡自己開啟或重看 -->
+    <q-btn dense flat round icon="mdi-compass-outline" class="q-mr-sm" data-tour="topbar-tour-entry">
+      <q-tooltip>系統導覽</q-tooltip>
+      <q-menu>
+        <q-list style="min-width: 260px">
+          <q-item-label header>系統導覽</q-item-label>
+
+          <q-item
+            v-for="tour in tourStore.availableTours"
+            :key="tour.id"
+            clickable
+            v-close-popup
+            :disable="!tourStore.canStartTour(tour.id)"
+            @click="handleStartTour(tour.id)"
+          >
+            <q-item-section>
+              <q-item-label>{{ tour.name }}</q-item-label>
+              <q-item-label caption>{{ buildTourHint(tour) }}</q-item-label>
+            </q-item-section>
+          </q-item>
+
+          <q-item v-if="tourStore.availableTours.length === 0">
+            <q-item-section>
+              <q-item-label caption>目前的角色沒有可用的導覽</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-btn>
+
     <!-- 色彩方案切換：點擊依序切換亮色／暗色／跟隨系統，與主題設定面板的「色彩方案」同一設定 -->
     <q-btn dense flat round v-bind:icon="currentColorScheme.icon" class="q-mr-sm" @click="layoutStore.cycleColorScheme()">
       <q-tooltip>{{ colorSchemeTooltip }}</q-tooltip>
@@ -18,7 +48,7 @@
 
     <q-btn dense flat round icon="mdi-cog-outline" class="q-mr-sm" @click="layoutStore.toggleSettingPanel()" />
 
-    <q-btn-dropdown flat dense no-caps dropdown-icon="none" class="q-px-none q-py-none">
+    <q-btn-dropdown flat dense no-caps dropdown-icon="none" class="q-px-none q-py-none" data-tour="topbar-user-menu">
       <template v-slot:label>
         <div class="row items-center no-wrap q-gutter-x-sm">
           <q-avatar>
@@ -72,11 +102,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useLayoutStore } from '@/stores/useLayout'
 import { useUserStore } from '@/stores/useUser'
+import { useTourStore } from '@/stores/useTour'
 import { useAuthentication } from '@/composables/useAuthentication'
 import { useNotify } from '@/composables/useNotify'
 import logoLockupBlue from '@/assets/images/nexus-lockup-blue.svg'
 import logoLockupWhite from '@/assets/images/nexus-lockup-white.svg'
 import type { LayoutConfig } from '@/types/layout'
+import type { TourDefinition } from '@/types/tour'
 
 defineEmits<{
   toggleLeftDrawer: []
@@ -93,6 +125,7 @@ const route = useRoute()
 const router = useRouter()
 const layoutStore = useLayoutStore()
 const userStore = useUserStore()
+const tourStore = useTourStore()
 const notify = useNotify()
 const { userProfile, assignedRoles, activeRoles, permissionMode } = storeToRefs(userStore)
 const { isLoggingOut, isSwitchingActiveRoles, logout, switchActiveRoles } = useAuthentication()
@@ -126,6 +159,14 @@ interface ColorSchemeDisplay {
 onMounted(() => {
   layoutStore.initColorScheme()
 })
+
+/**
+ * 啟動指定導覽；手動開啟不受「已看過」限制
+ * @param tourId 導覽識別碼
+ */
+async function handleStartTour(tourId: string) {
+  await tourStore.startTour(tourId)
+}
 
 async function handleLogout() {
   await logout()
@@ -190,5 +231,16 @@ function buildNextActiveRoleIds(roleId: string): string[] | null {
  */
 function isRoleActive(roleId: string): boolean {
   return activeRoles.value.some((role) => role.id === roleId)
+}
+
+/**
+ * 導覽在選單上的說明文字
+ * @param tour 導覽定義
+ * @returns 說明文字
+ */
+function buildTourHint(tour: TourDefinition): string {
+  if (!tourStore.canStartTour(tour.id)) return '請先進入該功能頁面再開啟'
+
+  return tourStore.hasSeenTour(tour.id) ? '已看過，可重看' : '尚未看過'
 }
 </script>
