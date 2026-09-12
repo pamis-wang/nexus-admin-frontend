@@ -1,0 +1,41 @@
+{
+  "id": "role-management-create",
+  "name": "角色管理：建立一個新角色",
+  "order": 50,
+  "requiresRouteName": null,
+  "resourceName": "系統管理>角色管理",
+  "steps": [
+    {
+      "anchor": "role-add-button",
+      "title": "先想清楚要不要開新角色",
+      "description": "角色開得愈多愈難管——半年後沒人記得「業務二」和「業務（新）」差在哪。開新角色之前，先看看現有角色是不是只差一兩個權限；如果是，考慮讓那個人同時具備兩個角色，而不是複製一份出來微調。",
+      "routeName": "roleManagementList",
+      "side": "bottom",
+      "align": "end"
+    },
+    {
+      "anchor": "role-form-name",
+      "title": "角色名稱要讓別人看得懂，不只是你",
+      "description": "這個名稱會出現在用戶管理的角色欄和角色切換選單裡，接手的人只會看到這個名字。用職務或業務範圍命名（例如「合約審核人員」），不要用「測試用」「暫時」「新角色1」這種只有當下有意義的名字。名稱不能重複，撞名時系統會擋下來。",
+      "routeName": "roleManagementAdd",
+      "side": "bottom",
+      "align": "start"
+    },
+    {
+      "anchor": "role-permission-matrix",
+      "title": "沒有「檢視」，其他三個都沒有意義",
+      "description": "每個功能有四種權限：檢視、新增、修改、刪除。檢視是其他三種的前提——沒勾檢視時，另外三個會直接變成不可勾選，因為進不去的功能談不上在裡面新增或刪除。設定的原則是從最少開始：先只給檢視，之後真的需要再加。權限給多了很難發現，給少了對方馬上會來問。",
+      "routeName": "roleManagementAdd",
+      "side": "top",
+      "align": "center"
+    },
+    {
+      "anchor": "role-form-submit",
+      "title": "「清空權限」只清畫面，不會動到已存在的角色",
+      "description": "勾得一團亂想重來時，用「清空權限」把所有勾選歸零再重新設定；這隻按鈕只影響眼前這張表單。按「儲存」之後角色才真正建立，接著到用戶管理把角色指派給人，對方下次登入就會生效。",
+      "routeName": "roleManagementAdd",
+      "side": "top",
+      "align": "center"
+    }
+  ]
+}

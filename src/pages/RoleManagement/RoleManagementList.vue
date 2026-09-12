@@ -10,7 +10,7 @@
           角色管理
         </div>
         <div class="row q-gutter-sm">
-          <q-btn unelevated color="primary" icon="mdi-plus" label="新增角色" :to="{ name: 'roleManagementAdd' }" />
+          <q-btn unelevated color="primary" icon="mdi-plus" label="新增角色" :to="{ name: 'roleManagementAdd' }" data-tour="role-add-button" />
           <q-btn flat color="grey" icon="mdi-refresh" label="重新整理" :loading="isLoading" @click="loadRoles" />
         </div>
       </div>
@@ -19,7 +19,7 @@
 
   <!-- 角色列表 -->
   <q-card flat bordered class="q-mt-xs">
-    <q-card-section class="q-pa-sm">
+    <q-card-section class="q-pa-sm" data-tour="role-result-table">
       <x-table v-model:pagination="pagination" :rows="rows" :columns="columns" :loading="isLoading" row-key="id">
         <template #body-cell-number="props">
           <q-td :props="props">{{ props.rowIndex + 1 }}</q-td>
@@ -33,7 +33,8 @@
         </template>
 
         <template #body-cell-action="props">
-          <q-td :props="props">
+          <!-- 只有第一列帶錨點，避免每一列都產生同名錨點 -->
+          <q-td :props="props" :data-tour="props.rowIndex === 0 ? 'role-row-actions' : undefined">
             <x-icon
               tooltip="檢視權限"
               color="primary"

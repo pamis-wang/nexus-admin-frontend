@@ -16,7 +16,7 @@
       </div>
 
       <q-form class="q-gutter-md" @submit="handleSubmit">
-        <div class="row">
+        <div class="row" data-tour="role-form-name">
           <div class="col-12 col-md-6">
             <q-input v-model="formData.name" label="角色名稱" :rules="[(value) => !!value?.trim() || '請輸入角色名稱']" maxlength="50" counter outlined dense>
               <template #prepend>
@@ -28,11 +28,13 @@
 
         <q-separator class="q-my-md" />
 
-        <RolePermissionMatrix :tree-nodes="treeNodes" :has-permission="hasPermission" :is-loading="isLoading" @update="updatePermission" />
+        <div data-tour="role-permission-matrix">
+          <RolePermissionMatrix :tree-nodes="treeNodes" :has-permission="hasPermission" :is-loading="isLoading" @update="updatePermission" />
+        </div>
 
         <q-separator />
 
-        <div class="q-pa-md q-mt-lg">
+        <div class="q-pa-md q-mt-lg" data-tour="role-form-submit">
           <div class="row q-gutter-sm justify-center">
             <q-btn flat label="取消" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
             <q-btn flat label="清空權限" color="grey" size="md" class="q-px-xl" @click="clearAllPermissions" />
