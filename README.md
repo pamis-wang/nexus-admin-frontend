@@ -94,7 +94,7 @@ npm run lint
 | 時機 | 檢查內容 | 約耗時 |
 |---|---|---|
 | `pre-commit` | 格式（`oxfmt --check`）、`oxlint` | 0.5 秒 |
-| `pre-push` | 上述加上 `eslint`、型別檢查、單元測試、`vite build` | 9 秒 |
+| `pre-push` | 上述加上 `eslint`、型別檢查、`vite build` | 7 秒 |
 
 `pre-push` 的目的是讓推上去發 MR 的分支保證 `npm run build` 過得去。
 想在推之前自己先跑一次完整檢查：
@@ -114,10 +114,15 @@ npm run verify:quick
 ```sh
 npm run verify:format   # oxfmt --check src/
 npm run verify:oxlint   # oxlint . --deny-warnings
-npm run verify:eslint   # eslint . --max-warnings 0
+npm run verify:eslint   # eslint . --cache --max-warnings 0
 npm run verify:types    # vue-tsc --build --force
-npm run verify:test     # vitest run
 npm run verify:build    # vite build
+```
+
+單元測試不在 `verify` 與 `pre-push` 內，需要時自行執行：
+
+```sh
+npm run verify:test     # vitest run
 ```
 
 > `verify:*` 系列一律**不帶 `--fix`**，只回報不修改；`npm run lint` 與 `npm run format` 才會動檔案。
