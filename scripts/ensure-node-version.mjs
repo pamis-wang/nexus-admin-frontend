@@ -5,12 +5,15 @@ import { readFileSync } from 'node:fs'
 
 const { engines } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
-// 只處理 ^x.y.z 形式（目前為 ^24.16.0，等同 >=24.16.0 <25.0.0）
-const [requiredMajor, requiredMinor] = engines.node.replace(/^\^/, '').split('.').map(Number)
-const [major, minor] = process.versions.node.split('.').map(Number)
+// 只處理 ^x.y.z 形式（目前為 ^24.22.1，等同 >=24.22.1 <25.0.0）
+const requiredVersion = engines.node.replace(/^\^/, '')
+const [requiredMajor, requiredMinor, requiredPatch] = requiredVersion.split('.').map(Number)
+const [major, minor, patch] = process.versions.node.split('.').map(Number)
 
-if (major !== requiredMajor || minor < requiredMinor) {
+const isOlderThanRequired = minor < requiredMinor || (minor === requiredMinor && patch < requiredPatch)
+
+if (major !== requiredMajor || isOlderThanRequired) {
   console.error(`\n✖ 此專案需要 Node.js ${engines.node}，目前為 v${process.versions.node}`)
-  console.error(`  請執行： nvm use ${requiredMajor}.${requiredMinor}.0\n`)
+  console.error(`  請執行： nvm use ${requiredVersion}\n`)
   process.exit(1)
 }
