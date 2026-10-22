@@ -9,17 +9,17 @@ description: 限定前端專案的 Node 版本——初始化新專案、engines
 
 `.nvmrc` 只是宣告，不具強制力——Windows 的 nvm 根本不讀它。要真正擋住錯誤版本得靠三層：**宣告**、**安裝期**、**執行期**，各守不同時機，缺一層就留一個缺口。
 
-版本取決於專案：新專案用 `24.16.0`；既有專案沿用它 `.nvmrc`／`engines` 現有的版本，只補齊缺的層次。**舊專案不順手升級**——各專案 Node 版本交錯並存是團隊常態。
+版本取決於專案：新專案用 `24.22.1`；既有專案沿用它 `.nvmrc`／`engines` 現有的版本，只補齊缺的層次。**舊專案不順手升級**——各專案 Node 版本交錯並存是團隊常態。
 
 ## 1. 宣告：`.nvmrc`
 
 內容只有版本號，格式與 Docker tag 一致（無 `v` 前綴）：
 
 ```
-24.16.0
+24.22.1
 ```
 
-Windows 的 nvm 不讀 `.nvmrc`、也沒有進入目錄自動切換，切換版本要打完整版號（`nvm use 24.16.0`）。這一層是給人、CI 與其他版本管理器看的。
+Windows 的 nvm 不讀 `.nvmrc`、也沒有進入目錄自動切換，切換版本要打完整版號（`nvm use 24.22.1`）。這一層是給人、CI 與其他版本管理器看的。
 
 ## 2. 安裝期：`engines` ＋ `engine-strict`
 
@@ -28,12 +28,12 @@ Windows 的 nvm 不讀 `.nvmrc`、也沒有進入目錄自動切換，切換版�
 ```jsonc
 {
   "engines": {
-    "node": "^24.16.0"
+    "node": "^24.22.1"
   }
 }
 ```
 
-**鎖 major，patch 保持開放。** `^24.16.0` 等同 `>=24.16.0 <25.0.0`；Node 的 patch 向後相容，寫成精確的 `24.16.0` 會讓每次安全修補都得改 repo、通知全隊重裝。
+**鎖 major，patch 保持開放。** `^24.22.1` 等同 `>=24.22.1 <25.0.0`；Node 的 patch 向後相容，寫成精確的 `24.22.1` 會讓每次安全修補都得改 repo、通知全隊重裝。
 
 `create-vue` 產生的預設值是 `^20.19.0 || >=22.12.0`，放行 Node 20／22，與專案的 `@tsconfig/node24`、`@types/node@^24` 矛盾——初始化後務必收斂。
 
@@ -59,13 +59,16 @@ import { readFileSync } from 'node:fs'
 
 const { engines } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
-// 只處理 ^x.y.z 形式（目前為 ^24.16.0，等同 >=24.16.0 <25.0.0）
-const [requiredMajor, requiredMinor] = engines.node.replace(/^\^/, '').split('.').map(Number)
-const [major, minor] = process.versions.node.split('.').map(Number)
+// 只處理 ^x.y.z 形式（目前為 ^24.22.1，等同 >=24.22.1 <25.0.0）
+const requiredVersion = engines.node.replace(/^\^/, '')
+const [requiredMajor, requiredMinor, requiredPatch] = requiredVersion.split('.').map(Number)
+const [major, minor, patch] = process.versions.node.split('.').map(Number)
 
-if (major !== requiredMajor || minor < requiredMinor) {
+const isOlderThanRequired = minor < requiredMinor || (minor === requiredMinor && patch < requiredPatch)
+
+if (major !== requiredMajor || isOlderThanRequired) {
   console.error(`\n✖ 此專案需要 Node.js ${engines.node}，目前為 v${process.versions.node}`)
-  console.error(`  請執行： nvm use ${requiredMajor}.${requiredMinor}.0\n`)
+  console.error(`  請執行： nvm use ${requiredVersion}\n`)
   process.exit(1)
 }
 ```
@@ -94,13 +97,13 @@ if (major !== requiredMajor || minor < requiredMinor) {
 
 ```dockerfile
 # 版本需與 .nvmrc / package.json engines 保持一致
-FROM node:24.16.0-alpine3.23 AS base
+FROM node:24.22.1-alpine3.23 AS base
 ```
 
 映像 tag **釘死到 patch**（可重現建構），與 `engines` 用範圍不衝突：`engines` 是給人的下限，tag 是給機器的固定值。動手前先確認該 tag 存在：
 
 ```bash
-curl -s "https://hub.docker.com/v2/repositories/library/node/tags?name=24.16.0-alpine&page_size=50" | grep -o '"name":"[^"]*"'
+curl -s "https://hub.docker.com/v2/repositories/library/node/tags?name=24.22.1-alpine&page_size=50" | grep -o '"name":"[^"]*"'
 ```
 
 ## 5. 驗證
