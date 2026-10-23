@@ -8,7 +8,7 @@
         </div>
       </q-card-section>
 
-      <q-card-section class="text-grey-8">在這裡建立後台帳號、設定角色與各功能的權限，也可以調整後台選單的結構。</q-card-section>
+      <q-card-section>在這裡建立後台帳號、設定角色與各功能的權限，也可以調整後台選單的結構。</q-card-section>
 
       <!-- 與選單一致，沒有權限的功能不顯示捷徑，免得點進去才被導到 403 -->
       <q-card-actions>
