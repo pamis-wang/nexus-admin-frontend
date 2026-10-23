@@ -8,7 +8,7 @@ import XSwitch from '@/components/XSwitch.vue'
  * @param props 元件參數
  * @param attrs 額外落到根節點的屬性
  */
-function mountXSwitch(props: Record<string, unknown>, attrs: Record<string, unknown> = {}) {
+function mountXSwitch(props: { modelValue: boolean } & Record<string, unknown>, attrs: Record<string, unknown> = {}) {
   return mount(XSwitch, {
     props,
     attrs,
