@@ -3,7 +3,9 @@
 
   // Override to include only test files and clear exclusions.
   // Application code imported in tests is automatically included via module resolution.
-  "include": ["src/**/__tests__/*", "env.d.ts"],
+  // 測試檔都放在 __tests__ 的子目錄，要用 **/* 才涵蓋得到（只寫 * 的話一個測試檔都不會檢查）；
+  // global.d.ts、components.d.ts 不會被 import 帶進來，要明列，頁面用到的 XTableColumn 等全域型別才找得到
+  "include": ["src/**/__tests__/**/*", "src/global.d.ts", "src/components.d.ts", "env.d.ts"],
   "exclude": [],
 
   "compilerOptions": {

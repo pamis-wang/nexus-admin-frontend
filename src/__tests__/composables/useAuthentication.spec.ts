@@ -21,7 +21,7 @@ const setActiveRolesMock = vi.fn<(data: SetActiveRolesRequest) => Promise<Respon
 
 vi.mock('@/services/auth/authService', () => ({
   login: vi.fn<(data: LoginRequest) => Promise<LoginResponse>>(),
-  logout: (...args: unknown[]) => logoutRequestMock(...args),
+  logout: () => logoutRequestMock(),
   getCurrentAuthorization: () => getCurrentAuthorizationMock(),
   setActiveRoles: (data: SetActiveRolesRequest) => setActiveRolesMock(data),
 }))
@@ -104,7 +104,13 @@ describe('useAuthentication - logout', () => {
   })
 
   it('撤銷成功時，清空使用者狀態並導向登入頁', async () => {
-    logoutRequestMock.mockResolvedValue(undefined)
+    logoutRequestMock.mockResolvedValue({
+      result: { data: { authStatus: 'success', message: null }, error: null },
+      status: 200,
+      statusText: 'OK',
+      success: true,
+      timestamp: Date.now(),
+    })
     const { authentication, router } = await mountAuthentication()
     const userStore = useUserStore()
     await userStore.storageUser('access-token', 'refresh-token', mockUserProfile)
