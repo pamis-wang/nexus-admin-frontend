@@ -39,7 +39,7 @@
               tooltip="檢視權限"
               color="primary"
               icon="mdi-eye-outline"
-              :size="props.isDense ? 'md' : 'lg'"
+              :size="props.isDense ? 'sm' : 'md'"
               flat
               dense
               :to="{ name: 'roleManagementView', params: { roleId: props.row.id } }"
@@ -48,7 +48,7 @@
               tooltip="編輯角色"
               color="warning"
               icon="mdi-file-document-edit-outline"
-              :size="props.isDense ? 'md' : 'lg'"
+              :size="props.isDense ? 'sm' : 'md'"
               flat
               dense
               :to="{ name: 'roleManagementEdit', params: { roleId: props.row.id } }"
@@ -59,7 +59,7 @@
               tooltip="刪除角色"
               color="negative"
               icon="mdi-trash-can-outline"
-              :size="props.isDense ? 'md' : 'lg'"
+              :size="props.isDense ? 'sm' : 'md'"
               flat
               dense
               @click="handleDelete(props.row)"

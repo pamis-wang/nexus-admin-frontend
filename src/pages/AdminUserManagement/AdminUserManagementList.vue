@@ -112,7 +112,7 @@
               tooltip="檢視"
               color="primary"
               icon="mdi-eye-outline"
-              :size="props.isDense ? 'md' : 'lg'"
+              :size="props.isDense ? 'sm' : 'md'"
               flat
               dense
               :to="{ name: 'userManagementView', params: { userId: props.row.id } }"
@@ -121,7 +121,7 @@
               tooltip="編輯"
               color="warning"
               icon="mdi-file-document-edit-outline"
-              :size="props.isDense ? 'md' : 'lg'"
+              :size="props.isDense ? 'sm' : 'md'"
               flat
               dense
               :to="{ name: 'userManagementEdit', params: { userId: props.row.id } }"
