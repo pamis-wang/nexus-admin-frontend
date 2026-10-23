@@ -8,19 +8,20 @@
     ]"
   />
 
+  <x-page-header title="編輯用戶" icon="mdi-account-edit-outline">
+    <template #badges>
+      <q-badge v-if="isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+      <q-badge v-if="formData.isDisabled" color="grey-6" class="q-ml-sm">已停用</q-badge>
+    </template>
+  </x-page-header>
+
   <x-loading-state :loading="isLoadingUser" message="載入用戶資料中..." />
 
   <q-card v-if="!isLoadingUser" flat bordered class="q-mt-xs">
     <q-card-section>
-      <div class="text-h6 text-primary q-mb-md">
-        <q-icon name="mdi-account-edit-outline" class="q-mr-sm" />
-        編輯用戶
-        <q-badge v-if="isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
-        <q-badge v-if="formData.isDisabled" color="grey-6" class="q-ml-sm">已停用</q-badge>
-      </div>
-
-      <q-form class="q-gutter-md" @submit="handleSubmit" @reset="handleReset">
-        <div class="row q-col-gutter-md">
+      <q-form @submit="handleSubmit" @reset="handleReset">
+        <x-section-header-bar title="基本資料" />
+        <div class="row q-col-gutter-md q-mt-xs">
           <div class="col-12 col-md-6">
             <!-- 後端允許修改帳號，但後台目前不開放；送出時仍要原樣帶回，PUT 是完整替換 -->
             <q-input :model-value="formData.account" label="登入帳號" outlined dense readonly hint="目前不開放在後台修改">
@@ -56,9 +57,9 @@
           </div>
         </div>
 
-        <div class="text-caption text-grey-7">帳號的停用狀態目前不開放在後台變更，列表與本頁都只顯示狀態，儲存時會把載入當下的值原樣帶回。</div>
+        <div class="text-caption text-grey-7 q-mt-sm">帳號的停用狀態目前不開放在後台變更，列表與本頁都只顯示狀態，儲存時會把載入當下的值原樣帶回。</div>
 
-        <q-separator />
+        <q-separator class="q-mt-md" />
 
         <div class="q-pa-md q-mt-lg">
           <div class="row q-gutter-sm justify-center">

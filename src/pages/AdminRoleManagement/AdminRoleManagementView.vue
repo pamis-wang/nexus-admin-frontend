@@ -10,26 +10,13 @@
 
   <x-loading-state :loading="isLoadingRole" message="載入角色資料中..." />
 
-  <q-card v-if="!isLoadingRole" flat bordered class="q-mt-xs">
-    <q-card-section>
-      <div class="row justify-between items-center q-mb-md">
-        <div class="text-h6 text-primary">
-          <q-icon name="mdi-shield-search" class="q-mr-sm" />
-          {{ role.name }}
-          <q-badge v-if="role.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
-        </div>
-        <div class="text-body2 text-grey-7">用戶人數 {{ role.userCount }}</div>
-      </div>
-
-      <q-separator class="q-my-md" />
-
-      <!-- 唯讀模式下勾選框全部停用，不會發出 update，所以不接這個事件 -->
-      <AdminRolePermissionMatrix :tree-nodes="treeNodes" :has-permission="hasPermission" :is-loading="isLoading" is-readonly />
-
-      <q-separator class="q-my-md" />
-
-      <div class="row q-gutter-sm justify-end">
-        <q-btn flat label="返回列表" color="grey" @click="handleBack" />
+  <template v-if="!isLoadingRole">
+    <x-page-header :title="role.name" icon="mdi-shield-search">
+      <template #badges>
+        <q-badge v-if="role.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+      </template>
+      <template #actions>
+        <q-btn outline color="secondary" icon="mdi-arrow-left" label="返回列表" :to="{ name: 'roleManagementList' }" />
         <q-btn
           unelevated
           label="編輯角色"
@@ -37,9 +24,33 @@
           icon="mdi-file-document-edit-outline"
           :to="{ name: 'roleManagementEdit', params: { roleId: role.id } }"
         />
-      </div>
-    </q-card-section>
-  </q-card>
+      </template>
+    </x-page-header>
+
+    <q-card flat bordered class="q-mt-xs">
+      <q-card-section>
+        <x-section-header-bar title="基本資料" />
+        <div class="row q-col-gutter-md q-mt-xs">
+          <div class="col-12 col-md-6">
+            <div class="text-caption text-grey-7">用戶人數</div>
+            <div class="text-body2">{{ role.userCount }}</div>
+          </div>
+        </div>
+
+        <x-section-header-bar title="權限設定" class="q-mt-md" />
+        <!-- 唯讀模式下勾選框全部停用，不會發出 update，所以不接這個事件 -->
+        <div class="q-mt-sm">
+          <AdminRolePermissionMatrix
+            :tree-nodes="treeNodes"
+            :has-permission="hasPermission"
+            :is-loading="isLoading"
+            :error-message="resourceErrorMessage"
+            is-readonly
+          />
+        </div>
+      </q-card-section>
+    </q-card>
+  </template>
 </template>
 
 <script setup lang="ts">
@@ -58,7 +69,7 @@ const route = useRoute()
 const router = useRouter()
 const dialog = useDialog()
 const logger = useLogger({ prefix: 'AdminRoleManagementView', enabled: import.meta.env.DEV })
-const { isLoading, treeNodes, loadResources, loadRolePermissions, hasPermission } = useAdminRolePermissionMatrix()
+const { isLoading, resourceErrorMessage, treeNodes, loadResources, loadRolePermissions, hasPermission } = useAdminRolePermissionMatrix()
 
 const role = reactive<AdminRoleManagementDetailFormData>({
   id: '',
@@ -84,7 +95,7 @@ async function loadRole() {
 
   isLoadingRole.value = true
   try {
-    const [roleResponse] = await Promise.all([getAdminRoleById(roleId), loadResources()])
+    const [roleResponse, isResourcesLoaded] = await Promise.all([getAdminRoleById(roleId), loadResources()])
 
     if (roleResponse.status !== 200 || !roleResponse.result.data) {
       dialog.showError(roleResponse.result.error?.message || '找不到指定角色', '載入失敗')
@@ -99,6 +110,11 @@ async function loadRole() {
     role.userCount = roleData.userCount
     role.version = roleData.version
 
+    // 資源清單讀不到時由權限設定區塊說明原因，角色的權限也沒有地方可以套
+    if (!isResourcesLoaded) {
+      return
+    }
+
     await loadRolePermissions(roleId)
   } catch (error) {
     const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
@@ -108,9 +124,5 @@ async function loadRole() {
   } finally {
     isLoadingRole.value = false
   }
-}
-
-function handleBack() {
-  router.push({ name: 'roleManagementList' })
 }
 </script>

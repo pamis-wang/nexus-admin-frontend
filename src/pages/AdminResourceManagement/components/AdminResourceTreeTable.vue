@@ -52,7 +52,7 @@
               dense
               round
               size="sm"
-              :icon="element.isExpanded ? 'expand_more' : 'chevron_right'"
+              :icon="element.isExpanded ? 'mdi-chevron-down' : 'mdi-chevron-right'"
               @click="emit('toggleExpand', element.row.rowKey)"
             />
             <div v-else style="width: 28px"></div>

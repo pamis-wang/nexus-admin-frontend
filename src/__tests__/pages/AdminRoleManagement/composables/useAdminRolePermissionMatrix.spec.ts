@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { useAdminRolePermissionMatrix } from '@/pages/AdminRoleManagement/composables/useAdminRolePermissionMatrix'
+import { RESOURCE_FORBIDDEN_MESSAGE, useAdminRolePermissionMatrix } from '@/pages/AdminRoleManagement/composables/useAdminRolePermissionMatrix'
 import type { AdminResourceResponse } from '@/services/admin/adminResourceService'
 import type { AdminRolePermissionResponse } from '@/services/admin/adminRoleService'
 import type { ResponseStructure } from '@/services/axiosService'
@@ -45,6 +45,22 @@ function buildResponse<T>(data: T): ResponseStructure<T> {
     status: 200,
     statusText: 'OK',
     success: true,
+    timestamp: Date.now(),
+  }
+}
+
+/**
+ * 組一份 axiosService 失敗時 reject 的物件
+ * @param status HTTP 狀態碼
+ * @param errorMessage 統一的錯誤訊息
+ */
+function buildErrorResponse(status: number, errorMessage: string): ResponseStructure<null> {
+  return {
+    result: { data: null, error: { code: status, message: errorMessage } },
+    status,
+    statusText: 'Error',
+    success: false,
+    errorMessage,
     timestamp: Date.now(),
   }
 }
@@ -105,6 +121,45 @@ describe('useAdminRolePermissionMatrix - 載入資源', () => {
     expect(matrix.hasPermission('id-system', 'canAccess')).toBe(false)
     expect(matrix.hasPermission('id-roles', 'canAccess')).toBe(false)
     expect(matrix.hasPermission('id-menu', 'canAccess')).toBe(false)
+  })
+})
+
+describe('useAdminRolePermissionMatrix - 資源清單載入失敗', () => {
+  beforeEach(() => {
+    getAdminResourcesMock.mockReset()
+    getAdminRolePermissionsByRoleIdMock.mockReset()
+  })
+
+  it('沒有「資源管理」權限（403）時不拋出，說明需要哪個權限', async () => {
+    getAdminResourcesMock.mockRejectedValue(buildErrorResponse(403, '權限不足'))
+    const matrix = useAdminRolePermissionMatrix()
+
+    const isLoaded = await matrix.loadResources()
+
+    expect(isLoaded).toBe(false)
+    expect(matrix.resourceErrorMessage.value).toBe(RESOURCE_FORBIDDEN_MESSAGE)
+    expect(matrix.treeNodes.value).toHaveLength(0)
+  })
+
+  it('其他錯誤時帶上錯誤訊息', async () => {
+    getAdminResourcesMock.mockRejectedValue(buildErrorResponse(500, '伺服器忙碌中'))
+    const matrix = useAdminRolePermissionMatrix()
+
+    await matrix.loadResources()
+
+    expect(matrix.resourceErrorMessage.value).toBe('載入資源清單失敗：伺服器忙碌中')
+  })
+
+  it('重新載入成功後清掉先前的錯誤', async () => {
+    getAdminResourcesMock.mockRejectedValueOnce(buildErrorResponse(403, '權限不足'))
+    const matrix = useAdminRolePermissionMatrix()
+    await matrix.loadResources()
+
+    getAdminResourcesMock.mockResolvedValue(buildResponse(buildSampleResources()))
+    const isLoaded = await matrix.loadResources()
+
+    expect(isLoaded).toBe(true)
+    expect(matrix.resourceErrorMessage.value).toBeNull()
   })
 })
 

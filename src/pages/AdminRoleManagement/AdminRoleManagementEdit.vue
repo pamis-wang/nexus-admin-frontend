@@ -8,18 +8,19 @@
     ]"
   />
 
+  <x-page-header title="編輯角色" icon="mdi-shield-edit-outline">
+    <template #badges>
+      <q-badge v-if="formData.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+    </template>
+  </x-page-header>
+
   <x-loading-state :loading="isLoadingRole" message="載入角色資料中..." />
 
   <q-card v-if="!isLoadingRole" flat bordered class="q-mt-xs">
     <q-card-section>
-      <div class="text-h6 text-primary q-mb-md">
-        <q-icon name="mdi-shield-edit-outline" class="q-mr-sm" />
-        編輯角色
-        <q-badge v-if="formData.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
-      </div>
-
-      <q-form class="q-gutter-md" @submit="handleSubmit" @reset="handleReset">
-        <div class="row q-col-gutter-md">
+      <q-form @submit="handleSubmit" @reset="handleReset">
+        <x-section-header-bar title="基本資料" />
+        <div class="row q-col-gutter-md q-mt-xs">
           <div class="col-12 col-md-6">
             <q-input v-model="formData.name" label="角色名稱" :rules="[(value) => !!value?.trim() || '請輸入角色名稱']" maxlength="50" counter outlined dense>
               <template #prepend>
@@ -36,17 +37,33 @@
           </div>
         </div>
 
-        <q-separator class="q-my-md" />
+        <x-section-header-bar title="權限設定" class="q-mt-md" />
+        <div class="q-mt-sm">
+          <AdminRolePermissionMatrix
+            :tree-nodes="treeNodes"
+            :has-permission="hasPermission"
+            :is-loading="isLoading"
+            :error-message="resourceErrorMessage"
+            @update="updatePermission"
+          />
+        </div>
 
-        <AdminRolePermissionMatrix :tree-nodes="treeNodes" :has-permission="hasPermission" :is-loading="isLoading" @update="updatePermission" />
-
-        <q-separator />
+        <q-separator class="q-mt-md" />
 
         <div class="q-pa-md q-mt-lg">
           <div class="row q-gutter-sm justify-center">
             <q-btn flat label="取消" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
             <q-btn flat label="重設" color="grey" size="md" class="q-px-xl" type="reset" />
-            <q-btn unelevated label="儲存" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />
+            <q-btn
+              unelevated
+              label="儲存"
+              color="primary"
+              size="md"
+              class="q-px-xl"
+              type="submit"
+              :loading="isSubmitting"
+              :disable="resourceErrorMessage !== null"
+            />
           </div>
         </div>
       </q-form>
@@ -72,8 +89,17 @@ const router = useRouter()
 const dialog = useDialog()
 const notify = useNotify()
 const logger = useLogger({ prefix: 'AdminRoleManagementEdit', enabled: import.meta.env.DEV })
-const { isLoading, treeNodes, loadResources, loadRolePermissions, hasPermission, updatePermission, resetPermissions, buildPermissionItems } =
-  useAdminRolePermissionMatrix()
+const {
+  isLoading,
+  resourceErrorMessage,
+  treeNodes,
+  loadResources,
+  loadRolePermissions,
+  hasPermission,
+  updatePermission,
+  resetPermissions,
+  buildPermissionItems,
+} = useAdminRolePermissionMatrix()
 
 const formData = reactive<AdminRoleManagementDetailFormData>({
   id: '',
@@ -103,7 +129,7 @@ async function loadRole() {
   isLoadingRole.value = true
   try {
     // 資源清單要先備妥，權限才有對應的資源可以套上去
-    const [roleResponse] = await Promise.all([getAdminRoleById(roleId), loadResources()])
+    const [roleResponse, isResourcesLoaded] = await Promise.all([getAdminRoleById(roleId), loadResources()])
 
     if (roleResponse.status !== 200 || !roleResponse.result.data) {
       dialog.showError(roleResponse.result.error?.message || '找不到指定角色', '載入失敗')
@@ -119,7 +145,17 @@ async function loadRole() {
     formData.version = role.version
     originalName.value = role.name
 
-    await loadRolePermissions(roleId)
+    // 資源清單讀不到時由權限設定區塊說明原因、儲存鈕停用，角色的權限也沒有地方可以套
+    if (!isResourcesLoaded) {
+      return
+    }
+
+    // 角色權限沒載入就不能讓人儲存：送出的會是全部未勾選，等於清掉這個角色的權限
+    const isPermissionsLoaded = await loadRolePermissions(roleId)
+    if (!isPermissionsLoaded) {
+      dialog.showError('載入角色權限失敗，請重新整理後再試。', '載入角色失敗')
+      router.push({ name: 'roleManagementList' })
+    }
   } catch (error) {
     const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
     logger.error('載入角色失敗', errorMessage)
@@ -132,6 +168,11 @@ async function loadRole() {
 
 /** 送出更新 */
 async function handleSubmit() {
+  // 儲存鈕已停用，這裡再擋一次：權限是全量替換，沒有資源清單就送出會清空這個角色的全部權限
+  if (resourceErrorMessage.value !== null) {
+    return
+  }
+
   isSubmitting.value = true
   try {
     const response = await updateAdminRole(formData.id, {

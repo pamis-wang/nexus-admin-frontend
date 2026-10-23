@@ -1,17 +1,21 @@
 <template>
-  <div class="text-subtitle1 text-primary q-mb-md">
-    <q-icon name="mdi-shield-account" class="q-mr-sm" />
-    權限設定
-  </div>
-
+  <!-- 分區標題「權限設定」由頁面以 x-section-header-bar 提供，這裡只放內容 -->
   <x-loading-state :loading="isLoading" message="載入權限設定中..." />
 
-  <div v-if="!isLoading && treeNodes.length === 0" class="q-pa-md text-center text-grey-6">
+  <!-- 資源清單讀不到（例如沒有「資源管理」的檢視權限）：說明原因，不顯示空的權限表 -->
+  <q-banner v-if="!isLoading && errorMessage !== null" class="bg-negative text-white" rounded dense>
+    <template #avatar>
+      <q-icon name="mdi-alert-circle-outline" />
+    </template>
+    {{ errorMessage }}
+  </q-banner>
+
+  <div v-else-if="!isLoading && treeNodes.length === 0" class="q-pa-md text-center text-grey-6">
     <q-icon name="mdi-information-outline" size="2em" />
     <div class="q-mt-sm">沒有可設定的資源，請先到選單設定建立資源</div>
   </div>
 
-  <q-tree v-if="!isLoading && treeNodes.length > 0" :nodes="treeNodes" node-key="resourceId" default-expand-all no-connectors dense>
+  <q-tree v-else-if="!isLoading" :nodes="treeNodes" node-key="resourceId" default-expand-all no-connectors dense>
     <template #default-header="{ node }">
       <div class="full-width row items-center justify-between q-py-xs">
         <!-- 資源名稱 -->
@@ -46,6 +50,7 @@ import type { AdminRolePermissionTreeNode, AdminRolePermissionType } from '@/pag
 withDefaults(defineProps<Props>(), {
   isLoading: false,
   isReadonly: false,
+  errorMessage: null,
 })
 
 const emit = defineEmits<{
@@ -70,6 +75,8 @@ interface Props {
   isLoading?: boolean
   /** 是否唯讀（檢視頁用） */
   isReadonly?: boolean
+  /** 資源清單載入失敗的原因，有值時以說明取代權限表 */
+  errorMessage?: string | null
 }
 
 /** 一個資源可設定的四種權限 */

@@ -4,6 +4,7 @@ import { useLogger } from '@/composables/useLogger'
 import router from '@/router'
 import { getAdminResources } from '@/services/admin/adminResourceService'
 import { getAdminRolePermissionsByRoleId, type AdminRolePermissionItemRequest } from '@/services/admin/adminRoleService'
+import type { ResponseStructure } from '@/services/axiosService'
 import type {
   AdminRolePermissionResource,
   AdminRolePermissionState,
@@ -20,6 +21,17 @@ const DEFAULT_LEVEL_ICONS: Record<number, string> = {
   2: 'mdi-folder-outline',
   3: 'mdi-file-outline',
 }
+
+/**
+ * 沒有「資源管理」檢視權限時的說明
+ *
+ * 資源清單（GET /api/admin-resources）要求 admin_resources 的檢視權限；
+ * 權限表上那一列叫「資源管理」，左側選單上叫「選單設定」，兩個名字都寫出來才找得到
+ */
+export const RESOURCE_FORBIDDEN_MESSAGE = '讀取資源清單需要「資源管理」（選單設定）的檢視權限，沒有這項權限就無法檢視或設定角色權限。請洽管理者開通後再試。'
+
+/** 資源清單因其他原因載入失敗時的說明 */
+const RESOURCE_LOAD_FAILED_MESSAGE = '載入資源清單失敗，請重新整理後再試。'
 
 /**
  * 角色權限矩陣
@@ -39,6 +51,8 @@ export function useAdminRolePermissionMatrix() {
   const originalPermissions = ref<Record<string, AdminRolePermissionState>>({})
   const isLoadingResources = ref(false)
   const isLoadingPermissions = ref(false)
+  /** 資源清單載入失敗的原因，載入成功時為 null */
+  const resourceErrorMessage = ref<string | null>(null)
 
   const isLoading = computed(() => isLoadingResources.value || isLoadingPermissions.value)
 
@@ -46,10 +60,14 @@ export function useAdminRolePermissionMatrix() {
 
   /**
    * 載入全部資源並把權限狀態初始化為未勾選
+   *
+   * 失敗時不拋出，改把原因寫進 resourceErrorMessage；頁面看回傳值決定能不能儲存——
+   * 沒有資源清單就送出，等於把這個角色的權限全部清空
    * @returns 是否載入成功
    */
   async function loadResources(): Promise<boolean> {
     isLoadingResources.value = true
+    resourceErrorMessage.value = null
     try {
       const response = await getAdminResources()
 
@@ -76,6 +94,16 @@ export function useAdminRolePermissionMatrix() {
       }
 
       logger.warn('資源清單載入失敗', response.result.error?.message)
+      resourceErrorMessage.value = response.result.error?.message || RESOURCE_LOAD_FAILED_MESSAGE
+      return false
+    } catch (error) {
+      const failure = error as ResponseStructure<null>
+      logger.warn('資源清單載入失敗', { status: failure.status, errorMessage: failure.errorMessage })
+      if (failure.status === 403) {
+        resourceErrorMessage.value = RESOURCE_FORBIDDEN_MESSAGE
+      } else {
+        resourceErrorMessage.value = failure.errorMessage ? `載入資源清單失敗：${failure.errorMessage}` : RESOURCE_LOAD_FAILED_MESSAGE
+      }
       return false
     } finally {
       isLoadingResources.value = false
@@ -302,6 +330,7 @@ export function useAdminRolePermissionMatrix() {
     permissions,
     isLoadingResources,
     isLoadingPermissions,
+    resourceErrorMessage,
 
     // 計算屬性
     isLoading,

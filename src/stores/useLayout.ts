@@ -1,5 +1,5 @@
 /** 用於集中管理佈局狀態 */
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { useStorage } from '@vueuse/core'
 import { Dark } from 'quasar'
@@ -12,21 +12,26 @@ const NEXT_COLOR_SCHEME: Record<LayoutConfig['colorScheme'], LayoutConfig['color
   system: 'light',
 }
 
+/**
+ * 佈局設定的預設值
+ *
+ * 使用時一律複製一份：localStorage 沒有資料時 useStorage 會直接沿用傳入的物件，
+ * 若共用同一個物件，之後的設定變更會連預設值一起改掉，重置就失效。
+ */
+const DEFAULT_LAYOUT_CONFIG: LayoutConfig = {
+  layout: 'vertical',
+  colorScheme: 'light',
+  topbarColor: 'light',
+  menuColor: 'light',
+  sidebarSize: 'default',
+}
+
 export const useLayoutStore = defineStore('layout', () => {
   /** 設定面板開關狀態 */
   const isSettingPanelOpen = ref(false)
 
-  /** 初始化佈局設定 */
-  const initLayoutConfig = reactive<LayoutConfig>({
-    layout: 'vertical',
-    colorScheme: 'light',
-    topbarColor: 'light',
-    menuColor: 'light',
-    sidebarSize: 'default',
-  })
-
   /** 宣告佈局設定 */
-  const layoutConfig = useStorage<LayoutConfig>('layoutConfig', initLayoutConfig)
+  const layoutConfig = useStorage<LayoutConfig>('layoutConfig', { ...DEFAULT_LAYOUT_CONFIG })
 
   /** 目前是否實際處於暗色：colorScheme 為 'system' 時由作業系統偏好決定，故不可只看設定值 */
   const isDarkActive = computed(() => Dark.isActive)
@@ -53,7 +58,7 @@ export const useLayoutStore = defineStore('layout', () => {
 
   /** 重置設定 */
   async function resetConfig() {
-    layoutConfig.value = { ...initLayoutConfig }
+    layoutConfig.value = { ...DEFAULT_LAYOUT_CONFIG }
     applyColorScheme(layoutConfig.value.colorScheme)
   }
 

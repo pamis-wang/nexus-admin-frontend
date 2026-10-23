@@ -39,6 +39,10 @@
       <slot name="body-selection" v-bind="scope"></slot>
     </template>
 
+    <template v-slot:body="scope" v-if="$slots['body']">
+      <slot name="body" v-bind="{ ...scope, isDense }"></slot>
+    </template>
+
     <template v-slot:bottom-row v-if="props.rows.length > 0">
       <!-- 自定義分頁控制區 -->
       <q-tr>
@@ -57,7 +61,14 @@
                 v-on:update:model-value="onRowsPerPageChange"
               />
 
-              <q-toggle v-model="isDense" />
+              <x-switch
+                v-model="isDense"
+                :size="isDense ? 'xs' : 'sm'"
+                active-text="緊湊"
+                inactive-text="標準"
+                active-color="primary"
+                inactive-color="secondary"
+              />
             </div>
 
             <!-- 中間：分頁導航 -->
@@ -65,10 +76,12 @@
               <q-pagination
                 v-bind:model-value="pagination.page"
                 v-bind:max="pagesNumber"
+                v-bind:max-pages="10"
                 v-bind:size="isDense ? 'sm' : 'md'"
                 v-on:update:model-value="onPageChange"
                 direction-links
                 boundary-links
+                ellipses
                 outline
                 color="secondary"
                 active-color="secondary"

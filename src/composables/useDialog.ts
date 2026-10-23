@@ -26,6 +26,9 @@ export function useDialog() {
 
   /**
    * 顯示確認訊息，以 `.onOk()` 接續使用者按下確認後的動作
+   *
+   * 預設焦點放在「取消」：Quasar 預設停在「確認」，對話框一打開就按 Enter、空白鍵或簡報筆的按鍵會直接執行，
+   * 刪除這類無法復原的動作不該這麼容易誤觸。
    * @param message 訊息內容
    * @param title 標題，預設為「確認」
    */
@@ -36,6 +39,7 @@ export function useDialog() {
       color: 'primary',
       ok: { label: '確認', color: 'primary', flat: true },
       cancel: { label: '取消', color: 'grey', flat: true },
+      focus: 'cancel',
       persistent: true,
     })
   }

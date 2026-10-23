@@ -2,20 +2,12 @@
   <x-breadcrumb :items="[{ label: '首頁', icon: 'mdi-home', to: { name: 'home' } }, { label: '系統管理' }, { label: '用戶管理' }]" />
 
   <!-- 功能操作區 -->
-  <q-card flat bordered class="q-mt-xs">
-    <q-card-section class="q-pa-sm">
-      <div class="row justify-between items-center">
-        <div class="text-h6 text-primary">
-          <q-icon name="mdi-account-circle" class="q-mr-sm" />
-          用戶管理
-        </div>
-        <div class="row q-gutter-sm">
-          <q-btn unelevated color="primary" icon="mdi-plus" label="新增用戶" :to="{ name: 'userManagementAdd' }" data-tour="user-add-button" />
-          <q-btn flat color="grey" icon="mdi-refresh" label="重新整理" :loading="isLoading" @click="loadUsers" />
-        </div>
-      </div>
-    </q-card-section>
-  </q-card>
+  <x-page-header title="用戶管理" icon="mdi-account-circle">
+    <template #actions>
+      <q-btn unelevated color="primary" icon="mdi-plus" label="新增用戶" :to="{ name: 'userManagementAdd' }" data-tour="user-add-button" />
+      <q-btn flat color="grey" icon="mdi-refresh" label="重新整理" :loading="isLoading" @click="loadUsers" />
+    </template>
+  </x-page-header>
 
   <!-- 篩選條件；全部在前端比對，不另外打 API -->
   <q-card flat bordered class="q-mt-xs" data-tour="user-filter-section">
@@ -112,7 +104,7 @@
               tooltip="檢視"
               color="primary"
               icon="mdi-eye-outline"
-              :size="props.isDense ? 'md' : 'lg'"
+              :size="props.isDense ? 'sm' : 'md'"
               flat
               dense
               :to="{ name: 'userManagementView', params: { userId: props.row.id } }"
@@ -121,7 +113,7 @@
               tooltip="編輯"
               color="warning"
               icon="mdi-file-document-edit-outline"
-              :size="props.isDense ? 'md' : 'lg'"
+              :size="props.isDense ? 'sm' : 'md'"
               flat
               dense
               :to="{ name: 'userManagementEdit', params: { userId: props.row.id } }"

@@ -2,20 +2,12 @@
   <x-breadcrumb :items="[{ label: '首頁', icon: 'mdi-home', to: { name: 'home' } }, { label: '系統管理' }, { label: '角色管理' }]" />
 
   <!-- 功能操作區 -->
-  <q-card flat bordered class="q-mt-xs">
-    <q-card-section class="q-pa-sm">
-      <div class="row justify-between items-center">
-        <div class="text-h6 text-primary">
-          <q-icon name="mdi-account-group" class="q-mr-sm" />
-          角色管理
-        </div>
-        <div class="row q-gutter-sm">
-          <q-btn unelevated color="primary" icon="mdi-plus" label="新增角色" :to="{ name: 'roleManagementAdd' }" data-tour="role-add-button" />
-          <q-btn flat color="grey" icon="mdi-refresh" label="重新整理" :loading="isLoading" @click="loadRoles" />
-        </div>
-      </div>
-    </q-card-section>
-  </q-card>
+  <x-page-header title="角色管理" icon="mdi-account-group">
+    <template #actions>
+      <q-btn unelevated color="primary" icon="mdi-plus" label="新增角色" :to="{ name: 'roleManagementAdd' }" data-tour="role-add-button" />
+      <q-btn flat color="grey" icon="mdi-refresh" label="重新整理" :loading="isLoading" @click="loadRoles" />
+    </template>
+  </x-page-header>
 
   <!-- 角色列表 -->
   <q-card flat bordered class="q-mt-xs">
@@ -39,7 +31,7 @@
               tooltip="檢視權限"
               color="primary"
               icon="mdi-eye-outline"
-              :size="props.isDense ? 'md' : 'lg'"
+              :size="props.isDense ? 'sm' : 'md'"
               flat
               dense
               :to="{ name: 'roleManagementView', params: { roleId: props.row.id } }"
@@ -48,7 +40,7 @@
               tooltip="編輯角色"
               color="warning"
               icon="mdi-file-document-edit-outline"
-              :size="props.isDense ? 'md' : 'lg'"
+              :size="props.isDense ? 'sm' : 'md'"
               flat
               dense
               :to="{ name: 'roleManagementEdit', params: { roleId: props.row.id } }"
@@ -59,7 +51,7 @@
               tooltip="刪除角色"
               color="negative"
               icon="mdi-trash-can-outline"
-              :size="props.isDense ? 'md' : 'lg'"
+              :size="props.isDense ? 'sm' : 'md'"
               flat
               dense
               @click="handleDelete(props.row)"

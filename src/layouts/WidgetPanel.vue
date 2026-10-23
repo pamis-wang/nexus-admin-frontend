@@ -21,37 +21,37 @@
 const apps = [
   {
     name: 'Slack',
-    icon: 'chat',
+    icon: 'mdi-chat',
     color: 'purple',
     url: 'https://slack.com',
   },
   {
     name: 'GitHub',
-    icon: 'code',
+    icon: 'mdi-code-tags',
     color: 'grey-8',
     url: 'https://github.com',
   },
   {
     name: 'Dribbble',
-    icon: 'palette',
+    icon: 'mdi-palette',
     color: 'pink',
     url: 'https://dribbble.com',
   },
   {
     name: 'Bitbucket',
-    icon: 'source',
+    icon: 'mdi-source-branch',
     color: 'blue',
     url: 'https://bitbucket.org',
   },
   {
     name: 'Dropbox',
-    icon: 'cloud',
+    icon: 'mdi-cloud',
     color: 'light-blue',
     url: 'https://dropbox.com',
   },
   {
     name: 'G Suite',
-    icon: 'apps',
+    icon: 'mdi-apps',
     color: 'orange',
     url: 'https://workspace.google.com',
   },

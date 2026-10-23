@@ -8,15 +8,13 @@
     ]"
   />
 
+  <x-page-header title="新增角色" icon="mdi-shield-plus-outline" />
+
   <q-card flat bordered class="q-mt-xs">
     <q-card-section>
-      <div class="text-h6 text-primary q-mb-md">
-        <q-icon name="mdi-shield-plus-outline" class="q-mr-sm" />
-        新增角色
-      </div>
-
-      <q-form class="q-gutter-md" @submit="handleSubmit">
-        <div class="row" data-tour="role-form-name">
+      <q-form @submit="handleSubmit">
+        <x-section-header-bar title="基本資料" />
+        <div class="row q-col-gutter-md q-mt-xs" data-tour="role-form-name">
           <div class="col-12 col-md-6">
             <q-input v-model="formData.name" label="角色名稱" :rules="[(value) => !!value?.trim() || '請輸入角色名稱']" maxlength="50" counter outlined dense>
               <template #prepend>
@@ -26,19 +24,33 @@
           </div>
         </div>
 
-        <q-separator class="q-my-md" />
-
-        <div data-tour="role-permission-matrix">
-          <AdminRolePermissionMatrix :tree-nodes="treeNodes" :has-permission="hasPermission" :is-loading="isLoading" @update="updatePermission" />
+        <x-section-header-bar title="權限設定" class="q-mt-md" />
+        <div class="q-mt-sm" data-tour="role-permission-matrix">
+          <AdminRolePermissionMatrix
+            :tree-nodes="treeNodes"
+            :has-permission="hasPermission"
+            :is-loading="isLoading"
+            :error-message="resourceErrorMessage"
+            @update="updatePermission"
+          />
         </div>
 
-        <q-separator />
+        <q-separator class="q-mt-md" />
 
         <div class="q-pa-md q-mt-lg" data-tour="role-form-submit">
           <div class="row q-gutter-sm justify-center">
             <q-btn flat label="取消" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
             <q-btn flat label="清空權限" color="grey" size="md" class="q-px-xl" @click="clearAllPermissions" />
-            <q-btn unelevated label="儲存" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />
+            <q-btn
+              unelevated
+              label="儲存"
+              color="primary"
+              size="md"
+              class="q-px-xl"
+              type="submit"
+              :loading="isSubmitting"
+              :disable="resourceErrorMessage !== null"
+            />
           </div>
         </div>
       </q-form>
@@ -61,16 +73,15 @@ import type { AdminRoleManagementFormData } from '@/pages/AdminRoleManagement/ty
 const router = useRouter()
 const notify = useNotify()
 const logger = useLogger({ prefix: 'AdminRoleManagementAdd', enabled: import.meta.env.DEV })
-const { isLoading, treeNodes, loadResources, hasPermission, updatePermission, clearAllPermissions, buildPermissionItems } = useAdminRolePermissionMatrix()
+const { isLoading, resourceErrorMessage, treeNodes, loadResources, hasPermission, updatePermission, clearAllPermissions, buildPermissionItems } =
+  useAdminRolePermissionMatrix()
 
 const formData = reactive<AdminRoleManagementFormData>({ name: '' })
 const isSubmitting = ref(false)
 
+// 資源清單讀不到時由權限設定區塊說明原因、儲存鈕停用
 onMounted(async () => {
-  const isSuccess = await loadResources()
-  if (!isSuccess) {
-    notify.notifyError('載入資源清單失敗，權限設定可能不完整，請重新整理後再試。', 0)
-  }
+  await loadResources()
 })
 
 /** 送出新增 */
