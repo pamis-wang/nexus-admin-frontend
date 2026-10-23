@@ -1,9 +1,5 @@
 <template>
-  <div class="text-subtitle1 text-primary q-mb-md">
-    <q-icon name="mdi-shield-account" class="q-mr-sm" />
-    權限設定
-  </div>
-
+  <!-- 分區標題「權限設定」由頁面以 x-section-header-bar 提供，這裡只放內容 -->
   <x-loading-state :loading="isLoading" message="載入權限設定中..." />
 
   <!-- 資源清單讀不到（例如沒有「資源管理」的檢視權限）：說明原因，不顯示空的權限表 -->

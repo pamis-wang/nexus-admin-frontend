@@ -8,15 +8,13 @@
     ]"
   />
 
+  <x-page-header title="新增角色" icon="mdi-shield-plus-outline" />
+
   <q-card flat bordered class="q-mt-xs">
     <q-card-section>
-      <div class="text-h6 text-primary q-mb-md">
-        <q-icon name="mdi-shield-plus-outline" class="q-mr-sm" />
-        新增角色
-      </div>
-
-      <q-form class="q-gutter-md" @submit="handleSubmit">
-        <div class="row" data-tour="role-form-name">
+      <q-form @submit="handleSubmit">
+        <x-section-header-bar title="基本資料" />
+        <div class="row q-col-gutter-md q-mt-xs" data-tour="role-form-name">
           <div class="col-12 col-md-6">
             <q-input v-model="formData.name" label="角色名稱" :rules="[(value) => !!value?.trim() || '請輸入角色名稱']" maxlength="50" counter outlined dense>
               <template #prepend>
@@ -26,9 +24,8 @@
           </div>
         </div>
 
-        <q-separator class="q-my-md" />
-
-        <div data-tour="role-permission-matrix">
+        <x-section-header-bar title="權限設定" class="q-mt-md" />
+        <div class="q-mt-sm" data-tour="role-permission-matrix">
           <AdminRolePermissionMatrix
             :tree-nodes="treeNodes"
             :has-permission="hasPermission"
@@ -38,7 +35,7 @@
           />
         </div>
 
-        <q-separator />
+        <q-separator class="q-mt-md" />
 
         <div class="q-pa-md q-mt-lg" data-tour="role-form-submit">
           <div class="row q-gutter-sm justify-center">

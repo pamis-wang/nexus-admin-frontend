@@ -8,13 +8,10 @@
     ]"
   />
 
+  <x-page-header title="新增用戶" icon="mdi-account-plus-outline" />
+
   <q-card flat bordered class="q-mt-xs">
     <q-card-section>
-      <div class="text-h6 text-primary q-mb-md">
-        <q-icon name="mdi-account-plus-outline" class="q-mr-sm" />
-        新增用戶
-      </div>
-
       <q-banner class="bg-info text-white q-mb-md" rounded dense data-tour="user-form-notice">
         <template #avatar>
           <q-icon name="mdi-information-outline" />
@@ -23,8 +20,9 @@
         <div class="text-caption">※ 帳號建立後不可修改，電子信箱與姓名之後仍可在編輯頁調整。</div>
       </q-banner>
 
-      <q-form class="q-gutter-md" @submit="handleSubmit">
-        <div class="row q-col-gutter-md" data-tour="user-form-basic">
+      <q-form @submit="handleSubmit">
+        <x-section-header-bar title="基本資料" />
+        <div class="row q-col-gutter-md q-mt-xs" data-tour="user-form-basic">
           <div class="col-12 col-md-6">
             <q-input
               v-model="formData.account"
@@ -67,7 +65,7 @@
           </div>
         </div>
 
-        <q-separator />
+        <q-separator class="q-mt-md" />
 
         <div class="q-pa-md q-mt-lg" data-tour="user-form-submit">
           <div class="row q-gutter-sm justify-center">

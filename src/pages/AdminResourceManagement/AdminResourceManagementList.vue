@@ -1,15 +1,9 @@
 <template>
   <x-breadcrumb :items="[{ label: '首頁', icon: 'mdi-home', to: { name: 'home' } }, { label: '系統管理' }, { label: '選單設定' }]" />
 
+  <x-page-header title="選單設定" icon="mdi-file-tree" />
+
   <q-card flat bordered class="q-mt-xs">
-    <!-- 頁面標題 -->
-    <q-card-section class="q-pa-sm row items-center q-gutter-sm">
-      <q-icon name="mdi-file-tree" size="sm" color="primary" />
-      <div class="text-h6 text-primary">選單設定</div>
-    </q-card-section>
-
-    <q-separator />
-
     <!-- 小提醒 -->
     <q-banner class="bg-info text-white q-mx-sm q-my-sm" rounded dense data-tour="menu-settings-notice">
       <template #avatar>

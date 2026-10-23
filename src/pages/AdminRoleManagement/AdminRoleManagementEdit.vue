@@ -8,18 +8,19 @@
     ]"
   />
 
+  <x-page-header title="編輯角色" icon="mdi-shield-edit-outline">
+    <template #badges>
+      <q-badge v-if="formData.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+    </template>
+  </x-page-header>
+
   <x-loading-state :loading="isLoadingRole" message="載入角色資料中..." />
 
   <q-card v-if="!isLoadingRole" flat bordered class="q-mt-xs">
     <q-card-section>
-      <div class="text-h6 text-primary q-mb-md">
-        <q-icon name="mdi-shield-edit-outline" class="q-mr-sm" />
-        編輯角色
-        <q-badge v-if="formData.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
-      </div>
-
-      <q-form class="q-gutter-md" @submit="handleSubmit" @reset="handleReset">
-        <div class="row q-col-gutter-md">
+      <q-form @submit="handleSubmit" @reset="handleReset">
+        <x-section-header-bar title="基本資料" />
+        <div class="row q-col-gutter-md q-mt-xs">
           <div class="col-12 col-md-6">
             <q-input v-model="formData.name" label="角色名稱" :rules="[(value) => !!value?.trim() || '請輸入角色名稱']" maxlength="50" counter outlined dense>
               <template #prepend>
@@ -36,17 +37,18 @@
           </div>
         </div>
 
-        <q-separator class="q-my-md" />
+        <x-section-header-bar title="權限設定" class="q-mt-md" />
+        <div class="q-mt-sm">
+          <AdminRolePermissionMatrix
+            :tree-nodes="treeNodes"
+            :has-permission="hasPermission"
+            :is-loading="isLoading"
+            :error-message="resourceErrorMessage"
+            @update="updatePermission"
+          />
+        </div>
 
-        <AdminRolePermissionMatrix
-          :tree-nodes="treeNodes"
-          :has-permission="hasPermission"
-          :is-loading="isLoading"
-          :error-message="resourceErrorMessage"
-          @update="updatePermission"
-        />
-
-        <q-separator />
+        <q-separator class="q-mt-md" />
 
         <div class="q-pa-md q-mt-lg">
           <div class="row q-gutter-sm justify-center">

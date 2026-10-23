@@ -7,5 +7,7 @@ declare module 'vue' {
     XBreadcrumb: typeof import('@/components/XBreadcrumb.vue').default
     XLoadingState: typeof import('@/components/XLoadingState.vue').default
     XSwitch: typeof import('@/components/XSwitch.vue').default
+    XPageHeader: typeof import('@/components/XPageHeader.vue').default
+    XSectionHeaderBar: typeof import('@/components/XSectionHeaderBar.vue').default
   }
 }
