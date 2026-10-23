@@ -150,9 +150,14 @@ describe('AdminUserManagementList', () => {
   it('帳號狀態只以標籤顯示，不提供切換', async () => {
     const wrapper = await mountAdminUserManagementList()
 
-    expect(findRowByAccount(wrapper, 'editor')?.text()).toContain('啟用中')
-    expect(findRowByAccount(wrapper, 'retired')?.text()).toContain('已停用')
-    expect(wrapper.find('.x-switch').exists()).toBe(false)
+    const editorRow = findRowByAccount(wrapper, 'editor')
+    const retiredRow = findRowByAccount(wrapper, 'retired')
+
+    expect(editorRow?.text()).toContain('啟用中')
+    expect(retiredRow?.text()).toContain('已停用')
+    // 只看資料列：表格底部的緊湊開關也是 x-switch，不能整頁找
+    expect(editorRow?.find('.x-switch').exists()).toBe(false)
+    expect(retiredRow?.find('.x-switch').exists()).toBe(false)
   })
 
   it('沒有任何條件時不顯示筆數與清除篩選', async () => {
