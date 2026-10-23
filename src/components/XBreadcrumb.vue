@@ -18,7 +18,7 @@ import type { RouteLocationRaw } from 'vue-router'
  *
  * @example
  * <XBreadcrumb :items="[
- *   { label: '首頁', icon: 'home', to: { name: 'home' } },
+ *   { label: '首頁', icon: 'mdi-home', to: { name: 'home' } },
  *   { label: '系統管理' },
  *   { label: '用戶管理', to: { name: 'userManagementList' } },
  *   { label: '新增使用者' }
