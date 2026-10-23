@@ -1,0 +1,14 @@
+/* 全域樣式：只放跨頁面共用、Quasar 沒有提供的類別；元件自己的樣式寫在元件的 <style scoped> */
+
+/* 沒有內建類別的品牌色補成 Quasar 色名，元件可以寫 color="brand-soft"、class="bg-brand-soft" */
+:root {
+  --q-brand-soft: #{$brand-soft};
+}
+
+.text-brand-soft {
+  color: var(--q-brand-soft) !important;
+}
+
+.bg-brand-soft {
+  background: var(--q-brand-soft) !important;
+}

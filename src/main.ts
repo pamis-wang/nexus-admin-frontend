@@ -6,6 +6,7 @@ import router from './router'
 
 import quasarPlugin from '@/plugins/quasar'
 import customPlugin from '@/plugins/custom'
+import '@/assets/scss/styles.scss'
 
 const app = createApp(App)
 const pinia = createPinia()
