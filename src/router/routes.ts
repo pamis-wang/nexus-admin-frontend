@@ -24,7 +24,7 @@ export const featureRoutes: RouteRecordRaw[] = [
     path: '',
     name: 'home',
     meta: { title: '首頁', icon: 'mdi-home', resourceName: '首頁' },
-    component: () => import('@/pages/PlaceholderPage.vue'),
+    component: () => import('@/pages/Home/HomeView.vue'),
   },
   systemRoutes,
   contentRoutes,
