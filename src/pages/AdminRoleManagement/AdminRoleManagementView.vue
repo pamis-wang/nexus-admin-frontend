@@ -24,7 +24,13 @@
       <q-separator class="q-my-md" />
 
       <!-- 唯讀模式下勾選框全部停用，不會發出 update，所以不接這個事件 -->
-      <AdminRolePermissionMatrix :tree-nodes="treeNodes" :has-permission="hasPermission" :is-loading="isLoading" is-readonly />
+      <AdminRolePermissionMatrix
+        :tree-nodes="treeNodes"
+        :has-permission="hasPermission"
+        :is-loading="isLoading"
+        :error-message="resourceErrorMessage"
+        is-readonly
+      />
 
       <q-separator class="q-my-md" />
 
@@ -58,7 +64,7 @@ const route = useRoute()
 const router = useRouter()
 const dialog = useDialog()
 const logger = useLogger({ prefix: 'AdminRoleManagementView', enabled: import.meta.env.DEV })
-const { isLoading, treeNodes, loadResources, loadRolePermissions, hasPermission } = useAdminRolePermissionMatrix()
+const { isLoading, resourceErrorMessage, treeNodes, loadResources, loadRolePermissions, hasPermission } = useAdminRolePermissionMatrix()
 
 const role = reactive<AdminRoleManagementDetailFormData>({
   id: '',
@@ -84,7 +90,7 @@ async function loadRole() {
 
   isLoadingRole.value = true
   try {
-    const [roleResponse] = await Promise.all([getAdminRoleById(roleId), loadResources()])
+    const [roleResponse, isResourcesLoaded] = await Promise.all([getAdminRoleById(roleId), loadResources()])
 
     if (roleResponse.status !== 200 || !roleResponse.result.data) {
       dialog.showError(roleResponse.result.error?.message || '找不到指定角色', '載入失敗')
@@ -98,6 +104,11 @@ async function loadRole() {
     role.isSystemDefault = roleData.isSystemDefault
     role.userCount = roleData.userCount
     role.version = roleData.version
+
+    // 資源清單讀不到時由權限設定區塊說明原因，角色的權限也沒有地方可以套
+    if (!isResourcesLoaded) {
+      return
+    }
 
     await loadRolePermissions(roleId)
   } catch (error) {

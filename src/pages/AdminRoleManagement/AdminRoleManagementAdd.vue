@@ -29,7 +29,13 @@
         <q-separator class="q-my-md" />
 
         <div data-tour="role-permission-matrix">
-          <AdminRolePermissionMatrix :tree-nodes="treeNodes" :has-permission="hasPermission" :is-loading="isLoading" @update="updatePermission" />
+          <AdminRolePermissionMatrix
+            :tree-nodes="treeNodes"
+            :has-permission="hasPermission"
+            :is-loading="isLoading"
+            :error-message="resourceErrorMessage"
+            @update="updatePermission"
+          />
         </div>
 
         <q-separator />
@@ -38,7 +44,16 @@
           <div class="row q-gutter-sm justify-center">
             <q-btn flat label="取消" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
             <q-btn flat label="清空權限" color="grey" size="md" class="q-px-xl" @click="clearAllPermissions" />
-            <q-btn unelevated label="儲存" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />
+            <q-btn
+              unelevated
+              label="儲存"
+              color="primary"
+              size="md"
+              class="q-px-xl"
+              type="submit"
+              :loading="isSubmitting"
+              :disable="resourceErrorMessage !== null"
+            />
           </div>
         </div>
       </q-form>
@@ -61,16 +76,15 @@ import type { AdminRoleManagementFormData } from '@/pages/AdminRoleManagement/ty
 const router = useRouter()
 const notify = useNotify()
 const logger = useLogger({ prefix: 'AdminRoleManagementAdd', enabled: import.meta.env.DEV })
-const { isLoading, treeNodes, loadResources, hasPermission, updatePermission, clearAllPermissions, buildPermissionItems } = useAdminRolePermissionMatrix()
+const { isLoading, resourceErrorMessage, treeNodes, loadResources, hasPermission, updatePermission, clearAllPermissions, buildPermissionItems } =
+  useAdminRolePermissionMatrix()
 
 const formData = reactive<AdminRoleManagementFormData>({ name: '' })
 const isSubmitting = ref(false)
 
+// 資源清單讀不到時由權限設定區塊說明原因、儲存鈕停用
 onMounted(async () => {
-  const isSuccess = await loadResources()
-  if (!isSuccess) {
-    notify.notifyError('載入資源清單失敗，權限設定可能不完整，請重新整理後再試。', 0)
-  }
+  await loadResources()
 })
 
 /** 送出新增 */
