@@ -61,7 +61,14 @@
                 v-on:update:model-value="onRowsPerPageChange"
               />
 
-              <q-toggle v-model="isDense" />
+              <x-switch
+                v-model="isDense"
+                :size="isDense ? 'xs' : 'sm'"
+                active-text="緊湊"
+                inactive-text="標準"
+                active-color="primary"
+                inactive-color="secondary"
+              />
             </div>
 
             <!-- 中間：分頁導航 -->
