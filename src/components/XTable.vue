@@ -84,7 +84,7 @@
                 ellipses
                 outline
                 color="secondary"
-                active-color="secondary"
+                active-color="brand-soft"
                 active-text-color="primary"
                 active-design="unelevated"
               />

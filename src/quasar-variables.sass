@@ -1,6 +1,8 @@
 // 色票來源：Hyper v5.4.2 admin 模板 creative 版本
 // D:\SideProject\Hyper_v5.4.2\Admin\src\assets\scss\config\creative\_variables.scss
-$primary   : #3d73dd
+// 例外：$primary 由 Hyper 的 #3d73dd 加深（色相不變、只降明度）。原值配白字對比 4.47，未達 WCAG AA 的 4.5；
+// 加深後白字 5.36，主色字疊在 $brand-soft 淡底（分頁目前頁）上也有 4.52
+$primary   : #2864d9
 $secondary : #6c757d
 $accent    : #727cf5
 
@@ -11,5 +13,5 @@ $negative  : #ff5b5b
 $info      : #35b8e0
 $warning   : #f9c851
 
-// 主色淡底：分區標題列（x-section-header-bar）；半透明疊在卡片上，亮色、暗色模式都適用
+// 主色淡底：分區標題列、分頁目前頁；半透明疊在卡片上，亮色、暗色模式都適用。色名類別寫在 assets/scss/styles.scss
 $brand-soft : rgba($primary, 0.12)
