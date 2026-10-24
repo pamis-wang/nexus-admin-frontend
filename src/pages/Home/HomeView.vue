@@ -13,7 +13,7 @@
       <!-- 與選單一致，沒有權限的功能不顯示捷徑，免得點進去才被導到 403 -->
       <q-card-actions>
         <q-btn
-          v-if="userStore.hasPermission('系統管理>用戶管理')"
+          v-if="userStore.hasPermission('admin_users')"
           flat
           color="primary"
           icon="mdi-account-circle"
@@ -21,7 +21,7 @@
           :to="{ name: 'userManagementList' }"
         />
         <q-btn
-          v-if="userStore.hasPermission('系統管理>角色管理')"
+          v-if="userStore.hasPermission('admin_roles')"
           flat
           color="primary"
           icon="mdi-account-group"
@@ -29,7 +29,7 @@
           :to="{ name: 'roleManagementList' }"
         />
         <q-btn
-          v-if="userStore.hasPermission('系統管理>資源管理')"
+          v-if="userStore.hasPermission('admin_resources')"
           flat
           color="primary"
           icon="mdi-file-tree"

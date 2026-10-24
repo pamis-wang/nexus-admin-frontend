@@ -69,10 +69,10 @@ export const useUserStore = defineStore('userStore', () => {
   })
 
   /**
-   * 權限查詢表：資源完整路徑 → 四種權限
+   * 權限查詢表：資源代碼 → 四種權限
    *
    * 後端回的是樹狀，授權狀態變動時才攤平一次，之後每次查詢都是 O(1)，不必反覆遞迴整棵樹。
-   * resourceName 在整棵資源樹內唯一，可以直接當鍵。
+   * resourceCode 在整棵資源樹內唯一，可以直接當鍵。
    */
   const resourcePermissions = computed<Record<string, ResourcePermission>>(() => flattenPermissions(authorization.value?.permissions ?? []))
 
@@ -113,8 +113,8 @@ export const useUserStore = defineStore('userStore', () => {
    * 是否具備指定資源的權限
    *
    * 全系統唯一的權限判斷入口，路由守衛與選單都走這裡，不要另外再寫一份。
-   * 過渡期：權限樹還沒有資源代碼，resourceCode 收的是資源完整路徑（例：系統管理>用戶管理）
-   * @param resourceCode 資源完整路徑
+   * 與後端端點的判斷一致：只看資源代碼與四個旗標，不看選單名稱或層級
+   * @param resourceCode 資源代碼（例：admin_users）
    * @param action 操作，預設為訪問權限
    * @returns 是否具備該權限；查不到資源一律視為沒有權限
    */
@@ -144,16 +144,16 @@ export const useUserStore = defineStore('userStore', () => {
 })
 
 /**
- * 把權限樹攤平成以資源完整路徑為鍵的查詢表
+ * 把權限樹攤平成以資源代碼為鍵的查詢表
  * @param permissions 後端回傳的權限樹
- * @returns 資源完整路徑 → 四種權限
+ * @returns 資源代碼 → 四種權限
  */
 function flattenPermissions(permissions: AuthorizationPermissionResponse[]): Record<string, ResourcePermission> {
   const table: Record<string, ResourcePermission> = {}
 
   function visit(nodes: AuthorizationPermissionResponse[]) {
     for (const node of nodes) {
-      table[node.resourceName] = {
+      table[node.resourceCode] = {
         canAccess: node.canAccess,
         canCreate: node.canCreate,
         canUpdate: node.canUpdate,

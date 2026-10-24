@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import type { RouteRecordRaw } from 'vue-router'
 import { useUserStore } from '@/stores/useUser'
-import type { CurrentAuthorizationResponse } from '@/services/auth/authService'
 import { filterMenuRoutes, menuRoutes } from '@/router/routes'
 import router from '@/router'
+import type { AuthorizationPermissionResponse } from '@/services/auth/authService'
+import type { PermissionAction } from '@/types/permission'
 
 /**
  * 遞迴收集路由名稱
@@ -23,38 +24,47 @@ const mockUserProfile = {
   roles: [],
 }
 
+/** nexus 後台全部的資源代碼 */
+const ALL_RESOURCE_CODES = ['admin_users', 'admin_roles', 'admin_resources']
+
 /**
- * 組一份授權狀態，指定的資源都給訪問權限
- * @param resourceNames 有訪問權限的資源完整路徑
+ * 組出權限樹的一個節點
+ * @param resourceCode 資源代碼
+ * @param actions 有權限的操作
  */
-function buildAuthorization(resourceNames: string[]): CurrentAuthorizationResponse {
+function buildPermission(resourceCode: string, actions: PermissionAction[]): AuthorizationPermissionResponse {
   return {
-    permissionMode: 'audit',
-    roles: [{ id: 'role-1', name: '管理員' }],
-    activeRoles: [{ id: 'role-1', name: '管理員' }],
-    permissions: resourceNames.map((resourceName, index) => ({
-      resourceId: `resource-${index}`,
-      parentId: null,
-      resourceName,
-      level: 1,
-      displayOrder: index,
-      canAccess: true,
-      canCreate: false,
-      canUpdate: false,
-      canDelete: false,
-      children: [],
-    })),
+    resourceId: `resource-${resourceCode}`,
+    parentId: null,
+    resourceName: resourceCode,
+    resourceCode,
+    level: 1,
+    displayOrder: 0,
+    canAccess: actions.includes('canAccess'),
+    canCreate: actions.includes('canCreate'),
+    canUpdate: actions.includes('canUpdate'),
+    canDelete: actions.includes('canDelete'),
+    children: [],
   }
 }
 
 /**
- * 登入並寫入授權狀態
- * @param resourceNames 有訪問權限的資源完整路徑，預設只給首頁
+ * 登入並指定生效角色的權限
+ * @param grants 各資源代碼有權限的操作；預設為全部資源的全部操作
  */
-async function signIn(resourceNames: string[] = ['首頁']) {
+async function signIn(
+  grants: Record<string, PermissionAction[]> = Object.fromEntries(
+    ALL_RESOURCE_CODES.map((code) => [code, ['canAccess', 'canCreate', 'canUpdate', 'canDelete']])
+  )
+) {
   const userStore = useUserStore()
   await userStore.storageUser('access-token', 'refresh-token', mockUserProfile)
-  await userStore.storageAuthorization(buildAuthorization(resourceNames))
+  await userStore.storageAuthorization({
+    permissionMode: 'audit',
+    roles: [{ id: 'role-1', name: '測試角色' }],
+    activeRoles: [{ id: 'role-1', name: '測試角色' }],
+    permissions: Object.entries(grants).map(([resourceCode, actions]) => buildPermission(resourceCode, actions)),
+  })
 }
 
 describe('router 導航守衛', () => {
@@ -79,6 +89,7 @@ describe('router 導航守衛', () => {
 
   it('已驗證時，訪問登入頁會導向首頁', async () => {
     await signIn()
+    await router.push({ name: 'home' })
 
     await router.push({ name: 'login' })
 
@@ -103,6 +114,85 @@ describe('router 導航守衛', () => {
     await router.push('/')
 
     expect(router.currentRoute.value.name).toBe('home')
+  })
+
+  it('首頁沒有標資源代碼，沒有任何權限也進得去', async () => {
+    await signIn({})
+
+    await router.push({ name: 'home' })
+
+    expect(router.currentRoute.value.name).toBe('home')
+  })
+})
+
+describe('router 資源權限', () => {
+  beforeEach(async () => {
+    setActivePinia(createPinia())
+    await useUserStore().clearUser()
+    // 從中立的 404 頁出發：router 是共用的單例，停在同一個路由時再導航一次不會觸發守衛
+    await router.push('/error-404')
+  })
+
+  it('有檢視權限時可以進入列表頁', async () => {
+    await signIn({ admin_roles: ['canAccess'] })
+
+    await router.push({ name: 'roleManagementList' })
+
+    expect(router.currentRoute.value.name).toBe('roleManagementList')
+  })
+
+  it('沒有檢視權限時導向 403，而不是登入頁', async () => {
+    await signIn({ admin_users: ['canAccess'] })
+
+    await router.push({ name: 'roleManagementList' })
+
+    expect(router.currentRoute.value.name).toBe('error403')
+  })
+
+  it('新增頁要求新增權限，只有檢視權限時直接輸入網址也進不去', async () => {
+    await signIn({ admin_roles: ['canAccess'] })
+
+    await router.push('/system-management/roles/new')
+
+    expect(router.currentRoute.value.name).toBe('error403')
+  })
+
+  it('編輯頁要求修改權限，檢視頁只要檢視權限', async () => {
+    await signIn({ admin_roles: ['canAccess'] })
+
+    await router.push({ name: 'roleManagementView', params: { roleId: 'abc-123' } })
+    expect(router.currentRoute.value.name).toBe('roleManagementView')
+
+    await router.push({ name: 'roleManagementEdit', params: { roleId: 'abc-123' } })
+    expect(router.currentRoute.value.name).toBe('error403')
+  })
+
+  it('選單設定看自己的資源代碼，與角色管理的權限分開', async () => {
+    await signIn({ admin_roles: ['canAccess'] })
+
+    await router.push({ name: 'roleManagementList' })
+    expect(router.currentRoute.value.name).toBe('roleManagementList')
+
+    await router.push({ name: 'menuSettingsList' })
+    expect(router.currentRoute.value.name).toBe('error403')
+  })
+
+  it('新增用戶要求新增權限，編輯要求修改權限', async () => {
+    await signIn({ admin_users: ['canAccess', 'canUpdate'] })
+
+    await router.push({ name: 'userManagementAdd' })
+    expect(router.currentRoute.value.name).toBe('error403')
+
+    await router.push({ name: 'userManagementEdit', params: { userId: 'abc-123' } })
+    expect(router.currentRoute.value.name).toBe('userManagementEdit')
+  })
+
+  it('403 頁本身不要求資源權限，沒有任何權限也看得到', async () => {
+    await signIn({})
+
+    await router.push({ name: 'error403' })
+
+    expect(router.currentRoute.value.name).toBe('error403')
   })
 })
 
@@ -131,154 +221,10 @@ describe('錯誤頁路由', () => {
 
     expect(router.currentRoute.value.name).toBe('login')
   })
-
-  it('403 在版面內，已登入時可以正常進入', async () => {
-    await signIn()
-
-    await router.push({ name: 'error403' })
-
-    expect(router.currentRoute.value.name).toBe('error403')
-  })
 })
 
-describe('資源權限守衛', () => {
-  beforeEach(async () => {
-    setActivePinia(createPinia())
-    await useUserStore().clearUser()
-    // 每個案例都從登入頁出發：停在上一個案例的目標路由時，再 push 同一個路由會被
-    // vue-router 當成重複導航略過，守衛根本不會執行，測試就會假性通過
-    await router.push({ name: 'login' })
-  })
-
-  it('有訪問權限時可以進入', async () => {
-    await signIn(['首頁', '系統管理>用戶管理'])
-
-    await router.push({ name: 'userManagementList' })
-
-    expect(router.currentRoute.value.name).toBe('userManagementList')
-  })
-
-  it('沒有訪問權限時導向 403', async () => {
-    await signIn(['首頁'])
-
-    await router.push({ name: 'userManagementList' })
-
-    expect(router.currentRoute.value.name).toBe('error403')
-  })
-
-  it('列表以外的頁面共用同一個資源，一起被擋下', async () => {
-    await signIn(['首頁'])
-
-    await router.push({ name: 'userManagementAdd' })
-
-    expect(router.currentRoute.value.name).toBe('error403')
-  })
-
-  it('資源有權限時，該資源底下的新增頁也進得去', async () => {
-    await signIn(['首頁', '系統管理>用戶管理'])
-
-    await router.push({ name: 'userManagementAdd' })
-
-    expect(router.currentRoute.value.name).toBe('userManagementAdd')
-  })
-
-  it('權限只給到別的資源時不會互通', async () => {
-    await signIn(['首頁', '系統管理>角色管理'])
-
-    await router.push({ name: 'userManagementList' })
-
-    expect(router.currentRoute.value.name).toBe('error403')
-  })
-
-  it('沒有 resourceName 的路由不受權限影響，403 自己不會被再擋一次', async () => {
-    await signIn([])
-
-    await router.push({ name: 'error403' })
-
-    expect(router.currentRoute.value.name).toBe('error403')
-  })
-
-  it('canAccess 為否時視同沒有權限', async () => {
-    const userStore = useUserStore()
-    await userStore.storageUser('access-token', 'refresh-token', mockUserProfile)
-    await userStore.storageAuthorization({
-      permissionMode: 'audit',
-      roles: [],
-      activeRoles: [],
-      permissions: [
-        {
-          resourceId: 'resource-0',
-          parentId: null,
-          resourceName: '系統管理>用戶管理',
-          level: 2,
-          displayOrder: 0,
-          canAccess: false,
-          canCreate: true,
-          canUpdate: true,
-          canDelete: true,
-          children: [],
-        },
-      ],
-    })
-
-    await router.push({ name: 'userManagementList' })
-
-    expect(router.currentRoute.value.name).toBe('error403')
-  })
-})
-
-describe('選單權限過濾', () => {
-  /**
-   * 依資源名稱清單過濾選單
-   * @param resourceNames 有訪問權限的資源
-   */
-  function filterByResourceNames(resourceNames: string[]): RouteRecordRaw[] {
-    return filterMenuRoutes(menuRoutes, (resourceName) => resourceNames.includes(resourceName))
-  }
-
-  it('只留下有權限的項目', () => {
-    const names = collectRouteNames(filterByResourceNames(['首頁', '系統管理', '系統管理>用戶管理']))
-
-    expect(names).toContain('home')
-    expect(names).toContain('userManagementList')
-    expect(names).not.toContain('roleManagementList')
-    expect(names).not.toContain('menuSettingsList')
-  })
-
-  it('父層底下沒有任何看得到的子項時整組消失', () => {
-    const names = collectRouteNames(filterByResourceNames(['首頁', '系統管理']))
-
-    expect(names).toContain('home')
-    expect(names).not.toContain('systemManagement')
-  })
-
-  it('父層漏設權限但子項有權限時仍保留父層，否則整組功能會從選單消失', () => {
-    const names = collectRouteNames(filterByResourceNames(['系統管理>用戶管理']))
-
-    expect(names).toContain('systemManagement')
-    expect(names).toContain('userManagementList')
-  })
-
-  it('完全沒有權限時選單是空的', () => {
-    expect(filterByResourceNames([])).toEqual([])
-  })
-
-  it('群組的 children 是空陣列時整組隱藏；葉節點沒有權限欄位一律顯示', () => {
-    const routes: RouteRecordRaw[] = [
-      { path: 'empty-group', name: 'emptyGroup', meta: { title: 'contentManagement', resourceName: '內容管理' }, children: [] },
-      { path: 'no-permission-field', name: 'noPermissionField', meta: { title: 'home' }, component: { render: () => null } },
-    ]
-
-    const names = collectRouteNames(filterMenuRoutes(routes, () => true))
-
-    expect(names).not.toContain('emptyGroup')
-    expect(names).toContain('noPermissionField')
-  })
-})
-
-describe('系統管理路由', () => {
-  // 合併到 system.routes.ts 之後網址必須完全不變，否則既有連結與書籤會斷
-  it('網址解析到原本的路由名稱', () => {
+describe('路由網址', () => {
+  it('網址解析到對應的路由名稱，靜態網址不會被動態參數吃掉', () => {
     const expectedNames: Array<[string, string]> = [
       ['/system-management/users', 'userManagementList'],
       ['/system-management/users/new', 'userManagementAdd'],
@@ -289,6 +235,7 @@ describe('系統管理路由', () => {
       ['/system-management/roles/abc-123', 'roleManagementView'],
       ['/system-management/roles/abc-123/edit', 'roleManagementEdit'],
       ['/system-management/menu-settings', 'menuSettingsList'],
+      ['/error-403', 'error403'],
     ]
 
     for (const [path, expectedName] of expectedNames) {
@@ -296,12 +243,7 @@ describe('系統管理路由', () => {
     }
   })
 
-  it('新增頁的靜態網址不會被檢視頁的動態參數吃掉', () => {
-    expect(router.resolve('/system-management/users/new').name).toBe('userManagementAdd')
-    expect(router.resolve('/system-management/roles/new').name).toBe('roleManagementAdd')
-  })
-
-  it('詳細頁帶得到路由參數', () => {
+  it('檢視與編輯頁帶得到唯一編號', () => {
     expect(router.resolve('/system-management/users/abc-123').params).toEqual({ userId: 'abc-123' })
     expect(router.resolve('/system-management/roles/abc-123/edit').params).toEqual({ roleId: 'abc-123' })
   })
@@ -311,15 +253,14 @@ describe('選單來源 menuRoutes', () => {
   it('只含選單項目，不含只從列表進入的頁面', () => {
     const names = collectRouteNames(menuRoutes)
 
-    expect(names).toContain('userManagementList')
-    expect(names).toContain('roleManagementList')
-    expect(names).toContain('menuSettingsList')
+    expect(names).toEqual(expect.arrayContaining(['userManagementList', 'roleManagementList', 'menuSettingsList']))
     expect(names).not.toContain('userManagementAdd')
     expect(names).not.toContain('userManagementView')
     expect(names).not.toContain('userManagementEdit')
     expect(names).not.toContain('roleManagementAdd')
     expect(names).not.toContain('roleManagementView')
     expect(names).not.toContain('roleManagementEdit')
+    expect(names).not.toContain('error403')
   })
 
   it('每個節點都有 title，選單才不會出現空白項目', () => {
@@ -331,10 +272,43 @@ describe('選單來源 menuRoutes', () => {
     }
   })
 
-  it('保留三層結構', () => {
-    const contentManagement = menuRoutes.find((route) => route.name === 'contentManagement')
-    const advancedSettings = contentManagement?.children?.find((route) => route.name === 'advancedSettings')
+  it('選單項目都有標資源代碼，只有首頁例外', () => {
+    const collectLeaves = (routes: RouteRecordRaw[]): RouteRecordRaw[] =>
+      routes.flatMap((route) => (route.children !== undefined && route.children.length > 0 ? collectLeaves(route.children) : [route]))
 
-    expect(advancedSettings?.children?.map((route) => route.name)).toEqual(['categorySettingsList', 'tagSettingsList'])
+    const leavesWithoutCode = collectLeaves(menuRoutes).filter((route) => route.meta?.resourceCode === undefined)
+
+    expect(leavesWithoutCode.map((route) => route.name)).toEqual(['home'])
+  })
+})
+
+describe('filterMenuRoutes', () => {
+  it('只留下有檢視權限的項目，子項目全被篩掉的群組整組不顯示', () => {
+    const visible = filterMenuRoutes(menuRoutes, (resourceCode) => resourceCode === 'admin_roles')
+
+    expect(collectRouteNames(visible)).toEqual(['home', 'systemManagement', 'roleManagementList'])
+  })
+
+  it('沒有任何權限時只剩首頁', () => {
+    const visible = filterMenuRoutes(menuRoutes, () => false)
+
+    expect(collectRouteNames(visible)).toEqual(['home'])
+  })
+
+  it('children 是空陣列的節點當成空群組整組隱藏，有權限也一樣', () => {
+    const routes: RouteRecordRaw[] = [
+      { path: 'system-management', name: 'systemManagement', meta: { title: 'systemManagement', resourceCode: 'admin_users' }, children: [] },
+    ]
+
+    expect(filterMenuRoutes(routes, () => true)).toEqual([])
+    expect(filterMenuRoutes(routes, () => false)).toEqual([])
+  })
+
+  it('沒有標資源代碼的一般項目一律顯示，不呼叫權限判斷', () => {
+    const canAccess = vi.fn<(resourceCode: string) => boolean>(() => false)
+    const routes: RouteRecordRaw[] = [{ path: '', name: 'home', meta: { title: 'home' }, component: { template: '<div />' } }]
+
+    expect(collectRouteNames(filterMenuRoutes(routes, canAccess))).toEqual(['home'])
+    expect(canAccess).not.toHaveBeenCalled()
   })
 })

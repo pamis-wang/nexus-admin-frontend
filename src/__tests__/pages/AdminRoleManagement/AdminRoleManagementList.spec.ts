@@ -45,11 +45,20 @@ function buildRoles(): AdminRoleResponse[] {
 
 /**
  * 組出授權狀態的權限節點
- * @param resourceName 資源完整路徑
+ * @param resourceCode 資源代碼
  * @param permission 四種權限
  */
-function buildPermissionNode(resourceName: string, permission: ResourcePermission): AuthorizationPermissionResponse {
-  return { resourceId: `resource-${resourceName}`, parentId: null, resourceName, level: 2, displayOrder: 0, children: [], ...permission }
+function buildPermissionNode(resourceCode: string, permission: ResourcePermission): AuthorizationPermissionResponse {
+  return {
+    resourceId: `resource-${resourceCode}`,
+    parentId: null,
+    resourceName: resourceCode,
+    resourceCode,
+    level: 2,
+    displayOrder: 0,
+    children: [],
+    ...permission,
+  }
 }
 
 /**
@@ -64,10 +73,7 @@ function seedPermissions(rolePermission: ResourcePermission, canViewUsers = true
     permissionMode: 'audit',
     roles: [],
     activeRoles: [],
-    permissions: [
-      buildPermissionNode('系統管理>角色管理', rolePermission),
-      buildPermissionNode('系統管理>用戶管理', { ...FULL_PERMISSION, canAccess: canViewUsers }),
-    ],
+    permissions: [buildPermissionNode('admin_roles', rolePermission), buildPermissionNode('admin_users', { ...FULL_PERMISSION, canAccess: canViewUsers })],
   }
   return pinia
 }

@@ -15,11 +15,11 @@
     "name": "輸入這一層的名稱"
   },
   "hint": {
-    "saveWholeTree": "※ 儲存是整棵樹一次送出，新增、改名、顯示狀態與順序的變更會一併寫入。",
+    "saveWholeTree": "※ 儲存是整棵樹一次送出，改名、顯示狀態與順序的變更會一併寫入。",
     "dragSameLevel": "※ 拖曳只能調整同一層的順序；要換到別的層級請用該列的「移到其他層級」。",
     "fullNameAuto": "※ 完整資源名稱由層級名稱自動組成，改名或搬移時底下子項目的名稱會一起重寫。",
-    "codeReadonly": "※ 資源代碼由後端種子資料維護，畫面唯讀；本頁不提供刪除資源的功能。",
-    "unsavedSummary": "有未儲存的變更：新增 {added} 筆、更新 {updated} 筆、位置變動 {moved} 筆",
+    "codeReadonly": "※ 資源由後端種子資料建立，資源代碼唯讀；本頁不能新增或刪除資源。",
+    "unsavedSummary": "有未儲存的變更：更新 {updated} 筆、位置變動 {moved} 筆",
     "searching": "搜尋只影響畫面顯示，儲存時送出的仍是完整的樹（共 {n} 筆）；搜尋狀態下暫時無法拖曳排序。",
     "drag": "拖曳可調整同一層的順序，跨層請用「移到其他層級」",
     "dragDisabled": "搜尋中無法拖曳排序",
@@ -29,17 +29,14 @@
     "revertAll": "全部還原",
     "expandAll": "全部展開",
     "collapseAll": "全部收合",
-    "addRoot": "新增第一層",
     "done": "完成",
     "rename": "改名",
-    "addChild": "新增第 {level} 層",
     "move": "移到其他層級",
     "moveUp": "上移",
     "moveDown": "下移",
     "confirmMove": "確認搬移"
   },
   "status": {
-    "new": "新增",
     "readonly": "唯讀",
     "visible": "顯示",
     "hidden": "隱藏"
@@ -64,8 +61,8 @@
     "targetFull": "目標層級已有 {count} 筆，同一層最多 {max} 筆"
   },
   "validation": {
-    "emptyTree": "整批替換是全量語意，空的樹會刪除全部資源，請至少保留一筆第一層選單。",
-    "blankName": "有選單名稱是空白的，請先填寫；未命名的新增列可在編輯狀態按取消收掉。",
+    "emptyTree": "沒有任何資源可以儲存，請重新載入頁面。",
+    "blankName": "有選單名稱是空白的，請先填寫。",
     "nameSeparator": "選單名稱不可包含「{separator}」，該符號是階層分隔用的。",
     "maxLevel": "資源層級最多 {n} 層。",
     "scopeRoot": "第一層",
@@ -75,7 +72,7 @@
   },
   "validationFailed": "選單設定尚未通過檢查",
   "leaveConfirm": "選單設定有未儲存的變更，離開後會遺失，確定要離開嗎？",
-  "saveConfirm": "即將以整棵樹一次送出：新增 {added} 筆、更新 {updated} 筆、位置變動 {moved} 筆。確定要儲存嗎？",
+  "saveConfirm": "即將以整棵樹一次送出：更新 {updated} 筆、位置變動 {moved} 筆。確定要儲存嗎？",
   "saveTitle": "儲存選單設定",
   "saved": "選單設定已儲存",
   "saveFailed": "儲存選單設定失敗",
@@ -86,7 +83,5 @@
   "revertConfirm": "未儲存的變更都會被丟棄，確定還原成上次載入的內容嗎？",
   "revertTitle": "還原變更",
   "conflict": "這份選單設定在你編輯期間已被其他人修改，請重新載入後再調整。",
-  "conflictTitle": "版本衝突",
-  "maxLevel": "資源層級最多 {n} 層",
-  "maxSiblings": "同一層最多 {n} 筆"
+  "conflictTitle": "版本衝突"
 }

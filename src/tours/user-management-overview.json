@@ -7,7 +7,7 @@
   "groupName": null,
   "order": 20,
   "requiresRouteNames": [],
-  "resourceCode": "系統管理>用戶管理",
+  "resourceCode": "admin_users",
   "requiresAnchor": null,
   "steps": [
     {

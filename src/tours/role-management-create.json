@@ -7,7 +7,7 @@
   "groupName": null,
   "order": 50,
   "requiresRouteNames": [],
-  "resourceCode": "系統管理>角色管理",
+  "resourceCode": "admin_roles",
   "requiresAnchor": null,
   "steps": [
     {

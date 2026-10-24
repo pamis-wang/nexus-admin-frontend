@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue'
+import type { RouteRecordRaw } from 'vue-router'
 
 import router from '@/router'
 import type { AdminRolePermissionActionResponse, AdminRolePermissionItemRequest, AdminRolePermissionNodeResponse } from '@/services/admin/adminRoleService'
@@ -84,7 +85,7 @@ export function useAdminRolePermissionMatrix() {
       fullPath: node.resourceName,
       isEnabled: node.isEnabled,
       availableActions: PERMISSION_ACTIONS.filter((action) => node.availableActions.some((available) => ACTION_BY_RESPONSE[available] === action)),
-      icon: iconMap.get(node.resourceName) ?? DEFAULT_LEVEL_ICONS[node.level] ?? 'mdi-circle-small',
+      icon: iconMap.get(node.resourceCode) ?? DEFAULT_LEVEL_ICONS[node.level] ?? 'mdi-circle-small',
     }))
     permissions.value = extractLeafPermissions(tree)
     baseline.value = clonePermissions(permissions.value)
@@ -338,20 +339,24 @@ function lastSegmentOf(resourceName: string): string {
 }
 
 /**
- * 從路由 meta 建立「完整資源名稱 → 圖示」的對照表，讓矩陣的圖示與左側選單一致
+ * 從路由 meta 建立「資源代碼 → 圖示」的對照表，讓矩陣的圖示與左側選單一致
  *
- * 同一個資源掛在列表、新增、編輯好幾個路由上，只有出現在選單的列表頁帶圖示
+ * 同一個資源代碼掛在列表、新增、編輯好幾個路由上，只有出現在選單的列表頁帶圖示；先登記的為準
  */
 function buildRouteIconMap(): Map<string, string> {
   const iconMap = new Map<string, string>()
 
-  router.getRoutes().forEach((route) => {
-    const resourceName = route.meta.resourceName
-    const icon = route.meta.icon
-    if (resourceName !== undefined && icon !== undefined && !iconMap.has(resourceName)) {
-      iconMap.set(resourceName, icon)
-    }
-  })
+  function collect(routes: readonly RouteRecordRaw[]) {
+    routes.forEach((route) => {
+      const resourceCode = route.meta?.resourceCode
+      const icon = route.meta?.icon
+      if (resourceCode !== undefined && icon !== undefined && !iconMap.has(resourceCode)) {
+        iconMap.set(resourceCode, icon)
+      }
+      if (route.children !== undefined) collect(route.children)
+    })
+  }
 
+  collect(router.options.routes)
   return iconMap
 }

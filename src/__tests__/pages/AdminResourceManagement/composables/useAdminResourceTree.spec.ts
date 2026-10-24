@@ -35,18 +35,18 @@ vi.mock('@/composables/useNotify', () => ({
   }),
 }))
 
-/** 組一個資源樹節點，只有測試在意的欄位需要指定 */
+/** 組一個資源樹節點，只有測試在意的欄位需要指定；沒給代碼時用 id 組一個 */
 function buildNode(
   id: string,
   resourceName: string,
-  options: { resourceCode?: string | null; children?: AdminResourceTreeNodeResponse[]; isEnabled?: boolean } = {}
+  options: { resourceCode?: string; children?: AdminResourceTreeNodeResponse[]; isEnabled?: boolean } = {}
 ): AdminResourceTreeNodeResponse {
   return {
     id,
     parentId: null,
     level: 1,
     resourceName,
-    resourceCode: options.resourceCode ?? null,
+    resourceCode: options.resourceCode ?? `code-${id}`,
     displayOrder: 0,
     isEnabled: options.isEnabled ?? true,
     children: options.children ?? [],
@@ -66,10 +66,10 @@ function buildTreeResponse(version: string | null, items: AdminResourceTreeNodeR
 
 /**
  * 固定的測試樹：
- * 系統管理（無代碼）
- *   ├─ 用戶管理（有代碼 admin_users）
- *   └─ 選單設定（無代碼）
- * 內容管理（無代碼）
+ * 系統管理
+ *   ├─ 用戶管理（代碼 admin_users）
+ *   └─ 選單設定
+ * 內容管理
  */
 function buildSampleTree(): AdminResourceTreeNodeResponse[] {
   return [
@@ -141,45 +141,6 @@ describe('useAdminResourceTree - 載入', () => {
   })
 })
 
-describe('useAdminResourceTree - 丟棄未送出的新增列', () => {
-  beforeEach(() => {
-    getAdminResourceTreeMock.mockReset()
-    replaceAdminResourceTreeMock.mockReset()
-    showWarningMock.mockReset()
-    showErrorMock.mockReset()
-    notifyWarningMock.mockReset()
-    notifyErrorMock.mockReset()
-  })
-
-  it('移除節點時連同子孫一起移除，並重編同層順序', async () => {
-    getAdminResourceTreeMock.mockResolvedValue(
-      buildTreeResponse('v1', [
-        buildNode('id-a', 'A', { children: [buildNode('id-a1', 'A>A1', { children: [buildNode('id-a1x', 'A>A1>A1X')] })] }),
-        buildNode('id-b', 'B'),
-        buildNode('id-c', 'C'),
-      ])
-    )
-    const tree = useAdminResourceTree()
-    await tree.loadTree()
-
-    tree.removeRow('id-a')
-
-    expect(tree.rows.value.map((row) => row.rowKey)).toEqual(['id-b', 'id-c'])
-    expect(tree.childrenOf(null).map((row) => row.position)).toEqual([1, 2])
-  })
-
-  it('丟棄還沒命名的新增列不算變更，也不會被擋下', async () => {
-    const tree = await mountTreeWithSampleData()
-    const created = tree.addRow(null)
-    if (created !== null) {
-      tree.removeRow(created.rowKey)
-    }
-
-    expect(tree.validateTree()).toEqual({ isValid: true, message: null })
-    expect(tree.hasChanges.value).toBe(false)
-  })
-})
-
 describe('useAdminResourceTree - 編輯與搬移', () => {
   beforeEach(() => {
     getAdminResourceTreeMock.mockReset()
@@ -188,27 +149,6 @@ describe('useAdminResourceTree - 編輯與搬移', () => {
     showErrorMock.mockReset()
     notifyWarningMock.mockReset()
     notifyErrorMock.mockReset()
-  })
-
-  it('新增的節點沒有 id，並排在同層最後', async () => {
-    const tree = await mountTreeWithSampleData()
-
-    const created = tree.addRow('id-system')
-
-    expect(created?.id).toBeNull()
-    expect(created?.level).toBe(2)
-    expect(created?.position).toBe(3)
-    expect(tree.changeSummary.value.addedCount).toBe(1)
-  })
-
-  it('超過三層時不新增，並顯示層級上限警告', async () => {
-    const tree = await mountTreeWithSampleData()
-    const thirdLevel = tree.addRow('id-menu')
-
-    const fourthLevel = thirdLevel === null ? null : tree.addRow(thirdLevel.rowKey)
-
-    expect(fourthLevel).toBeNull()
-    expect(notifyWarningMock).toHaveBeenCalledWith('資源層級最多 3 層')
   })
 
   it('同層上移會交換 position，已在第一個位置時回 false', async () => {
@@ -249,11 +189,12 @@ describe('useAdminResourceTree - 編輯與搬移', () => {
   it('還原變更會回到上次載入的狀態', async () => {
     const tree = await mountTreeWithSampleData()
     tree.renameRow('id-menu', '選單管理')
-    tree.addRow(null)
+    tree.nudgeRow('id-menu', -1)
 
     tree.resetChanges()
 
     expect(tree.findRow('id-menu')?.name).toBe('選單設定')
+    expect(tree.childrenOf('id-system').map((row) => row.rowKey)).toEqual(['id-users', 'id-menu'])
     expect(tree.hasChanges.value).toBe(false)
   })
 })
@@ -270,20 +211,17 @@ describe('useAdminResourceTree - 送出前驗證', () => {
 
   it('名稱空白時不通過', async () => {
     const tree = await mountTreeWithSampleData()
-    tree.addRow(null)
+    tree.renameRow('id-menu', '   ')
 
     const validation = tree.validateTree()
 
     expect(validation.isValid).toBe(false)
-    expect(validation.message).toBe('有選單名稱是空白的，請先填寫；未命名的新增列可在編輯狀態按取消收掉。')
+    expect(validation.message).toBe('有選單名稱是空白的，請先填寫。')
   })
 
   it('完整資源名稱重複時不通過', async () => {
     const tree = await mountTreeWithSampleData()
-    const created = tree.addRow('id-system')
-    if (created !== null) {
-      tree.renameRow(created.rowKey, '選單設定')
-    }
+    tree.renameRow('id-users', '選單設定')
 
     const validation = tree.validateTree()
 
@@ -360,7 +298,7 @@ describe('useAdminResourceTree - 整批替換', () => {
 
   it('未通過前端驗證時不呼叫 API', async () => {
     const tree = await mountTreeWithSampleData()
-    tree.addRow(null)
+    tree.renameRow('id-menu', '')
 
     const isSuccess = await tree.saveTree()
 

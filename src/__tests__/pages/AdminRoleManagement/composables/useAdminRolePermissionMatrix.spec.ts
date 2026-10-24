@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   AUTO_GRANT_ACCESS_HINT,
   AUTO_REVOKE_DEPENDENT_HINT,
@@ -6,11 +6,6 @@ import {
   useAdminRolePermissionMatrix,
 } from '@/pages/AdminRoleManagement/composables/useAdminRolePermissionMatrix'
 import type { AdminRolePermissionActionResponse, AdminRolePermissionNodeResponse } from '@/services/admin/adminRoleService'
-
-// 權限矩陣只拿路由表對應選單圖示，給一筆就夠驗證對照與預設圖示
-vi.mock('@/router', () => ({
-  default: { getRoutes: () => [{ meta: { resourceName: '系統管理>角色管理', icon: 'mdi-account-group' } }] },
-}))
 
 interface NodeOptions {
   canAccess?: boolean
@@ -25,12 +20,14 @@ interface NodeOptions {
  * 組出權限樹節點
  * @param resourceId 資源唯一編號
  * @param resourceName 完整資源名稱
+ * @param resourceCode 資源代碼
  * @param options 旗標、啟用狀態與可授權的操作，沒給的旗標為 false、預設四種操作都可授權
  * @param children 子節點
  */
 function buildNode(
   resourceId: string,
   resourceName: string,
+  resourceCode: string,
   options: NodeOptions = {},
   children: AdminRolePermissionNodeResponse[] = []
 ): AdminRolePermissionNodeResponse {
@@ -38,7 +35,7 @@ function buildNode(
     resourceId,
     parentId: null,
     resourceName,
-    resourceCode: null,
+    resourceCode,
     level: resourceName.split('>').length,
     displayOrder: 0,
     isEnabled: options.isEnabled ?? true,
@@ -61,11 +58,11 @@ function buildNode(
  */
 function buildTree(): AdminRolePermissionNodeResponse[] {
   return [
-    buildNode('home', '首頁', { canAccess: true, availableActions: ['access'] }),
-    buildNode('system', '系統管理', { canAccess: true, canCreate: true, canUpdate: true, canDelete: true, availableActions: ['access'] }, [
-      buildNode('users', '系統管理>用戶管理', { canAccess: true, canUpdate: true, availableActions: ['access', 'create', 'update'] }),
-      buildNode('roles', '系統管理>角色管理'),
-      buildNode('resources', '系統管理>資源管理', { isEnabled: false, availableActions: ['access', 'update'] }),
+    buildNode('home', '首頁', 'home', { canAccess: true, availableActions: ['access'] }),
+    buildNode('system', '系統管理', 'system_management', { canAccess: true, canCreate: true, canUpdate: true, canDelete: true, availableActions: ['access'] }, [
+      buildNode('users', '系統管理>用戶管理', 'admin_users', { canAccess: true, canUpdate: true, availableActions: ['access', 'create', 'update'] }),
+      buildNode('roles', '系統管理>角色管理', 'admin_roles'),
+      buildNode('resources', '系統管理>資源管理', 'admin_resources', { isEnabled: false, availableActions: ['access', 'update'] }),
     ]),
   ]
 }
@@ -128,12 +125,11 @@ describe('useAdminRolePermissionMatrix - 載入', () => {
     expect(rowOf(matrix, 'system').cells.canDelete).toBe('none')
   })
 
-  it('圖示依完整資源名稱取自路由 meta；路由沒有的依層級給預設圖示', () => {
+  it('圖示取自路由 meta，與左側選單一致；路由沒有的依層級給預設圖示', () => {
     const matrix = loadMatrix()
 
     expect(rowOf(matrix, 'roles').icon).toBe('mdi-account-group')
     expect(rowOf(matrix, 'system').icon).toBe('mdi-folder')
-    expect(rowOf(matrix, 'users').icon).toBe('mdi-folder-outline')
   })
 
   it('剛載入時沒有任何變更，已授權數只算功能列', () => {

@@ -29,7 +29,7 @@ vi.mock('@/composables/useDialog', () => ({
 
 // 權限矩陣只拿路由表對應選單圖示，換成空路由表就好，不必載入真正的路由與守衛
 vi.mock('@/router', () => ({
-  default: { getRoutes: () => [] },
+  default: { options: { routes: [] } },
 }))
 
 /**
@@ -49,7 +49,7 @@ function buildNode(
     resourceId,
     parentId: null,
     resourceName,
-    resourceCode: null,
+    resourceCode: `code-${resourceId}`,
     level: resourceName.split('>').length,
     displayOrder: 0,
     isEnabled: true,

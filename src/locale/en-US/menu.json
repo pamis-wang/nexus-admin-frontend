@@ -4,10 +4,5 @@
   "systemManagement": "System Management",
   "userManagementList": "User Management",
   "roleManagementList": "Role Management",
-  "menuSettingsList": "Menu Settings",
-  "contentManagement": "Content Management",
-  "articleManagementList": "Article Management",
-  "advancedSettings": "Advanced Settings",
-  "categorySettingsList": "Category Settings",
-  "tagSettingsList": "Tag Settings"
+  "menuSettingsList": "Menu Settings"
 }
