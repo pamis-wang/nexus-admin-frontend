@@ -1,8 +1,10 @@
 # 後台 UI 慣例
 
-> 來源：development-standards — `frontend-standards/08.後台樣式規範.md`
+> 來源：development-standards — `frontend-standards/08.後台樣式規範.md`、`13.多語系規範.md`
 
 只適用**後台（Quasar）**專案。頁面的建立順序（service → 路由 → 頁面 → 列表 → 表單）在 `crud-page.md`；這份講**畫面要長什麼樣**：共用元件、色彩、圖示、按鈕、版面、表單、表格、對話框。
+
+範例的畫面文字直接寫中文；專案有 `src/locale/` 時一律換成 `t()`，寫法見文末〈多語系〉。
 
 ---
 
@@ -208,6 +210,16 @@ const columns: XTableColumn[] = [
 ]
 ```
 
+有 `src/locale/` 時表頭用 `t()`，整個定義包進 `computed`——setup 時算一次的陣列，切換語系後表頭會停在舊語言：
+
+```ts
+const columns = computed<XTableColumn[]>(() => [
+  { name: 'number', align: 'center', label: t('common.column.index'), field: '' },
+  { name: 'name', align: 'left', label: t('xxx.column.name'), field: (row: XxxResponse) => row.name },
+  { name: 'action', align: 'center', label: t('common.column.actions'), field: 'action', style: 'width: 100px;' },
+])
+```
+
 - 第一欄固定「項次」，用 `body-cell-number` slot 渲染 `props.rowIndex + 1`。
 - 最後一欄固定「操作」，`align: 'center'`、`style: 'width: 100px;'`。
 - 文字欄 `align: 'left'`，數值／狀態欄 `align: 'center'`。
@@ -249,6 +261,11 @@ const columns: XTableColumn[] = [
 
 **例外**：成功訊息帶了使用者必須讀完的內容（送審案號、匯入完成但有失敗明細、一次性密碼），那是結果不是回饋，改用 `dialog.showSuccess`。
 
+`useDialog` 已內建兩個安全預設，頁面自己組 `$q.dialog` 時也要照做：
+
+- **確認對話框的焦點預設在「取消」**（`focus: 'cancel'`）。Quasar 預設停在「確認」，對話框一打開就按 Enter、空白鍵或簡報筆的按鍵會直接執行刪除這類無法復原的動作。
+- **錯誤對話框不解析 HTML**（不開 `html: true`），訊息原樣顯示。錯誤訊息常帶後端回傳或使用者輸入的文字，當成 HTML 解析就是 XSS 入口。顯示錯誤一律走 `showError`。
+
 刪除確認的訊息**要帶被刪除對象的名稱**，並註明「此操作無法復原」——只寫「確定要刪除嗎」使用者無法確認刪到的是哪一筆。
 
 ```ts
@@ -270,6 +287,55 @@ async function confirmDelete(data: XxxResponse) {
 
 ---
 
+## 多語系（專案有 `src/locale/` 時）
+
+上面範例的中文全部換成 `t()`，字典 key 分組與英文寫法照 `i18n.md`。
+
+```vue
+<x-breadcrumb
+  :items="[
+    { label: t('menu.home'), icon: 'mdi-home', to: { name: 'home' } },
+    { label: t('menu.userManagement') },
+    { label: t('user.title'), to: { name: 'users' } },
+    { label: t('user.addTitle') },
+  ]"
+/>
+<x-page-header :title="t('user.addTitle')" icon="mdi-account-plus" />
+
+<x-section-header-bar :title="t('user.section.basic')" />
+<q-input dense outlined :label="t('user.field.account')" v-model="formData.account" :rules="[requiredRule(t('user.field.account'))]" />
+
+<q-btn flat :label="t('common.action.cancel')" color="grey" size="md" @click="onCancel" class="q-px-xl" />
+<q-btn unelevated :label="t('common.action.save')" color="primary" size="md" :loading="loading" @click="onSubmit" class="q-px-xl" />
+```
+
+```ts
+/** 必填驗證；訊息在驗證當下才翻譯 */
+function requiredRule(label: string) {
+  return (value: string | null) => (value !== null && value.trim() !== '') || t('validation.input', { field: label })
+}
+
+async function confirmDelete(data: XxxResponse) {
+  dialog.showConfirm(t('xxx.deleteConfirm', { name: data.name }), t('xxx.deleteTitle')).onOk(async () => {
+    try {
+      await deleteXxx(data.id)
+      notify.notifySuccess(t('xxx.deleted', { name: data.name }))
+      loadList()
+    } catch (error) {
+      notify.notifyError((error as ErrorResponseStructure).errorMessage || t('xxx.deleteFailed'), 0)
+    }
+  })
+}
+```
+
+- 固定用詞用 `common` 的 key：儲存 `common.action.save`、取消 `common.action.cancel`、送出 `common.action.submit`；`showConfirm` 的確認／取消鈕已內建。
+- 驗證訊息：專案有 `validation` 命名空間就用它的通用訊息（`t('validation.input', { field })`），沒有就放模組的 `validation.*`。
+- 刪除確認的訊息照樣帶對象名稱，名稱用具名參數 `{name}` 傳進去，不在程式碼裡拼字串。
+
+**頂部列有語系切換**（登入頁的右上角也有）：`mdi-translate` 圖示的下拉選單，選項名稱用該語言本身書寫（繁體中文、English），不隨目前語系翻譯——使用者才認得出自己的語言。切換一律呼叫 `@/plugins/i18n` 的 `setLocale`，不直接改 `i18n.global.locale`：Quasar 元件內建的文字（日期選擇器的月份與星期）與頁籤標題才會一起換，選擇也才會記在這台瀏覽器。
+
+---
+
 ## 交付前逐條對過
 
 每一項都要實際回到程式碼確認，不憑印象打勾：
@@ -285,3 +351,5 @@ async function confirmDelete(data: XxxResponse) {
 - [ ] 每顆 `x-icon` 都有 `tooltip`，顏色為 檢視 `primary`／編輯 `warning`／刪除 `negative`
 - [ ] 刪除有 `showConfirm`，訊息含對象名稱與「此操作無法復原」
 - [ ] 成功用 `notifySuccess`、可重試的失敗用 `notifyError`（`timeout: 0` 不自動關）、阻斷性錯誤用 `showError`
+- [ ] 自己組的 `$q.dialog`：有取消鈕的設 `focus: 'cancel'`，顯示錯誤的沒有開 `html: true`
+- [ ] 有 `src/locale/` 時：麵包屑、標題、按鈕、欄位、驗證訊息、表頭、對話框與通知都走 `t()`，表頭用 `computed`

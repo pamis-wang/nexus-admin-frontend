@@ -5,7 +5,7 @@
 技術基礎：Vue 3.5（TypeScript）＋ Vite，Composition API ＋ `<script setup lang="ts">`。
 UI：**Quasar（後台）｜Tailwind CSS（前台）** ← 複製到專案後刪掉不適用的一項。
 
-本檔只列**每種任務都會踩到的硬規則**。照抄用的流程與模板在 skill `frontend-standards`——**動手做 CRUD 頁面、service 檔與 API 串接、宣告 API 型別、寫元件測試前，先讀那個 skill**；本檔不重複它的內容。
+本檔只列**每種任務都會踩到的硬規則**。照抄用的流程與模板在 skill `frontend-standards`——**動手做 CRUD 頁面、service 檔與 API 串接、宣告 API 型別、寫元件測試、新增畫面文字前，先讀那個 skill**；本檔不重複它的內容。
 
 ---
 
@@ -75,9 +75,23 @@ UI：**Quasar（後台）｜Tailwind CSS（前台）** ← 複製到專案後刪
 - **後台：有對應的 `x-` 共用元件就用它**——表格 `x-table`、表單分區 `x-section-header-bar`、頁面標題 `x-page-header`、麵包屑 `x-breadcrumb`、表格列操作 `x-icon`，不手刻 `q-table`，也不用 `q-separator` ＋ 小標題當分區。
 - **後台：顏色一律用 Quasar 語意色名**（`primary`／`negative`／`warning`…）、圖示一律 `mdi-` 前綴。動作圖示對照表、按鈕四階、版面三段與對話框／通知的選用照 skill 的 `ui-conventions.md`。
 
+## 多語系（專案有 `src/locale/` 時）
+
+有 `src/locale/` 代表專案採用 vue-i18n，本節才適用；沒有的專案畫面文字照原本直接寫中文。
+
+- **使用者看得到的文字一律用 `t()`，模板與 script 都不寫死**——標題、按鈕、欄位標籤、表頭、placeholder、驗證訊息、對話框與通知。ESLint 的 `no-raw-text` 只擋模板，script 裡的字串（通知、對話框、驗證規則、表格欄位）要自己守。
+- **繁中（`zh-TW/`）與英文（`en-US/`）字典同一次補齊**：同一個 key 兩份 JSON 都加，英文不留到之後、不拿中文頂替。
+- **英文照產品術語表與寫法規則**（大小寫、組合詞、確認問句、標點，規則在 skill 的 `i18n.md`）。先沿用字典裡既有的譯法，同一句中文只對應一種英文。
+- 含 `t()` 的表格欄位定義、下拉選項用 **`computed`**——setup 時算一次的陣列，切換語系後會停在舊語言。
+- 不翻譯：logger 訊息、程式碼註解、測試描述、使用者自訂的資料。
+
+新增頁面文字的步驟、字典命名空間與 key 分組、操作導覽的雙語格式照 skill 的 `i18n.md`。
+
 ## 測試
 
-**測試檔一律集中放 `src/__tests__/`**，依來源檔案的 `src/` 相對路徑建子目錄，命名 `<原始檔名>.spec.ts`。Quasar 元件測試有四個預設做法會靜默失敗的地方（`mount` vs `shallowMount`、Quasar plugin、`vi.mock` 的 `ref`、`vi.waitFor`），寫測試前照 skill 的 `component-test.md`。
+**測試檔一律集中放 `src/__tests__/`**，依來源檔案的 `src/` 相對路徑建子目錄，命名 `<原始檔名>.spec.ts`。Quasar 元件測試有幾個預設做法會靜默失敗的地方（`mount` vs `shallowMount`、Quasar 與 i18n plugin、`vi.mock` 的 `ref`、`vi.waitFor`），寫測試前照 skill 的 `component-test.md`。
+
+**`vi.fn` 一律帶被替換函式的完整簽章當型別參數**：`vi.fn<(userId: string) => Promise<ResponseStructure<null>>>()`。裸的 `vi.fn()` 收什麼參數與回傳值都過，service 簽章改了測試照樣編譯通過。
 
 ## 命名
 
