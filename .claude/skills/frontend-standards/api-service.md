@@ -1,6 +1,6 @@
 # service 檔與 axiosService 串接
 
-> 來源：development-standards @ `d76e95f` — `frontend-standards/06.型別與API串接規範.md`
+> 來源：development-standards @ `d76e95f` — `frontend-standards/06.型別與API串接規範.md`、`13.多語系規範.md`
 
 **一律透過 `axiosService` 呼叫後端，禁止在頁面／元件直接 import axios。**
 
@@ -142,18 +142,42 @@ if (response.success) {
 }
 ```
 
+非 2xx 不會走到 `else`——`request` 直接拋出，錯誤在 `catch` 處理，見〈錯誤訊息〉。
+
 ---
 
 ## axiosService 已經做掉的事——頁面不要重複做
 
 - 自動附加 `Authorization: Bearer <token>`（從 user store 取 `accessToken`）。
-- 非 2xx 依狀態碼記 log（400／403／404／422／500…）。
-- **401 自動用 `refreshToken` 刷新**；刷新期間其他請求進入**佇列**等新 token 後重送；無 refresh token 或刷新失敗則**強制登出導回登入頁**。
+- 非 2xx 依狀態碼記 log（400／403／404／422／500…），並把錯誤轉成**友善訊息**放進 `errorMessage`。
+- **401 自動用 `refreshToken` 換發**；換發期間其他遇到 401 的請求共用同一次換發，拿到新 token 後重送。沒收到回應（斷網、逾時）不是 401，不嘗試換發。
+- **換發失敗或沒有 refresh token 就強制登出、導回登入頁，這個請求與其他還在等回應的請求一律掛起不回**：Promise 不 resolve 也不 reject，頁面的 `catch` 不會執行，跳回登入頁前不會冒出錯誤通知。
 - 最後統一拋出 `ResponseStructure` 錯誤物件。
 
-> 401 佇列的存在是為了避免多個並行請求同時觸發刷新造成競態。這是團隊標準實作，**不要在頁面另寫一套 401 處理**。
+> 共用同一次換發，是因為 refresh token 換過一次就失效：並行請求各自換發，只有第一個成功、其餘失敗而把使用者登出。這是團隊標準實作，**不要在頁面另寫一套 401 處理，也不要為登出期間的錯誤另寫判斷**。
 
 頁面只需要處理：業務錯誤（`result.error`）的呈現、未預期例外的 `catch`、`loading` 的 `finally`。
+
+---
+
+## 錯誤訊息
+
+要顯示給使用者的錯誤取 `catch` 拿到的 **`errorMessage`**，沒有才退回頁面自己的文字：
+
+```ts
+} catch (error) {
+  notify.notifyError((error as ResponseStructure<null>).errorMessage || '新增失敗', 0)
+}
+```
+
+`errorMessage` 已經是友善訊息：後端有回錯誤訊息就用後端的；沒有（斷網、逾時、代理伺服器的錯誤頁）就依狀態碼給通用說明（「請求逾時，請稍後再試」「沒有權限執行此操作」）。頁面不自己依狀態碼拼訊息，也不顯示 axios 的原始錯誤文字。
+
+**有 `src/locale/` 時**，`errorMessage` 也已依目前語系處理：
+
+- 繁中直接顯示後端原文；英文查後端訊息的英文對照表，查不到就改顯示 `http` 字典的通用說明（原文記在 log）——英文介面不會冒出中文。
+- 後端訊息的英文對照**不放進 vue-i18n 字典**：後端訊息含 `[ ] { } .` 等字元，當成 key 會被解析成路徑或訊息語法。補對照時加進專案的後端訊息對照表，key 用後端的中文原文。
+- `result.error.message` 是後端原文、沒經過語系處理。2xx 卻帶 `result.error` 而要顯示它時，先經過專案的後端訊息轉換（例如 `resolveBackendMessage(message, t('user.loadFailed'))`），查不到就顯示自己的 `t()` 文字。
+- 退回用的頁面文字也走 `t()`：`errorMessage || t('user.createFailed')`。
 
 ---
 

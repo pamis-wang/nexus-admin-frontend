@@ -1,6 +1,6 @@
 # 從零做一個 CRUD 頁面
 
-> 來源：development-standards @ `9c740b0` — `frontend-standards/10.開發實作指南.md`
+> 來源：development-standards @ `9c740b0` — `frontend-standards/10.開發實作指南.md`、`13.多語系規範.md`
 
 以「使用者管理（User）」為例。**順序不可跳**：service 先建好，型別才穩定，頁面才有東西可串。
 
@@ -9,7 +9,7 @@
       ↓
 2. 註冊路由
       ↓
-3. 建頁面模組資料夾與頁面型別
+3. 建頁面模組資料夾與頁面型別（有 src/locale/：同時建字典）
       ↓
 4. 列表頁：串接 + 導覽
       ↓
@@ -17,6 +17,8 @@
 ```
 
 後台專案的畫面長相（圖示、按鈕階級、版面三段、表單分區、表格欄位、對話框與通知）照 `ui-conventions.md`——這份只講順序與串接。
+
+範例的畫面文字直接寫中文；**專案有 `src/locale/` 時一律換成 `t()`**，各步驟末尾的〈有 `src/locale/` 時〉列出差異，字典與英文寫法照 `i18n.md`。
 
 ---
 
@@ -62,6 +64,8 @@ export const userRoutes: RouteRecordRaw = {
 
 在 `router/routes.ts` 匯入彙整。ID 一律走路由參數（`users/:userId`），**不用 query string**。
 
+**有 `src/locale/` 時**：`meta.title` 填 `menu` 字典的 key（用路由 `name`），不填中文——`meta: { title: 'userManagement', requiresAuth: true }`，`menu.json` 兩個語系都加 `"userManagement"`。
+
 ---
 
 ## 3　建頁面模組與頁面型別
@@ -91,6 +95,8 @@ export interface UserFormData {
 ```
 
 > 為什麼不直接用 service 的 `UserResponse`：頁面與 service 解耦，後端合約改動不會悄悄穿透到頁面。判斷細則見 `types.md`。
+
+**有 `src/locale/` 時**：同一步建模組字典 `src/locale/zh-TW/user.json`、`src/locale/en-US/user.json`，並在兩個語系的 `index.ts` 都 import。key 分組照 `i18n.md`。
 
 ---
 
@@ -162,6 +168,26 @@ function buildEditRoute(userId: string): RouteLocationRaw {
 - `onMounted` 等 lifecycle 在函數**之前**。
 - `async function` 排在一般 `function` 之前。
 
+**有 `src/locale/` 時**，差異只有這幾處：
+
+```vue
+<x-icon :tooltip="t('common.action.edit')" icon="mdi-file-document-edit-outline" color="warning" flat dense :to="buildEditRoute(props.row.id)" />
+```
+
+```ts
+import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'            // 與 vue-router 同一組
+import type { RouteLocationRaw } from 'vue-router'
+
+const { t } = useI18n()                       // const 區第一個
+const dialog = useDialog()
+
+// loadUsers 的 catch：退回文字也走 t()
+notify.notifyError((error as ResponseStructure<null>).errorMessage || t('common.unknownError'))
+```
+
+表頭含 `t()`，欄位定義要改用 `computed`，寫法見 `ui-conventions.md`〈表格〉。
+
 ---
 
 ## 5　表單頁
@@ -187,6 +213,16 @@ async function onSubmit() {
 
 編輯頁在 `onMounted` 先載入單筆資料填入表單，送出改呼叫 `updateUser(userId, data)`。`userId` 從 `useRoute().params` 取。
 
+**有 `src/locale/` 時**：通知文字用模組字典的 key，帶上對象名稱。
+
+```ts
+notify.notifySuccess(t('user.created', { name: form.account }))
+// …
+notify.notifyError(t('user.createFailed'))
+```
+
+標題、分區、欄位標籤與驗證訊息的寫法見 `ui-conventions.md`〈多語系〉。
+
 ---
 
 ## 錯誤處理分工
@@ -211,4 +247,5 @@ async function onSubmit() {
 - [ ] 衍生值用 `computed`，沒有 deep watch 整包物件
 - [ ] 導頁按鈕用 `:to`，只有「先驗證／確認／送 API 再導頁」才用 `router.push`
 - [ ] 元件樣式有 `scoped`，顏色字級走 token 沒寫死
+- [ ] 有 `src/locale/` 時：畫面文字都走 `t()`、繁中與英文字典同時補齊、含 `t()` 的表頭用 `computed`、路由 `meta.title` 是 `menu` 的 key
 - [ ] `npm run lint` 與 `npm run type-check` 通過

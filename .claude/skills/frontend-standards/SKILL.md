@@ -1,6 +1,6 @@
 ---
 name: frontend-standards
-description: Vue 3 前端的照抄模板與開發順序——從零做一個 CRUD 頁面（路由、列表、表單）、service 檔與 axiosService 串接、檔案上傳、TypeScript 型別與後端 JSON 形狀對應、可空性判斷、頁面型別解耦、後台 UI 慣例（x- 共用元件、mdi 圖示、按鈕階級、版面三段、表單分區、對話框與通知）、Quasar 元件測試（mount／plugin／vi.mock 的 ref／vi.waitFor）
+description: Vue 3 前端的照抄模板與開發順序——從零做一個 CRUD 頁面（路由、列表、表單）、service 檔與 axiosService 串接、檔案上傳、TypeScript 型別與後端 JSON 形狀對應、可空性判斷、頁面型別解耦、後台 UI 慣例（x- 共用元件、mdi 圖示、按鈕階級、版面三段、表單分區、對話框與通知）、Quasar 元件測試（mount／plugin／vi.mock 的 ref／vi.fn 型別／vi.waitFor）、多語系（t()、字典命名空間與 key、英文寫法、操作導覽雙語）
 ---
 
 # 前端開發規範
@@ -17,13 +17,14 @@ Vue 3.5（TypeScript）＋ Vite，Composition API ＋ `<script setup>`。跨任�
 | 新增或修改 service 檔、串 API、處理回應與錯誤、檔案上傳 | `api-service.md` |
 | 宣告型別、判斷欄位可空性、對應後端 JSON 形狀 | `types.md` |
 | 後台畫面的圖示、按鈕、版面、表單、表格、對話框慣例 | `ui-conventions.md` |
-| 寫元件測試（`mount`／Quasar plugin／`vi.mock`／`vi.waitFor`） | `component-test.md` |
+| 寫元件測試（`mount`／Quasar plugin／`vi.mock`／`vi.fn` 型別／`vi.waitFor`） | `component-test.md` |
+| 專案有 `src/locale/`：新增或修改畫面文字、補字典、寫英文、操作導覽文字 | `i18n.md` |
 
-一個完整 CRUD 頁面會用到五份：`crud-page.md` 給順序，`api-service.md` 給串接模板，`types.md` 給型別判斷，`ui-conventions.md` 給畫面長相，`component-test.md` 給測試模板。
+一個完整 CRUD 頁面會用到五份：`crud-page.md` 給順序，`api-service.md` 給串接模板，`types.md` 給型別判斷，`ui-conventions.md` 給畫面長相，`component-test.md` 給測試模板；專案有 `src/locale/` 時再加 `i18n.md` 給字典與英文寫法。
 
 ## 這裡查不到的東西
 
-環境建置、技術選型依據、前台 Tailwind 樣式、Quasar 與 SCSS 的註冊設定、路由守衛與權限控管，以及各項決策的完整理由（`附錄01`–`附錄05`），都在 GitLab `agent-go/development-standards` 的 `frontend-standards/`，**不在本專案內**。Node 版本限定的設定由 skill `node-version-lock` 負責。
+環境建置、技術選型依據、前台 Tailwind 樣式、Quasar 與 SCSS 的註冊設定、路由守衛與權限控管、多語系的完整規範與理由（`13.多語系規範.md`），以及各項決策的完整理由（`附錄01`–`附錄05`），都在 GitLab `agent-go/development-standards` 的 `frontend-standards/`，**不在本專案內**。Node 版本限定的設定由 skill `node-version-lock` 負責。
 
 Vue／Quasar／Tailwind 的框架知識查官方文件——規範只記錄**團隊的約定與取捨**。
 
