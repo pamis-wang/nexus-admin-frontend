@@ -15,3 +15,8 @@ $warning   : #f9c851
 
 // 主色淡底：分區標題列、分頁目前頁；半透明疊在卡片上，亮色、暗色模式都適用。色名類別寫在 assets/scss/styles.scss
 $brand-soft : rgba($primary, 0.12)
+
+// 暗色模式的主色文字：主色疊在暗色卡片（$dark）上對比只有 2.15，文字與指示色改用這個色。
+// 主色與白色各半混合（Sass 的 mix(#fff, $primary, 50%)；全域 mix() 已棄用，改主色時照這個算法重算）：
+// 暗色卡片上 5.39，疊在 $brand-soft 淡底上 4.98。底色仍用 $primary（白字 5.36），覆寫寫在 assets/scss/styles.scss
+$primary-on-dark : #94b2ec

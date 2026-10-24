@@ -12,3 +12,22 @@
 .bg-brand-soft {
   background: var(--q-brand-soft) !important;
 }
+
+/*
+ * 暗色模式
+ * 主色當文字放在暗色卡片上對比只有 2.15，文字與指示色改用 $primary-on-dark。
+ * 輸入框焦點、開關、選單選取這些 Quasar 內部樣式直接讀 --q-primary，所以改變數，不是只改 .text-primary。
+ */
+body.body--dark {
+  --q-primary: #{$primary-on-dark};
+
+  /* 底色維持主色，按鈕、表頭、品牌色頂部列與選單上的白字對比才夠 */
+  .bg-primary {
+    background: $primary !important;
+  }
+
+  /* 勾選框的勾是白色，框底變淡後看不清楚，改深色 */
+  .q-checkbox__svg {
+    color: $dark;
+  }
+}
