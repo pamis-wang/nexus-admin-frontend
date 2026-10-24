@@ -7,8 +7,8 @@ export interface Permission {
   level: ResourceLevel
   /** 資源名稱，給人看的，營運端可以改 */
   resourceName: string
-  /** 資源代碼，權限判斷一律用它；純選單分組的資源沒有代碼 */
-  resourceCode: string | null
+  /** 資源代碼，權限判斷一律用它 */
+  resourceCode: string
   /** 排序 */
   sortOrder: number
   /** 子資源列表 */
