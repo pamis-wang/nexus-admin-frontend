@@ -1,306 +1,332 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { RESOURCE_FORBIDDEN_MESSAGE, useAdminRolePermissionMatrix } from '@/pages/AdminRoleManagement/composables/useAdminRolePermissionMatrix'
-import type { AdminResourceResponse } from '@/services/admin/adminResourceService'
-import type { AdminRolePermissionResponse } from '@/services/admin/adminRoleService'
-import type { ResponseStructure } from '@/services/axiosService'
+import { describe, expect, it, vi } from 'vitest'
+import {
+  AUTO_GRANT_ACCESS_HINT,
+  AUTO_REVOKE_DEPENDENT_HINT,
+  combineStates,
+  useAdminRolePermissionMatrix,
+} from '@/pages/AdminRoleManagement/composables/useAdminRolePermissionMatrix'
+import type { AdminRolePermissionActionResponse, AdminRolePermissionNodeResponse } from '@/services/admin/adminRoleService'
 
-const getAdminResourcesMock = vi.fn<() => Promise<ResponseStructure<AdminResourceResponse[]>>>()
-const getAdminRolePermissionsByRoleIdMock = vi.fn<(roleId: string) => Promise<ResponseStructure<AdminRolePermissionResponse[]>>>()
-
-vi.mock('@/services/admin/adminResourceService', () => ({
-  getAdminResources: () => getAdminResourcesMock(),
-}))
-
-vi.mock('@/services/admin/adminRoleService', () => ({
-  getAdminRolePermissionsByRoleId: (roleId: string) => getAdminRolePermissionsByRoleIdMock(roleId),
-}))
-
+// 權限矩陣只拿路由表對應選單圖示，給一筆就夠驗證對照與預設圖示
 vi.mock('@/router', () => ({
-  default: {
-    getRoutes: () => [{ meta: { resourceName: '系統管理', icon: 'mdi-cog' } }],
-  },
+  default: { getRoutes: () => [{ meta: { resourceName: '系統管理>角色管理', icon: 'mdi-account-group' } }] },
 }))
 
-/** 組一筆資源，只有測試在意的欄位需要指定 */
-function buildResource(
-  id: string,
+interface NodeOptions {
+  canAccess?: boolean
+  canCreate?: boolean
+  canUpdate?: boolean
+  canDelete?: boolean
+  isEnabled?: boolean
+  availableActions?: AdminRolePermissionActionResponse[]
+}
+
+/**
+ * 組出權限樹節點
+ * @param resourceId 資源唯一編號
+ * @param resourceName 完整資源名稱
+ * @param options 旗標、啟用狀態與可授權的操作，沒給的旗標為 false、預設四種操作都可授權
+ * @param children 子節點
+ */
+function buildNode(
+  resourceId: string,
   resourceName: string,
-  options: { parentId?: string | null; level?: number; isEnabled?: boolean; displayOrder?: number } = {},
-): AdminResourceResponse {
+  options: NodeOptions = {},
+  children: AdminRolePermissionNodeResponse[] = [],
+): AdminRolePermissionNodeResponse {
   return {
-    id,
-    parentId: options.parentId ?? null,
-    level: options.level ?? 1,
+    resourceId,
+    parentId: null,
     resourceName,
     resourceCode: null,
-    displayOrder: options.displayOrder ?? 0,
+    level: resourceName.split('>').length,
+    displayOrder: 0,
     isEnabled: options.isEnabled ?? true,
-  }
-}
-
-/** 把資料包成 axiosService 的統一回應格式 */
-function buildResponse<T>(data: T): ResponseStructure<T> {
-  return {
-    result: { data, error: null },
-    status: 200,
-    statusText: 'OK',
-    success: true,
-    timestamp: Date.now(),
+    canAccess: options.canAccess ?? false,
+    canCreate: options.canCreate ?? false,
+    canUpdate: options.canUpdate ?? false,
+    canDelete: options.canDelete ?? false,
+    availableActions: options.availableActions ?? ['access', 'create', 'update', 'delete'],
+    children: children.map((child) => ({ ...child, parentId: resourceId })),
   }
 }
 
 /**
- * 組一份 axiosService 失敗時 reject 的物件
- * @param status HTTP 狀態碼
- * @param errorMessage 統一的錯誤訊息
+ * 測試樹（可授權的操作比照後端依端點宣告推導的結果）：
+ * 首頁（只有檢視；可檢視）
+ * 系統管理（群組，後端給的旗標全開，載入時不採用）
+ *   ├ 用戶管理（沒有刪除；可檢視、可修改）
+ *   ├ 角色管理（四種都有；全部沒有）
+ *   └ 資源管理（只有檢視與修改；選單已停用；全部沒有）
  */
-function buildErrorResponse(status: number, errorMessage: string): ResponseStructure<null> {
-  return {
-    result: { data: null, error: { code: status, message: errorMessage } },
-    status,
-    statusText: 'Error',
-    success: false,
-    errorMessage,
-    timestamp: Date.now(),
-  }
-}
-
-/**
- * 固定的測試資源：
- * 系統管理
- *   ├─ 角色管理（啟用）
- *   └─ 選單設定（停用）
- */
-function buildSampleResources(): AdminResourceResponse[] {
+function buildTree(): AdminRolePermissionNodeResponse[] {
   return [
-    buildResource('id-system', '系統管理', { level: 1, displayOrder: 10000 }),
-    buildResource('id-roles', '系統管理>角色管理', { parentId: 'id-system', level: 2, displayOrder: 10100 }),
-    buildResource('id-menu', '系統管理>選單設定', { parentId: 'id-system', level: 2, displayOrder: 10200, isEnabled: false }),
+    buildNode('home', '首頁', { canAccess: true, availableActions: ['access'] }),
+    buildNode('system', '系統管理', { canAccess: true, canCreate: true, canUpdate: true, canDelete: true, availableActions: ['access'] }, [
+      buildNode('users', '系統管理>用戶管理', { canAccess: true, canUpdate: true, availableActions: ['access', 'create', 'update'] }),
+      buildNode('roles', '系統管理>角色管理'),
+      buildNode('resources', '系統管理>資源管理', { isEnabled: false, availableActions: ['access', 'update'] }),
+    ]),
   ]
 }
 
-/** 載入固定測試資源後回傳組合函式 */
-async function mountMatrixWithSampleData() {
-  getAdminResourcesMock.mockResolvedValue(buildResponse(buildSampleResources()))
+function loadMatrix() {
   const matrix = useAdminRolePermissionMatrix()
-  await matrix.loadResources()
-
+  matrix.load(buildTree())
   return matrix
 }
 
-describe('useAdminRolePermissionMatrix - 載入資源', () => {
-  beforeEach(() => {
-    getAdminResourcesMock.mockReset()
-    getAdminRolePermissionsByRoleIdMock.mockReset()
+function rowOf(matrix: ReturnType<typeof useAdminRolePermissionMatrix>, resourceId: string) {
+  const row = matrix.rows.value.find((candidate) => candidate.resourceId === resourceId)
+  if (row === undefined) throw new Error(`找不到資源 ${resourceId}`)
+  return row
+}
+
+describe('useAdminRolePermissionMatrix - 載入', () => {
+  it('攤平成父在前、子在後的列，名稱只取最後一段', () => {
+    const matrix = loadMatrix()
+
+    expect(matrix.rows.value.map((row) => row.name)).toEqual(['首頁', '系統管理', '用戶管理', '角色管理', '資源管理'])
+    expect(rowOf(matrix, 'users').fullPath).toBe('系統管理>用戶管理')
+    expect(rowOf(matrix, 'system').hasChildren).toBe(true)
+    expect(rowOf(matrix, 'users').hasChildren).toBe(false)
   })
 
-  it('把扁平資源組成樹，名稱只取完整路徑的最後一段', async () => {
-    const matrix = await mountMatrixWithSampleData()
+  it('停用的資源照樣列出並帶著停用狀態', () => {
+    const matrix = loadMatrix()
 
-    expect(matrix.treeNodes.value).toHaveLength(1)
-
-    const root = matrix.treeNodes.value[0]
-
-    expect(root?.name).toBe('系統管理')
-    expect(root?.fullPath).toBe('系統管理')
-    expect(root?.icon).toBe('mdi-cog')
-    expect(root?.children.map((child) => child.name)).toEqual(['角色管理', '選單設定'])
+    expect(rowOf(matrix, 'resources').isEnabled).toBe(false)
+    expect(rowOf(matrix, 'roles').isEnabled).toBe(true)
   })
 
-  it('停用的資源照樣列出來，並標示啟用狀態', async () => {
-    const matrix = await mountMatrixWithSampleData()
-    const menuNode = matrix.treeNodes.value[0]?.children[1]
+  it('可授權的操作轉成矩陣的旗標欄位，依欄位順序排列', () => {
+    const matrix = loadMatrix()
 
-    expect(menuNode?.name).toBe('選單設定')
-    expect(menuNode?.isEnabled).toBe(false)
+    expect(rowOf(matrix, 'users').availableActions).toEqual(['canAccess', 'canCreate', 'canUpdate'])
+    expect(rowOf(matrix, 'home').availableActions).toEqual(['canAccess'])
   })
 
-  it('載入後全部權限都是未勾選', async () => {
-    const matrix = await mountMatrixWithSampleData()
+  it('沒有的操作是不適用；群組列只看底下有這種操作的功能', () => {
+    const matrix = loadMatrix()
 
-    expect(matrix.hasPermission('id-system', 'canAccess')).toBe(false)
-    expect(matrix.hasPermission('id-roles', 'canAccess')).toBe(false)
-    expect(matrix.hasPermission('id-menu', 'canAccess')).toBe(false)
+    expect(rowOf(matrix, 'home').cells).toEqual({ canAccess: 'all', canCreate: 'na', canUpdate: 'na', canDelete: 'na' })
+    expect(rowOf(matrix, 'users').cells.canDelete).toBe('na')
+    // 刪除只有角色管理有，而它沒勾，所以群組是 none 而不是 na
+    expect(rowOf(matrix, 'system').cells).toEqual({ canAccess: 'some', canCreate: 'none', canUpdate: 'some', canDelete: 'none' })
+  })
+
+  it('整列狀態不計不適用的格子', () => {
+    const matrix = loadMatrix()
+
+    expect(rowOf(matrix, 'home').rowState).toBe('all')
+    expect(rowOf(matrix, 'system').rowState).toBe('some')
+  })
+
+  it('群組資源本身的旗標不採用，一律看底下的功能', () => {
+    const matrix = loadMatrix()
+
+    expect(rowOf(matrix, 'system').cells.canDelete).toBe('none')
+  })
+
+  it('圖示依完整資源名稱取自路由 meta；路由沒有的依層級給預設圖示', () => {
+    const matrix = loadMatrix()
+
+    expect(rowOf(matrix, 'roles').icon).toBe('mdi-account-group')
+    expect(rowOf(matrix, 'system').icon).toBe('mdi-folder')
+    expect(rowOf(matrix, 'users').icon).toBe('mdi-folder-outline')
+  })
+
+  it('剛載入時沒有任何變更，已授權數只算功能列', () => {
+    const matrix = loadMatrix()
+
+    expect(matrix.changedCount.value).toBe(0)
+    expect(matrix.grantedCount.value).toBe(2)
+    expect(matrix.leafResources.value).toHaveLength(4)
+  })
+
+  it('loadBlank 只取資源當骨架，權限全部不勾且不算變更', () => {
+    const matrix = useAdminRolePermissionMatrix()
+
+    matrix.loadBlank(buildTree())
+
+    expect(matrix.grantedCount.value).toBe(0)
+    expect(matrix.changedCount.value).toBe(0)
+    expect(matrix.rows.value).toHaveLength(5)
   })
 })
 
-describe('useAdminRolePermissionMatrix - 資源清單載入失敗', () => {
-  beforeEach(() => {
-    getAdminResourcesMock.mockReset()
-    getAdminRolePermissionsByRoleIdMock.mockReset()
+describe('useAdminRolePermissionMatrix - 勾選連動', () => {
+  it('勾新增時自動勾上檢視，並回傳說明', () => {
+    const matrix = loadMatrix()
+
+    const hint = matrix.setCell('roles', 'canCreate', true)
+
+    expect(hint).toBe(AUTO_GRANT_ACCESS_HINT)
+    expect(rowOf(matrix, 'roles').cells).toEqual({ canAccess: 'all', canCreate: 'all', canUpdate: 'none', canDelete: 'none' })
   })
 
-  it('沒有「資源管理」權限（403）時不拋出，說明需要哪個權限', async () => {
-    getAdminResourcesMock.mockRejectedValue(buildErrorResponse(403, '權限不足'))
-    const matrix = useAdminRolePermissionMatrix()
+  it('取消檢視時一併取消其他操作，並回傳說明', () => {
+    const matrix = loadMatrix()
 
-    const isLoaded = await matrix.loadResources()
+    const hint = matrix.setCell('users', 'canAccess', false)
 
-    expect(isLoaded).toBe(false)
-    expect(matrix.resourceErrorMessage.value).toBe(RESOURCE_FORBIDDEN_MESSAGE)
-    expect(matrix.treeNodes.value).toHaveLength(0)
+    expect(hint).toBe(AUTO_REVOKE_DEPENDENT_HINT)
+    expect(rowOf(matrix, 'users').rowState).toBe('none')
   })
 
-  it('其他錯誤時帶上錯誤訊息', async () => {
-    getAdminResourcesMock.mockRejectedValue(buildErrorResponse(500, '伺服器忙碌中'))
-    const matrix = useAdminRolePermissionMatrix()
+  it('不適用的格子勾了也不會改變任何東西', () => {
+    const matrix = loadMatrix()
 
-    await matrix.loadResources()
-
-    expect(matrix.resourceErrorMessage.value).toBe('載入資源清單失敗：伺服器忙碌中')
+    expect(matrix.setCell('home', 'canCreate', true)).toBeNull()
+    expect(rowOf(matrix, 'home').cells.canCreate).toBe('na')
+    expect(matrix.changedCount.value).toBe(0)
   })
 
-  it('重新載入成功後清掉先前的錯誤', async () => {
-    getAdminResourcesMock.mockRejectedValueOnce(buildErrorResponse(403, '權限不足'))
-    const matrix = useAdminRolePermissionMatrix()
-    await matrix.loadResources()
+  it('勾群組列的格子只套用到底下有這種操作的功能', () => {
+    const matrix = loadMatrix()
 
-    getAdminResourcesMock.mockResolvedValue(buildResponse(buildSampleResources()))
-    const isLoaded = await matrix.loadResources()
+    matrix.setCell('system', 'canDelete', true)
 
-    expect(isLoaded).toBe(true)
-    expect(matrix.resourceErrorMessage.value).toBeNull()
-  })
-})
-
-describe('useAdminRolePermissionMatrix - 權限連動', () => {
-  beforeEach(() => {
-    getAdminResourcesMock.mockReset()
-    getAdminRolePermissionsByRoleIdMock.mockReset()
-  })
-
-  it('勾選父節點時，子孫一併勾選', async () => {
-    const matrix = await mountMatrixWithSampleData()
-
-    matrix.updatePermission('id-system', 'canAccess', true)
-
-    expect(matrix.hasPermission('id-roles', 'canAccess')).toBe(true)
-    expect(matrix.hasPermission('id-menu', 'canAccess')).toBe(true)
-  })
-
-  it('取消父節點時，子孫一併取消', async () => {
-    const matrix = await mountMatrixWithSampleData()
-    matrix.updatePermission('id-system', 'canAccess', true)
-
-    matrix.updatePermission('id-system', 'canAccess', false)
-
-    expect(matrix.hasPermission('id-roles', 'canAccess')).toBe(false)
-    expect(matrix.hasPermission('id-menu', 'canAccess')).toBe(false)
-  })
-
-  it('取消訪問權限時，同一節點的新增、修改、刪除一併清掉', async () => {
-    const matrix = await mountMatrixWithSampleData()
-    matrix.updatePermission('id-roles', 'canAccess', true)
-    matrix.updatePermission('id-roles', 'canCreate', true)
-    matrix.updatePermission('id-roles', 'canDelete', true)
-
-    matrix.updatePermission('id-roles', 'canAccess', false)
-
-    expect(matrix.hasPermission('id-roles', 'canCreate')).toBe(false)
-    expect(matrix.hasPermission('id-roles', 'canDelete')).toBe(false)
-  })
-
-  it('同層全部勾選時，父節點自動跟著勾選', async () => {
-    const matrix = await mountMatrixWithSampleData()
-
-    matrix.updatePermission('id-roles', 'canAccess', true)
-
-    expect(matrix.hasPermission('id-system', 'canAccess')).toBe(false)
-
-    matrix.updatePermission('id-menu', 'canAccess', true)
-
-    expect(matrix.hasPermission('id-system', 'canAccess')).toBe(true)
-  })
-
-  it('同層最後一個被取消時，父節點也跟著取消', async () => {
-    const matrix = await mountMatrixWithSampleData()
-    matrix.updatePermission('id-system', 'canAccess', true)
-
-    matrix.updatePermission('id-roles', 'canAccess', false)
-
-    expect(matrix.hasPermission('id-system', 'canAccess')).toBe(true)
-
-    matrix.updatePermission('id-menu', 'canAccess', false)
-
-    expect(matrix.hasPermission('id-system', 'canAccess')).toBe(false)
+    expect(rowOf(matrix, 'roles').cells.canDelete).toBe('all')
+    expect(rowOf(matrix, 'users').cells.canDelete).toBe('na')
+    expect(rowOf(matrix, 'system').cells.canDelete).toBe('all')
   })
 })
 
-describe('useAdminRolePermissionMatrix - 角色權限與送出', () => {
-  beforeEach(() => {
-    getAdminResourcesMock.mockReset()
-    getAdminRolePermissionsByRoleIdMock.mockReset()
+describe('useAdminRolePermissionMatrix - 整列與整欄', () => {
+  it('整列：還沒全勾就把可授權的操作全部勾上，不會觸發自動勾檢視的說明', () => {
+    const matrix = loadMatrix()
+
+    const hint = matrix.toggleRow('system')
+
+    expect(hint).toBeNull()
+    expect(rowOf(matrix, 'system').rowState).toBe('all')
+    expect(rowOf(matrix, 'resources').cells).toEqual({ canAccess: 'all', canCreate: 'na', canUpdate: 'all', canDelete: 'na' })
   })
 
-  it('載入角色權限後套用到對應資源上', async () => {
-    const matrix = await mountMatrixWithSampleData()
-    getAdminRolePermissionsByRoleIdMock.mockResolvedValue(
-      buildResponse([
-        {
-          id: 'perm-1',
-          roleId: 'role-1',
-          roleName: '管理員',
-          resourceId: 'id-roles',
-          resourceName: '系統管理>角色管理',
-          canAccess: true,
-          canCreate: true,
-          canUpdate: false,
-          canDelete: false,
-        },
-      ]),
-    )
+  it('整列：已經全勾就全部取消，不會觸發連帶取消的說明', () => {
+    const matrix = loadMatrix()
+    matrix.toggleRow('roles')
 
-    await matrix.loadRolePermissions('role-1')
+    const hint = matrix.toggleRow('roles')
 
-    expect(matrix.hasPermission('id-roles', 'canAccess')).toBe(true)
-    expect(matrix.hasPermission('id-roles', 'canCreate')).toBe(true)
-    expect(matrix.hasPermission('id-roles', 'canUpdate')).toBe(false)
-    expect(matrix.hasPermission('id-menu', 'canAccess')).toBe(false)
+    expect(hint).toBeNull()
+    expect(rowOf(matrix, 'roles').rowState).toBe('none')
   })
 
-  it('重設會還原成載入當下的權限', async () => {
-    const matrix = await mountMatrixWithSampleData()
-    getAdminRolePermissionsByRoleIdMock.mockResolvedValue(
-      buildResponse([
-        {
-          id: 'perm-1',
-          roleId: 'role-1',
-          roleName: '管理員',
-          resourceId: 'id-roles',
-          resourceName: '系統管理>角色管理',
-          canAccess: true,
-          canCreate: false,
-          canUpdate: false,
-          canDelete: false,
-        },
-      ]),
-    )
-    await matrix.loadRolePermissions('role-1')
-    matrix.updatePermission('id-roles', 'canAccess', false)
-    matrix.updatePermission('id-menu', 'canAccess', true)
+  it('整欄只套用到指定且有這種操作的功能', () => {
+    const matrix = loadMatrix()
 
-    matrix.resetPermissions()
+    matrix.toggleColumn('canDelete', ['home', 'users', 'roles', 'resources'])
 
-    expect(matrix.hasPermission('id-roles', 'canAccess')).toBe(true)
-    expect(matrix.hasPermission('id-menu', 'canAccess')).toBe(false)
+    expect(rowOf(matrix, 'roles').cells.canDelete).toBe('all')
+    expect(
+      matrix
+        .buildPermissionItems()
+        .filter((item) => item.canDelete)
+        .map((item) => item.resourceId),
+    ).toEqual(['system', 'roles'])
   })
 
-  it('送出的權限矩陣涵蓋全部資源，含未勾選與已停用的', async () => {
-    const matrix = await mountMatrixWithSampleData()
-    matrix.updatePermission('id-roles', 'canAccess', true)
+  it('整欄：指定的功能都已勾選時改為全部取消', () => {
+    const matrix = loadMatrix()
+    matrix.toggleColumn('canUpdate', ['users', 'roles', 'resources'])
+
+    const hint = matrix.toggleColumn('canUpdate', ['users', 'roles', 'resources'])
+
+    expect(hint).toBeNull()
+    expect(rowOf(matrix, 'system').cells.canUpdate).toBe('none')
+    // 勾修改時自動勾上的檢視不會跟著取消
+    expect(rowOf(matrix, 'system').cells.canAccess).toBe('all')
+  })
+})
+
+describe('useAdminRolePermissionMatrix - 變更、重設與範本', () => {
+  it('變更數以功能的每一種操作計，群組列標出底下有變動的操作', () => {
+    const matrix = loadMatrix()
+
+    matrix.setCell('roles', 'canCreate', true)
+
+    expect(matrix.changedCount.value).toBe(2)
+    expect(rowOf(matrix, 'roles').changedActions).toEqual(['canAccess', 'canCreate'])
+    expect(rowOf(matrix, 'system').changedActions).toEqual(['canAccess', 'canCreate'])
+    expect(rowOf(matrix, 'home').changedActions).toEqual([])
+  })
+
+  it('改回原狀就不算變更', () => {
+    const matrix = loadMatrix()
+    matrix.setCell('users', 'canCreate', true)
+
+    matrix.setCell('users', 'canCreate', false)
+
+    expect(matrix.changedCount.value).toBe(0)
+  })
+
+  it('重設還原成載入時的權限', () => {
+    const matrix = loadMatrix()
+    matrix.toggleRow('system')
+
+    matrix.reset()
+
+    expect(matrix.changedCount.value).toBe(0)
+    expect(rowOf(matrix, 'users').cells.canUpdate).toBe('all')
+  })
+
+  it('套用範本只換權限，基準不變，所以會標成未儲存', () => {
+    const matrix = useAdminRolePermissionMatrix()
+    matrix.loadBlank(buildTree())
+
+    matrix.applyTemplate(buildTree())
+
+    expect(rowOf(matrix, 'users').cells).toEqual({ canAccess: 'all', canCreate: 'none', canUpdate: 'all', canDelete: 'na' })
+    expect(matrix.changedCount.value).toBe(3)
+  })
+
+  it('清空把全部功能取消勾選', () => {
+    const matrix = loadMatrix()
+
+    matrix.clear()
+
+    expect(matrix.grantedCount.value).toBe(0)
+  })
+})
+
+describe('useAdminRolePermissionMatrix - 送出內容', () => {
+  it('全部資源各一筆，含沒勾的、停用的功能與群組', () => {
+    const matrix = loadMatrix()
 
     const items = matrix.buildPermissionItems()
 
-    expect(items).toHaveLength(3)
-    expect(items.map((item) => item.resourceId)).toEqual(['id-system', 'id-roles', 'id-menu'])
-    expect(items.find((item) => item.resourceId === 'id-roles')?.canAccess).toBe(true)
-    // 停用的資源也要送，否則全量替換會把它既有的權限一起洗掉
-    expect(items.find((item) => item.resourceId === 'id-menu')).toEqual({
-      resourceId: 'id-menu',
+    expect(items.map((item) => item.resourceId)).toEqual(['home', 'system', 'users', 'roles', 'resources'])
+    expect(items.find((item) => item.resourceId === 'resources')).toEqual({
+      resourceId: 'resources',
       canAccess: false,
       canCreate: false,
       canUpdate: false,
       canDelete: false,
     })
+  })
+
+  it('群組資源的旗標取底下功能的聯集', () => {
+    const matrix = loadMatrix()
+
+    const items = matrix.buildPermissionItems()
+
+    expect(items.find((item) => item.resourceId === 'system')).toEqual({
+      resourceId: 'system',
+      canAccess: true,
+      canCreate: false,
+      canUpdate: true,
+      canDelete: false,
+    })
+  })
+})
+
+describe('combineStates', () => {
+  it('不適用的狀態不參與合併；全部不適用才是不適用', () => {
+    expect(combineStates(['all', 'na', 'all'])).toBe('all')
+    expect(combineStates(['none', 'na'])).toBe('none')
+    expect(combineStates(['all', 'none', 'na'])).toBe('some')
+    expect(combineStates(['na', 'na'])).toBe('na')
   })
 })
