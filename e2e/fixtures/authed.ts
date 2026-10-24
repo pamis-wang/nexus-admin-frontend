@@ -146,6 +146,9 @@ async function mockApi(page: Page) {
 
   await fulfillJson(page, '**/api/admin-users', ADMIN_USERS)
   await fulfillJson(page, '**/api/admin-roles', ADMIN_ROLES)
+  // 新增頁借第一個角色的權限矩陣當骨架；編輯、檢視頁也讀這一支，假資料一律回第一個角色
+  await fulfillJson(page, '**/api/admin-roles/*/permissions', { role: ADMIN_ROLES[0], permissions: buildRolePermissionTree() })
+  await fulfillJson(page, '**/api/admin-roles/*/users', [{ id: 'user-1', account: 'alice', fullName: '王小明', isDisabled: false }])
   await fulfillJson(page, '**/api/admin-resources', buildFlatResources())
   await fulfillJson(page, '**/api/admin-resources/tree', { version: 'v1', items: buildResourceTree() })
 }
@@ -200,6 +203,42 @@ function buildPermissionTree(): unknown[] {
     canDelete: true,
     children: [],
   }))
+}
+
+/**
+ * 組出角色權限矩陣端點要回傳的權限樹：以全部資源為底、四種操作都可授權、只給檢視
+ * @returns 第一層節點，子節點依完整路徑組回巢狀結構
+ */
+function buildRolePermissionTree(): unknown[] {
+  return RESOURCE_NAMES.filter((resourceName) => !resourceName.includes('>')).map((rootName) => buildRolePermissionNode(rootName))
+}
+
+/**
+ * 遞迴組出權限矩陣的單一節點與它的子節點
+ * @param resourceName 資源完整路徑
+ * @returns 權限樹節點
+ */
+function buildRolePermissionNode(resourceName: string): unknown {
+  const index = RESOURCE_NAMES.indexOf(resourceName)
+  const directChildNames = RESOURCE_NAMES.filter(
+    (candidate) => candidate.startsWith(`${resourceName}>`) && candidate.split('>').length === resourceName.split('>').length + 1,
+  )
+
+  return {
+    resourceId: `resource-${index + 1}`,
+    parentId: resolveParentId(resourceName),
+    resourceName,
+    resourceCode: null,
+    level: resourceName.split('>').length,
+    displayOrder: index + 1,
+    isEnabled: true,
+    canAccess: true,
+    canCreate: false,
+    canUpdate: false,
+    canDelete: false,
+    availableActions: ['access', 'create', 'update', 'delete'],
+    children: directChildNames.map((childName) => buildRolePermissionNode(childName)),
+  }
 }
 
 /**

@@ -1,16 +1,32 @@
-import { computed, reactive, ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import { useLogger } from '@/composables/useLogger'
 import router from '@/router'
-import { getAdminResources } from '@/services/admin/adminResourceService'
-import { getAdminRolePermissionsByRoleId, type AdminRolePermissionItemRequest } from '@/services/admin/adminRoleService'
-import type { ResponseStructure } from '@/services/axiosService'
+import type { AdminRolePermissionActionResponse, AdminRolePermissionItemRequest, AdminRolePermissionNodeResponse } from '@/services/admin/adminRoleService'
 import type {
+  AdminRolePermissionAction,
+  AdminRolePermissionCells,
+  AdminRolePermissionCheckState,
   AdminRolePermissionResource,
+  AdminRolePermissionRow,
   AdminRolePermissionState,
-  AdminRolePermissionTreeNode,
-  AdminRolePermissionType,
 } from '@/pages/AdminRoleManagement/types'
+
+/** 四種操作；檢視是其他三種的前提，固定排第一個 */
+export const PERMISSION_ACTIONS: AdminRolePermissionAction[] = ['canAccess', 'canCreate', 'canUpdate', 'canDelete']
+
+/** 勾新增／修改／刪除時一併勾上檢視的說明 */
+export const AUTO_GRANT_ACCESS_HINT = '已自動勾選「檢視」：新增、修改、刪除都要先能檢視'
+
+/** 取消檢視時一併取消其他三種的說明 */
+export const AUTO_REVOKE_DEPENDENT_HINT = '已一併取消新增、修改、刪除：沒有檢視就無法操作'
+
+/** 後端的權限動作對到矩陣的旗標欄位 */
+const ACTION_BY_RESPONSE: Record<AdminRolePermissionActionResponse, AdminRolePermissionAction> = {
+  access: 'canAccess',
+  create: 'canCreate',
+  update: 'canUpdate',
+  delete: 'canDelete',
+}
 
 /** 完整資源名稱的層級分隔符號 */
 const PATH_SEPARATOR = '>'
@@ -23,328 +39,319 @@ const DEFAULT_LEVEL_ICONS: Record<number, string> = {
 }
 
 /**
- * 沒有「資源管理」檢視權限時的說明
+ * 角色的權限矩陣（v2）
  *
- * 資源清單（GET /api/admin-resources）要求 admin_resources 的檢視權限；
- * 權限表上那一列叫「資源管理」，左側選單上叫「選單設定」，兩個名字都寫出來才找得到
- */
-export const RESOURCE_FORBIDDEN_MESSAGE = '讀取資源清單需要「資源管理」（選單設定）的檢視權限，沒有這項權限就無法檢視或設定角色權限。請洽管理者開通後再試。'
-
-/** 資源清單因其他原因載入失敗時的說明 */
-const RESOURCE_LOAD_FAILED_MESSAGE = '載入資源清單失敗，請重新整理後再試。'
-
-/**
- * 角色權限矩陣
+ * 權限只存在葉節點（沒有子資源的功能）上；群組列的勾選狀態一律由底下的功能聚合，
+ * 勾群組等於勾底下全部功能。送出時群組資源的旗標取底下功能的聯集，讓授權狀態的權限樹仍保有群組節點。
  *
- * 資源清單取的是「全部資源」而不是已啟用的那份：更新角色時權限是全量替換，
- * 只送已啟用資源的話，停用資源上的既有權限會在儲存時被一併洗掉。停用的資源照樣列出來，
- * 由畫面標示狀態，權限則原封不動帶回去。
+ * 每個資源只能勾後端標示為可授權（availableActions）的操作，其餘格子是「不適用」：
+ * 那些操作沒有任何端點會檢查，勾了也不會多出權限。
+ *
+ * 後端的更新是全量替換，送出時一律帶上全部資源（含沒勾的、停用的），少送就等於取消那筆權限
  */
 export function useAdminRolePermissionMatrix() {
-  const logger = useLogger({ prefix: 'AdminRolePermissionMatrix', enabled: import.meta.env.DEV })
-
-  /** 扁平的全部資源，依 displayOrder 排序 */
+  /** 扁平的全部資源，依權限樹的深度優先順序（父在前、子在後、同層依顯示順序） */
   const resources = ref<AdminRolePermissionResource[]>([])
-  /** 每個資源目前的權限狀態，key 為 resourceId */
-  const permissions = reactive<Record<string, AdminRolePermissionState>>({})
-  /** 載入當下的權限快照，供「重設」還原 */
-  const originalPermissions = ref<Record<string, AdminRolePermissionState>>({})
-  const isLoadingResources = ref(false)
-  const isLoadingPermissions = ref(false)
-  /** 資源清單載入失敗的原因，載入成功時為 null */
-  const resourceErrorMessage = ref<string | null>(null)
+  /** 葉節點目前的權限，key 為資源唯一編號 */
+  const permissions = ref<Record<string, AdminRolePermissionState>>({})
+  /** 載入當下的權限，供「重設」還原與標示未儲存的格子 */
+  const baseline = ref<Record<string, AdminRolePermissionState>>({})
 
-  const isLoading = computed(() => isLoadingResources.value || isLoadingPermissions.value)
-
-  const treeNodes = computed<AdminRolePermissionTreeNode[]>(() => buildTreeNodes(null))
+  /** 各資源的直接子資源唯一編號 */
+  const childIdsByParentId = computed<Map<string, string[]>>(() => buildChildIdsByParentId())
+  /** 依唯一編號查資源 */
+  const resourceById = computed<Map<string, AdminRolePermissionResource>>(() => new Map(resources.value.map((resource) => [resource.resourceId, resource])))
+  /** 葉節點（沒有子資源的功能） */
+  const leafResources = computed<AdminRolePermissionResource[]>(() => resources.value.filter((resource) => !hasChildren(resource.resourceId)))
+  /** 畫面上的每一列，含聚合後的勾選狀態 */
+  const rows = computed<AdminRolePermissionRow[]>(() => resources.value.map((resource) => buildRow(resource)))
+  /** 與載入時不同的格數（以葉節點每一種可授權的操作計） */
+  const changedCount = computed<number>(() => countChanges())
+  /** 有檢視權限的功能數 */
+  const grantedCount = computed<number>(() => leafResources.value.filter((resource) => permissions.value[resource.resourceId]?.canAccess === true).length)
 
   /**
-   * 載入全部資源並把權限狀態初始化為未勾選
-   *
-   * 失敗時不拋出，改把原因寫進 resourceErrorMessage；頁面看回傳值決定能不能儲存——
-   * 沒有資源清單就送出，等於把這個角色的權限全部清空
-   * @returns 是否載入成功
+   * 載入權限樹，同時當成「載入時」的基準
+   * @param tree 以全部資源為底的權限樹
    */
-  async function loadResources(): Promise<boolean> {
-    isLoadingResources.value = true
-    resourceErrorMessage.value = null
-    try {
-      const response = await getAdminResources()
-
-      if (response.status === 200 && response.result.data) {
-        const iconMap = buildRouteIconMap()
-
-        resources.value = response.result.data
-          .map((resource) => ({
-            resourceId: resource.id,
-            parentResourceId: resource.parentId,
-            level: resource.level,
-            name: lastSegmentOf(resource.resourceName),
-            fullPath: resource.resourceName,
-            isEnabled: resource.isEnabled,
-            displayOrder: resource.displayOrder,
-            icon: iconMap.get(resource.resourceName) ?? DEFAULT_LEVEL_ICONS[resource.level] ?? 'mdi-circle-small',
-          }))
-          .sort((a, b) => a.displayOrder - b.displayOrder)
-
-        clearAllPermissions()
-        originalPermissions.value = snapshotPermissions()
-        logger.info('資源清單載入成功', { count: resources.value.length })
-        return true
-      }
-
-      logger.warn('資源清單載入失敗', response.result.error?.message)
-      resourceErrorMessage.value = response.result.error?.message || RESOURCE_LOAD_FAILED_MESSAGE
-      return false
-    } catch (error) {
-      const failure = error as ResponseStructure<null>
-      logger.warn('資源清單載入失敗', { status: failure.status, errorMessage: failure.errorMessage })
-      if (failure.status === 403) {
-        resourceErrorMessage.value = RESOURCE_FORBIDDEN_MESSAGE
-      } else {
-        resourceErrorMessage.value = failure.errorMessage ? `載入資源清單失敗：${failure.errorMessage}` : RESOURCE_LOAD_FAILED_MESSAGE
-      }
-      return false
-    } finally {
-      isLoadingResources.value = false
-    }
+  function load(tree: AdminRolePermissionNodeResponse[]) {
+    const iconMap = buildRouteIconMap()
+    resources.value = flattenTree(tree).map((node) => ({
+      resourceId: node.resourceId,
+      parentResourceId: node.parentId,
+      level: node.level,
+      name: lastSegmentOf(node.resourceName),
+      fullPath: node.resourceName,
+      isEnabled: node.isEnabled,
+      availableActions: PERMISSION_ACTIONS.filter((action) => node.availableActions.some((available) => ACTION_BY_RESPONSE[available] === action)),
+      icon: iconMap.get(node.resourceName) ?? DEFAULT_LEVEL_ICONS[node.level] ?? 'mdi-circle-small',
+    }))
+    permissions.value = extractLeafPermissions(tree)
+    baseline.value = clonePermissions(permissions.value)
   }
 
   /**
-   * 載入指定角色的權限並套用到矩陣上
-   * @param roleId 角色唯一編號
-   * @returns 是否載入成功
+   * 只取權限樹的資源當骨架，權限全部不勾（新增頁）
+   * @param tree 任一角色的權限樹；後端一律以全部資源為底回傳，哪個角色都一樣
    */
-  async function loadRolePermissions(roleId: string): Promise<boolean> {
-    isLoadingPermissions.value = true
-    try {
-      const response = await getAdminRolePermissionsByRoleId(roleId)
-
-      if (response.status === 200 && response.result.data) {
-        clearAllPermissions()
-
-        response.result.data.forEach((permission) => {
-          // 資源可能在設定權限之後被刪掉，對不到資源的權限直接略過
-          if (permissions[permission.resourceId] === undefined) {
-            return
-          }
-          permissions[permission.resourceId] = {
-            canAccess: permission.canAccess,
-            canCreate: permission.canCreate,
-            canUpdate: permission.canUpdate,
-            canDelete: permission.canDelete,
-          }
-        })
-
-        originalPermissions.value = snapshotPermissions()
-        logger.info('角色權限載入成功', { roleId, count: response.result.data.length })
-        return true
-      }
-
-      logger.warn('角色權限載入失敗', response.result.error?.message)
-      return false
-    } finally {
-      isLoadingPermissions.value = false
-    }
-  }
-
-  /** 從路由 meta 建立「完整資源名稱 → 圖示」的對照表 */
-  function buildRouteIconMap(): Map<string, string> {
-    const iconMap = new Map<string, string>()
-
-    router.getRoutes().forEach((route) => {
-      const resourceName = route.meta.resourceName
-      const icon = route.meta.icon
-      if (resourceName !== undefined && icon !== undefined) {
-        iconMap.set(resourceName, icon)
-      }
-    })
-
-    return iconMap
-  }
-
-  /** 取出完整路徑的最後一段作為這一層的顯示名稱 */
-  function lastSegmentOf(resourceName: string): string {
-    const segments = resourceName.split(PATH_SEPARATOR)
-    return segments[segments.length - 1]?.trim() || resourceName
-  }
-
-  /** 依 parentResourceId 組出巢狀節點 */
-  function buildTreeNodes(parentResourceId: string | null): AdminRolePermissionTreeNode[] {
-    return resources.value
-      .filter((resource) => resource.parentResourceId === parentResourceId)
-      .map((resource) => ({ ...resource, children: buildTreeNodes(resource.resourceId) }))
-  }
-
-  /** 直接子資源 */
-  function childrenOf(resourceId: string): AdminRolePermissionResource[] {
-    return resources.value.filter((resource) => resource.parentResourceId === resourceId)
-  }
-
-  /** 全部子孫的資源編號（不含自己） */
-  function descendantIdsOf(resourceId: string): string[] {
-    return childrenOf(resourceId).flatMap((child) => [child.resourceId, ...descendantIdsOf(child.resourceId)])
-  }
-
-  /** 父資源編號；第一層為 null */
-  function parentIdOf(resourceId: string): string | null {
-    return resources.value.find((resource) => resource.resourceId === resourceId)?.parentResourceId ?? null
-  }
-
-  /** 同層的其他資源 */
-  function siblingsOf(resourceId: string): AdminRolePermissionResource[] {
-    const parentResourceId = parentIdOf(resourceId)
-    return resources.value.filter((resource) => resource.parentResourceId === parentResourceId)
+  function loadBlank(tree: AdminRolePermissionNodeResponse[]) {
+    load(tree)
+    clear()
+    baseline.value = clonePermissions(permissions.value)
   }
 
   /**
-   * 查詢某個資源的權限
+   * 以另一個角色的權限為起點（新增頁的範本）；基準不變，套用的權限會標成未儲存
+   * @param tree 範本角色的權限樹
+   */
+  function applyTemplate(tree: AdminRolePermissionNodeResponse[]) {
+    const templatePermissions = extractLeafPermissions(tree)
+    permissions.value = Object.fromEntries(
+      Object.keys(permissions.value).map((resourceId) => [resourceId, { ...(templatePermissions[resourceId] ?? emptyState()) }]),
+    )
+  }
+
+  /** 全部取消勾選；基準不變 */
+  function clear() {
+    permissions.value = Object.fromEntries(Object.keys(permissions.value).map((resourceId) => [resourceId, emptyState()]))
+  }
+
+  /** 還原成載入時的權限 */
+  function reset() {
+    permissions.value = clonePermissions(baseline.value)
+  }
+
+  /**
+   * 勾選或取消一格；群組列套用到底下全部有這種操作的功能
    * @param resourceId 資源唯一編號
-   * @param permissionType 權限種類
-   */
-  function hasPermission(resourceId: string, permissionType: AdminRolePermissionType): boolean {
-    return permissions[resourceId]?.[permissionType] ?? false
-  }
-
-  /**
-   * 勾選或取消某個資源的權限，並連動父子節點
-   *
-   * 勾選：子孫一併勾選；同層全部都有時，父節點也跟著勾選。
-   * 取消：子孫一併取消；同層都沒有了，父節點也跟著取消。
-   * 另外「訪問」是其他三種權限的前提，取消訪問時一併清掉同一個節點的新增／修改／刪除。
-   * @param resourceId 資源唯一編號
-   * @param permissionType 權限種類
+   * @param action 操作
    * @param value 勾選或取消
+   * @returns 連動了其他操作時的說明；沒有連動為 null
    */
-  function updatePermission(resourceId: string, permissionType: AdminRolePermissionType, value: boolean) {
-    const state = permissions[resourceId]
-    if (state === undefined) {
-      return
-    }
-
-    state[permissionType] = value
-    if (permissionType === 'canAccess' && !value) {
-      clearDependentPermissions(state)
-    }
-
-    descendantIdsOf(resourceId).forEach((descendantId) => {
-      const descendantState = permissions[descendantId]
-      if (descendantState === undefined) {
-        return
-      }
-      descendantState[permissionType] = value
-      if (permissionType === 'canAccess' && !value) {
-        clearDependentPermissions(descendantState)
-      }
-    })
-
-    syncParentPermission(resourceId, permissionType, value)
-  }
-
-  /** 訪問權限被取消時，同一個節點的其他三種權限也失去前提 */
-  function clearDependentPermissions(state: AdminRolePermissionState) {
-    state.canCreate = false
-    state.canUpdate = false
-    state.canDelete = false
-  }
-
-  /** 依同層的勾選結果回頭調整父節點 */
-  function syncParentPermission(resourceId: string, permissionType: AdminRolePermissionType, value: boolean) {
-    const parentResourceId = parentIdOf(resourceId)
-    if (parentResourceId === null) {
-      return
-    }
-
-    const parentState = permissions[parentResourceId]
-    if (parentState === undefined) {
-      return
-    }
-
-    const siblings = siblingsOf(resourceId)
-
-    if (value) {
-      const isEverySiblingChecked = siblings.every((sibling) => hasPermission(sibling.resourceId, permissionType))
-      if (!isEverySiblingChecked || parentState[permissionType]) {
-        return
-      }
-      parentState[permissionType] = true
-    } else {
-      const isAnySiblingChecked = siblings.some((sibling) => hasPermission(sibling.resourceId, permissionType))
-      if (isAnySiblingChecked || !parentState[permissionType]) {
-        return
-      }
-      parentState[permissionType] = false
-      if (permissionType === 'canAccess') {
-        clearDependentPermissions(parentState)
-      }
-    }
-
-    syncParentPermission(parentResourceId, permissionType, value)
-  }
-
-  /** 全部權限設為未勾選；資源清單換了也會重建 key */
-  function clearAllPermissions() {
-    Object.keys(permissions).forEach((resourceId) => {
-      delete permissions[resourceId]
-    })
-    resources.value.forEach((resource) => {
-      permissions[resource.resourceId] = { canAccess: false, canCreate: false, canUpdate: false, canDelete: false }
-    })
-  }
-
-  /** 還原成載入當下的權限 */
-  function resetPermissions() {
-    const snapshot = originalPermissions.value
-    Object.keys(permissions).forEach((resourceId) => {
-      permissions[resourceId] = { ...(snapshot[resourceId] ?? { canAccess: false, canCreate: false, canUpdate: false, canDelete: false }) }
-    })
-  }
-
-  /** 目前權限狀態的深層複製 */
-  function snapshotPermissions(): Record<string, AdminRolePermissionState> {
-    const snapshot: Record<string, AdminRolePermissionState> = {}
-    Object.entries(permissions).forEach(([resourceId, state]) => {
-      snapshot[resourceId] = { ...state }
-    })
-    return snapshot
+  function setCell(resourceId: string, action: AdminRolePermissionAction, value: boolean): string | null {
+    return firstHint(leafIdsUnder(resourceId).map((leafId) => applyToLeaf(leafId, action, value)))
   }
 
   /**
-   * 組出送出用的權限矩陣
+   * 整列切換：還沒全勾就全部勾上，已經全勾就全部取消；不適用的操作略過
    *
-   * 一律帶上全部資源（含未勾選與已停用的），因為後端是全量替換，少送就等於取消那筆權限。
+   * 取消時從刪除往檢視倒著做，才不會在中途觸發「取消檢視連帶取消其他操作」的說明
+   * @param resourceId 資源唯一編號
+   * @returns 連動了其他操作時的說明；沒有連動為 null
+   */
+  function toggleRow(resourceId: string): string | null {
+    const value = rowStateOf(resourceId) !== 'all'
+    const actions = value ? PERMISSION_ACTIONS : [...PERMISSION_ACTIONS].reverse()
+
+    return firstHint(leafIdsUnder(resourceId).flatMap((leafId) => actions.map((action) => applyToLeaf(leafId, action, value))))
+  }
+
+  /**
+   * 整欄切換：指定的功能還沒全勾就全部勾上，已經全勾就全部取消；沒有這種操作的功能略過
+   * @param action 操作
+   * @param leafIds 要套用的功能（有搜尋時只有搜尋結果，收合起來的群組照樣套用）
+   * @returns 連動了其他操作時的說明；沒有連動為 null
+   */
+  function toggleColumn(action: AdminRolePermissionAction, leafIds: string[]): string | null {
+    const applicableLeafIds = leafIds.filter((leafId) => isApplicable(leafId, action))
+    const value = !applicableLeafIds.every((leafId) => permissions.value[leafId]?.[action] === true)
+
+    return firstHint(applicableLeafIds.map((leafId) => applyToLeaf(leafId, action, value)))
+  }
+
+  /**
+   * 組出送出用的權限矩陣：全部資源各一筆，群組資源的旗標取底下功能的聯集
+   * @returns 權限矩陣
    */
   function buildPermissionItems(): AdminRolePermissionItemRequest[] {
-    return resources.value.map((resource) => ({
-      resourceId: resource.resourceId,
-      canAccess: hasPermission(resource.resourceId, 'canAccess'),
-      canCreate: hasPermission(resource.resourceId, 'canCreate'),
-      canUpdate: hasPermission(resource.resourceId, 'canUpdate'),
-      canDelete: hasPermission(resource.resourceId, 'canDelete'),
-    }))
+    return resources.value.map((resource) => {
+      const leafStates = leafIdsUnder(resource.resourceId).map((leafId) => permissions.value[leafId] ?? emptyState())
+
+      return {
+        resourceId: resource.resourceId,
+        canAccess: leafStates.some((state) => state.canAccess),
+        canCreate: leafStates.some((state) => state.canCreate),
+        canUpdate: leafStates.some((state) => state.canUpdate),
+        canDelete: leafStates.some((state) => state.canDelete),
+      }
+    })
+  }
+
+  /**
+   * 套用到單一葉節點，並處理「檢視是其他操作前提」的連動；這個功能沒有該操作時不做事
+   * @returns 連動了其他操作時的說明；沒有連動為 null
+   */
+  function applyToLeaf(leafId: string, action: AdminRolePermissionAction, value: boolean): string | null {
+    const state = permissions.value[leafId]
+    if (state === undefined || !isApplicable(leafId, action)) return null
+
+    state[action] = value
+
+    if (value && action !== 'canAccess' && !state.canAccess) {
+      state.canAccess = true
+      return AUTO_GRANT_ACCESS_HINT
+    }
+
+    if (!value && action === 'canAccess' && (state.canCreate || state.canUpdate || state.canDelete)) {
+      state.canCreate = false
+      state.canUpdate = false
+      state.canDelete = false
+      return AUTO_REVOKE_DEPENDENT_HINT
+    }
+
+    return null
+  }
+
+  /** 一列在畫面上的樣子 */
+  function buildRow(resource: AdminRolePermissionResource): AdminRolePermissionRow {
+    const cells: AdminRolePermissionCells = {
+      canAccess: aggregateOf(resource.resourceId, 'canAccess'),
+      canCreate: aggregateOf(resource.resourceId, 'canCreate'),
+      canUpdate: aggregateOf(resource.resourceId, 'canUpdate'),
+      canDelete: aggregateOf(resource.resourceId, 'canDelete'),
+    }
+
+    return {
+      ...resource,
+      hasChildren: hasChildren(resource.resourceId),
+      cells,
+      rowState: combineStates(PERMISSION_ACTIONS.map((action) => cells[action])),
+      changedActions: PERMISSION_ACTIONS.filter((action) => isChanged(resource.resourceId, action)),
+    }
+  }
+
+  /** 某個資源的某種操作，底下有這種操作的功能勾了多少；一個都沒有這種操作時是不適用 */
+  function aggregateOf(resourceId: string, action: AdminRolePermissionAction): AdminRolePermissionCheckState {
+    const leafIds = leafIdsUnder(resourceId).filter((leafId) => isApplicable(leafId, action))
+    if (leafIds.length === 0) return 'na'
+
+    const grantedLeafCount = leafIds.filter((leafId) => permissions.value[leafId]?.[action] === true).length
+    if (grantedLeafCount === 0) return 'none'
+
+    return grantedLeafCount === leafIds.length ? 'all' : 'some'
+  }
+
+  /** 整列的勾選狀態 */
+  function rowStateOf(resourceId: string): AdminRolePermissionCheckState {
+    return combineStates(PERMISSION_ACTIONS.map((action) => aggregateOf(resourceId, action)))
+  }
+
+  /** 底下的功能有沒有任何一個跟載入時不同 */
+  function isChanged(resourceId: string, action: AdminRolePermissionAction): boolean {
+    return leafIdsUnder(resourceId).some((leafId) => (permissions.value[leafId]?.[action] ?? false) !== (baseline.value[leafId]?.[action] ?? false))
+  }
+
+  function countChanges(): number {
+    return leafResources.value.reduce((total, resource) => total + PERMISSION_ACTIONS.filter((action) => isChanged(resource.resourceId, action)).length, 0)
+  }
+
+  /** 這個功能有沒有這種操作可以授權 */
+  function isApplicable(resourceId: string, action: AdminRolePermissionAction): boolean {
+    return resourceById.value.get(resourceId)?.availableActions.includes(action) ?? false
+  }
+
+  /** 自己沒有子資源就是自己，否則是底下全部的葉節點 */
+  function leafIdsUnder(resourceId: string): string[] {
+    const childIds = childIdsByParentId.value.get(resourceId) ?? []
+    if (childIds.length === 0) return [resourceId]
+
+    return childIds.flatMap((childId) => leafIdsUnder(childId))
+  }
+
+  function hasChildren(resourceId: string): boolean {
+    return (childIdsByParentId.value.get(resourceId) ?? []).length > 0
+  }
+
+  function buildChildIdsByParentId(): Map<string, string[]> {
+    const childIds = new Map<string, string[]>()
+    resources.value.forEach((resource) => {
+      if (resource.parentResourceId === null) return
+
+      childIds.set(resource.parentResourceId, [...(childIds.get(resource.parentResourceId) ?? []), resource.resourceId])
+    })
+    return childIds
   }
 
   return {
-    // 狀態
     resources,
     permissions,
-    isLoadingResources,
-    isLoadingPermissions,
-    resourceErrorMessage,
-
-    // 計算屬性
-    isLoading,
-    treeNodes,
-
-    // 非同步方法
-    loadResources,
-    loadRolePermissions,
-
-    // 權限操作
-    hasPermission,
-    updatePermission,
-    resetPermissions,
-    clearAllPermissions,
+    rows,
+    changedCount,
+    grantedCount,
+    leafResources,
+    load,
+    loadBlank,
+    applyTemplate,
+    clear,
+    reset,
+    setCell,
+    toggleRow,
+    toggleColumn,
     buildPermissionItems,
   }
+}
+
+/**
+ * 合併多個勾選狀態；不適用的不算：其餘全部是 all 才是 all、全部是 none 才是 none，混雜為 some，全部不適用才是 na
+ * @param states 勾選狀態
+ * @returns 合併後的勾選狀態
+ */
+export function combineStates(states: AdminRolePermissionCheckState[]): AdminRolePermissionCheckState {
+  const applicableStates = states.filter((state) => state !== 'na')
+  if (applicableStates.length === 0) return 'na'
+  if (applicableStates.every((state) => state === 'all')) return 'all'
+  if (applicableStates.every((state) => state === 'none')) return 'none'
+
+  return 'some'
+}
+
+/** 深度優先攤平權限樹，父節點排在子節點前面 */
+function flattenTree(nodes: AdminRolePermissionNodeResponse[]): AdminRolePermissionNodeResponse[] {
+  return nodes.flatMap((node) => [node, ...flattenTree(node.children)])
+}
+
+/** 取出葉節點的四個旗標；群組節點的旗標由底下功能聚合，載入時不採用 */
+function extractLeafPermissions(tree: AdminRolePermissionNodeResponse[]): Record<string, AdminRolePermissionState> {
+  return Object.fromEntries(
+    flattenTree(tree)
+      .filter((node) => node.children.length === 0)
+      .map((node) => [node.resourceId, { canAccess: node.canAccess, canCreate: node.canCreate, canUpdate: node.canUpdate, canDelete: node.canDelete }]),
+  )
+}
+
+function clonePermissions(source: Record<string, AdminRolePermissionState>): Record<string, AdminRolePermissionState> {
+  return Object.fromEntries(Object.entries(source).map(([resourceId, state]) => [resourceId, { ...state }]))
+}
+
+function emptyState(): AdminRolePermissionState {
+  return { canAccess: false, canCreate: false, canUpdate: false, canDelete: false }
+}
+
+function firstHint(hints: Array<string | null>): string | null {
+  return hints.find((hint) => hint !== null) ?? null
+}
+
+/** 取出完整路徑的最後一段作為這一層的顯示名稱 */
+function lastSegmentOf(resourceName: string): string {
+  const segments = resourceName.split(PATH_SEPARATOR)
+  return segments[segments.length - 1]?.trim() || resourceName
+}
+
+/**
+ * 從路由 meta 建立「完整資源名稱 → 圖示」的對照表，讓矩陣的圖示與左側選單一致
+ *
+ * 同一個資源掛在列表、新增、編輯好幾個路由上，只有出現在選單的列表頁帶圖示
+ */
+function buildRouteIconMap(): Map<string, string> {
+  const iconMap = new Map<string, string>()
+
+  router.getRoutes().forEach((route) => {
+    const resourceName = route.meta.resourceName
+    const icon = route.meta.icon
+    if (resourceName !== undefined && icon !== undefined && !iconMap.has(resourceName)) {
+      iconMap.set(resourceName, icon)
+    }
+  })
+
+  return iconMap
 }

@@ -17,26 +17,57 @@ export interface AdminRoleResponse {
   userCount: number
 }
 
-/** 角色的單筆資源權限設定 */
-export interface AdminRolePermissionResponse {
-  /** 唯一編號 */
-  id: string
-  /** 角色唯一編號 */
-  roleId: string
-  /** 角色名稱 */
-  roleName: string
+/** 權限動作；依權限矩陣的欄位順序為 access、create、update、delete */
+export type AdminRolePermissionActionResponse = 'access' | 'create' | 'update' | 'delete'
+
+/** 權限矩陣上的一個資源節點：資源本身、這個角色對它的四個旗標，以及它實際有哪些操作可以授權 */
+export interface AdminRolePermissionNodeResponse {
   /** 資源唯一編號 */
   resourceId: string
+  /** 父級資源唯一編號；第一層為 null */
+  parentId: string | null
   /** 資源名稱（完整路徑，例：系統管理>角色管理） */
-  resourceName: string | null
+  resourceName: string
+  /** 資源代碼；null 表示這筆資源沒有綁定端點權限，只開放檢視 */
+  resourceCode: string | null
+  /** 資源層級 (1:一層, 2:二層, 3:三層) */
+  level: number
+  /** 顯示順序，格式 1AA2BB3CC */
+  displayOrder: number
+  /** 是否啟用；停用的資源照樣列出，權限原樣保留，選單重新啟用後立即生效 */
+  isEnabled: boolean
   /** 訪問權限 */
   canAccess: boolean
-  /** 新增權限 */
+  /** 新增權限；不在 availableActions 裡時一律為 false */
   canCreate: boolean
-  /** 修改權限 */
+  /** 修改權限；不在 availableActions 裡時一律為 false */
   canUpdate: boolean
-  /** 刪除權限 */
+  /** 刪除權限；不在 availableActions 裡時一律為 false */
   canDelete: boolean
+  /** 可以授權的操作；不在清單裡的操作沒有任何端點會檢查，儲存時後端會把旗標清成 false */
+  availableActions: AdminRolePermissionActionResponse[]
+  /** 子節點，依顯示順序排列 */
+  children: AdminRolePermissionNodeResponse[]
+}
+
+/** 角色與它的權限矩陣 */
+export interface AdminRolePermissionMatrixResponse {
+  /** 角色，含用戶人數與版本戳記 */
+  role: AdminRoleResponse
+  /** 以全部資源為底的權限樹（含停用的資源），依顯示順序排列 */
+  permissions: AdminRolePermissionNodeResponse[]
+}
+
+/** 使用某個角色的用戶 */
+export interface AdminRoleUserResponse {
+  /** 用戶唯一編號 */
+  id: string
+  /** 登入帳號 */
+  account: string
+  /** 姓名；未填時為 null */
+  fullName: string | null
+  /** 是否已停用 */
+  isDisabled: boolean
 }
 
 /** 送出用的單筆權限設定 */
@@ -123,10 +154,21 @@ export async function deleteAdminRoleById(roleId: string): Promise<ResponseStruc
 }
 
 /**
- * 取得指定角色的所有權限設定
+ * 取得角色與它的權限矩陣
+ * @description 角色本身與以全部資源為底的權限樹一次回來，編輯頁與檢視頁只要打這一支，不必另外有資源管理的檢視權限
  * @param roleId 角色唯一編號
- * @returns 該角色已設定的資源權限列表
+ * @returns 角色與權限樹；角色不存在時回 404
  */
-export async function getAdminRolePermissionsByRoleId(roleId: string): Promise<ResponseStructure<AdminRolePermissionResponse[]>> {
-  return await request<AdminRolePermissionResponse[]>({ url: `${BASE_API_URL}/${roleId}/permissions`, method: 'GET' })
+export async function getAdminRolePermissionMatrix(roleId: string): Promise<ResponseStructure<AdminRolePermissionMatrixResponse>> {
+  return await request<AdminRolePermissionMatrixResponse>({ url: `${BASE_API_URL}/${roleId}/permissions`, method: 'GET' })
+}
+
+/**
+ * 取得使用指定角色的用戶
+ * @description 只需要角色管理的檢視權限；角色存在但沒有人使用時為空陣列
+ * @param roleId 角色唯一編號
+ * @returns 依帳號排序的用戶；角色不存在時回 404
+ */
+export async function getAdminRoleUsers(roleId: string): Promise<ResponseStructure<AdminRoleUserResponse[]>> {
+  return await request<AdminRoleUserResponse[]>({ url: `${BASE_API_URL}/${roleId}/users`, method: 'GET' })
 }
