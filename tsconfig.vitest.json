@@ -1,21 +1,18 @@
 {
   "extends": "./tsconfig.app.json",
 
-  // Override to include only test files and clear exclusions.
-  // Application code imported in tests is automatically included via module resolution.
-  // 測試檔都放在 __tests__ 的子目錄，要用 **/* 才涵蓋得到（只寫 * 的話一個測試檔都不會檢查）；
-  // global.d.ts、components.d.ts 不會被 import 帶進來，要明列，頁面用到的 XTableColumn 等全域型別才找得到
-  "include": ["src/**/__tests__/**/*", "src/global.d.ts", "src/components.d.ts", "env.d.ts"],
+  // 只收測試檔並清掉排除設定；測試裡 import 的應用程式碼會由模組解析自動帶入。
+  // 全域型別宣告例外：它們不被任何檔案 import，沒列進來的話，
+  // 被連帶拉進檢查的頁面就會找不到 ErrorResponseStructure 這類全域型別。
+  "include": ["src/__tests__/**/*", "src/global.d.ts", "src/components.d.ts", "env.d.ts"],
   "exclude": [],
 
   "compilerOptions": {
-    // Vitest runs in a different environment than the application code.
-    // Adjust lib and types accordingly.
+    // Vitest 跑在與應用程式不同的環境，lib 與 types 要跟著換
     "lib": [],
     "types": ["node", "jsdom"],
 
-    // `vue-tsc --build` produces a .tsbuildinfo file for incremental type-checking.
-    // Specified here to keep it out of the root directory.
+    // `vue-tsc --build` 會產生 .tsbuildinfo，指定位置避免落在根目錄
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.vitest.tsbuildinfo"
   }
 }

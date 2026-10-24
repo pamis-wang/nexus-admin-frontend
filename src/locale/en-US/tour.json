@@ -1,0 +1,19 @@
+{
+  "entry": "Guided Tours",
+  "empty": "No tours available",
+  "group": {
+    "common": "General"
+  },
+  "hint": {
+    "notFound": "Tour not found",
+    "noPermission": "You don't have permission to use this feature",
+    "requiresPage": "Open the feature page first to start this tour",
+    "seen": "Viewed, replay anytime",
+    "unseen": "Not viewed yet"
+  },
+  "button": {
+    "next": "Next",
+    "prev": "Previous",
+    "done": "Done"
+  }
+}

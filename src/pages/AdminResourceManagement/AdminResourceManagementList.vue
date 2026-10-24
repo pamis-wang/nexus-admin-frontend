@@ -1,7 +1,9 @@
 <template>
-  <x-breadcrumb :items="[{ label: '首頁', icon: 'mdi-home', to: { name: 'home' } }, { label: '系統管理' }, { label: '選單設定' }]" />
+  <x-breadcrumb
+    :items="[{ label: t('menu.home'), icon: 'mdi-home', to: { name: 'home' } }, { label: t('menu.systemManagement') }, { label: t('resource.title') }]"
+  />
 
-  <x-page-header title="選單設定" icon="mdi-file-tree" />
+  <x-page-header :title="t('resource.title')" icon="mdi-file-tree" />
 
   <q-card flat bordered class="q-mt-xs">
     <!-- 小提醒 -->
@@ -9,10 +11,10 @@
       <template #avatar>
         <q-icon name="mdi-information-outline" />
       </template>
-      <div class="text-caption">※ 儲存是整棵樹一次送出，新增、改名、顯示狀態與順序的變更會一併寫入。</div>
-      <div class="text-caption">※ 拖曳只能調整同一層的順序；要換到別的層級請用該列的「移到其他層級」。</div>
-      <div class="text-caption">※ 完整資源名稱由層級名稱自動組成，改名或搬移時底下子項目的名稱會一起重寫。</div>
-      <div class="text-caption">※ 資源代碼由後端種子資料維護，畫面唯讀；本頁不提供刪除資源的功能。</div>
+      <div class="text-caption">{{ t('resource.hint.saveWholeTree') }}</div>
+      <div class="text-caption">{{ t('resource.hint.dragSameLevel') }}</div>
+      <div class="text-caption">{{ t('resource.hint.fullNameAuto') }}</div>
+      <div class="text-caption">{{ t('resource.hint.codeReadonly') }}</div>
     </q-banner>
 
     <!-- 未儲存變更 -->
@@ -21,29 +23,49 @@
         <q-icon name="mdi-alert-outline" />
       </template>
       <div class="text-caption">
-        有未儲存的變更：新增 {{ changeSummary.addedCount }} 筆、更新 {{ changeSummary.updatedCount }} 筆、位置變動 {{ changeSummary.movedCount }} 筆
+        {{
+          t('resource.hint.unsavedSummary', {
+            added: changeSummary.addedCount,
+            updated: changeSummary.updatedCount,
+            moved: changeSummary.movedCount,
+          })
+        }}
       </div>
       <template #action>
-        <q-btn flat dense color="dark" label="全部還原" icon="mdi-undo" @click="handleReset" />
+        <q-btn flat dense color="dark" :label="t('resource.action.revertAll')" icon="mdi-undo" @click="handleReset" />
       </template>
     </q-banner>
 
     <!-- 工具列 -->
     <div class="row items-center q-pa-sm q-gutter-sm" data-tour="menu-settings-toolbar">
-      <q-input v-model="keyword" dense outlined clearable placeholder="搜尋選單名稱或資源代碼" style="min-width: 240px">
+      <q-input v-model="keyword" dense outlined clearable :placeholder="t('resource.placeholder.search')" style="min-width: 240px">
         <template #prepend>
           <q-icon name="mdi-magnify" />
         </template>
       </q-input>
 
-      <q-btn outline color="primary" label="全部展開" icon="mdi-unfold-more-horizontal" :disable="isFiltering" @click="handleExpandAll" />
-      <q-btn outline color="primary" label="全部收合" icon="mdi-unfold-less-horizontal" :disable="isFiltering" @click="handleCollapseAll" />
+      <q-btn
+        outline
+        color="primary"
+        :label="t('resource.action.expandAll')"
+        icon="mdi-unfold-more-horizontal"
+        :disable="isFiltering"
+        @click="handleExpandAll"
+      />
+      <q-btn
+        outline
+        color="primary"
+        :label="t('resource.action.collapseAll')"
+        icon="mdi-unfold-less-horizontal"
+        :disable="isFiltering"
+        @click="handleCollapseAll"
+      />
 
       <q-space />
 
-      <q-btn label="新增第一層" color="primary" icon="mdi-plus" @click="handleAddRoot" />
+      <q-btn :label="t('resource.action.addRoot')" color="primary" icon="mdi-plus" @click="handleAddRoot" />
       <q-btn
-        label="儲存"
+        :label="t('common.action.save')"
         color="primary"
         icon="mdi-content-save-outline"
         :disable="!hasChanges"
@@ -55,7 +77,7 @@
 
     <!-- 搜尋提示：全量替換的坑，送出一律用完整的樹 -->
     <div v-if="isFiltering" class="q-px-sm q-pb-sm text-caption text-grey-7">
-      搜尋只影響畫面顯示，儲存時送出的仍是完整的樹（共 {{ rows.length }} 筆）；搜尋狀態下暫時無法拖曳排序。
+      {{ t('resource.hint.searching', rows.length) }}
     </div>
 
     <q-inner-loading :showing="isLoading">
@@ -95,6 +117,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { onBeforeRouteLeave } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
@@ -105,6 +128,7 @@ import AdminResourceMoveDialog from '@/pages/AdminResourceManagement/components/
 import AdminResourceTreeTable from '@/pages/AdminResourceManagement/components/AdminResourceTreeTable.vue'
 import type { AdminResourceDragMove, AdminResourceRow, AdminResourceTableRow } from '@/pages/AdminResourceManagement/types'
 
+const { t } = useI18n()
 const dialog = useDialog()
 const notify = useNotify()
 const logger = useLogger({ prefix: 'AdminResourceManagement', enabled: import.meta.env.DEV })
@@ -176,27 +200,27 @@ onBeforeRouteLeave(() => {
   if (!hasChanges.value) {
     return true
   }
-  return window.confirm('選單設定有未儲存的變更，離開後會遺失，確定要離開嗎？')
+  return window.confirm(t('resource.leaveConfirm'))
 })
 
 /** 送出整棵樹，先跑前端檢查再讓使用者確認影響範圍 */
 async function handleSave() {
   const validation = validateTree()
   if (!validation.isValid) {
-    dialog.showWarning(validation.message || '選單設定尚未通過檢查')
+    dialog.showWarning(validation.message || t('resource.validationFailed'))
     return
   }
 
   const summary = changeSummary.value
-  const message = `即將以整棵樹一次送出：新增 ${summary.addedCount} 筆、更新 ${summary.updatedCount} 筆、位置變動 ${summary.movedCount} 筆。確定要儲存嗎？`
+  const message = t('resource.saveConfirm', { added: summary.addedCount, updated: summary.updatedCount, moved: summary.movedCount })
 
-  dialog.showConfirm(message, '儲存選單設定').onOk(async () => {
+  dialog.showConfirm(message, t('resource.saveTitle')).onOk(async () => {
     const isSuccess = await saveTree()
     if (isSuccess) {
       editingRowKey.value = null
       editingName.value = ''
       handleExpandAll()
-      notify.notifySuccess('選單設定已儲存')
+      notify.notifySuccess(t('resource.saved'))
     }
   })
 }
@@ -206,7 +230,7 @@ function filteredRows(): AdminResourceRow[] {
   const text = keyword.value?.trim() ?? ''
 
   return visibleRows(null).filter(
-    (row) => row.name.includes(text) || fullPathOf(row).includes(text) || (row.resourceCode !== null && row.resourceCode.includes(text)),
+    (row) => row.name.includes(text) || fullPathOf(row).includes(text) || (row.resourceCode !== null && row.resourceCode.includes(text))
   )
 }
 
@@ -250,11 +274,11 @@ function handleStartEdit(rowKey: string) {
 function handleCommitEdit(rowKey: string) {
   const name = editingName.value.trim()
   if (name.length === 0) {
-    notify.notifyWarning('選單名稱不可空白')
+    notify.notifyWarning(t('resource.nameRequired'))
     return
   }
   if (name.includes('>')) {
-    notify.notifyWarning('選單名稱不可包含「>」，該符號是階層分隔用的')
+    notify.notifyWarning(t('resource.nameSeparator'))
     return
   }
 
@@ -294,7 +318,7 @@ function handleToggleEnabled(rowKey: string, isEnabled: boolean) {
  */
 function handleNudge(rowKey: string, offset: number) {
   if (!nudgeRow(rowKey, offset)) {
-    dialog.showInfo(offset < 0 ? '已經在同層的第一個位置' : '已經在同層的最後一個位置')
+    dialog.showInfo(offset < 0 ? t('resource.alreadyFirst') : t('resource.alreadyLast'))
   }
 }
 
@@ -375,7 +399,7 @@ function handleDragMove(payload: AdminResourceDragMove) {
 }
 
 function handleReset() {
-  dialog.showConfirm('未儲存的變更都會被丟棄，確定還原成上次載入的內容嗎？', '還原變更').onOk(() => {
+  dialog.showConfirm(t('resource.revertConfirm'), t('resource.revertTitle')).onOk(() => {
     resetChanges()
     editingRowKey.value = null
     editingName.value = ''

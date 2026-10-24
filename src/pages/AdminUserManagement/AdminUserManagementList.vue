@@ -1,11 +1,13 @@
 <template>
-  <x-breadcrumb :items="[{ label: '首頁', icon: 'mdi-home', to: { name: 'home' } }, { label: '系統管理' }, { label: '用戶管理' }]" />
+  <x-breadcrumb
+    :items="[{ label: t('menu.home'), icon: 'mdi-home', to: { name: 'home' } }, { label: t('menu.systemManagement') }, { label: t('user.title') }]"
+  />
 
   <!-- 功能操作區 -->
-  <x-page-header title="用戶管理" icon="mdi-account-circle">
+  <x-page-header :title="t('user.title')" icon="mdi-account-circle">
     <template #actions>
-      <q-btn unelevated color="primary" icon="mdi-plus" label="新增用戶" :to="{ name: 'userManagementAdd' }" data-tour="user-add-button" />
-      <q-btn flat color="grey" icon="mdi-refresh" label="重新整理" :loading="isLoading" @click="loadUsers" />
+      <q-btn unelevated color="primary" icon="mdi-plus" :label="t('user.action.add')" :to="{ name: 'userManagementAdd' }" data-tour="user-add-button" />
+      <q-btn flat color="grey" icon="mdi-refresh" :label="t('common.action.refresh')" :loading="isLoading" @click="loadUsers" />
     </template>
   </x-page-header>
 
@@ -13,30 +15,39 @@
   <q-card flat bordered class="q-mt-xs" data-tour="user-filter-section">
     <q-card-section class="q-pa-sm">
       <div class="row items-center q-gutter-sm">
-        <q-input v-model="filter.account" placeholder="搜尋帳號" outlined dense clearable style="width: 180px">
+        <q-input v-model="filter.account" :placeholder="t('user.placeholder.account')" outlined dense clearable style="width: 180px">
           <template #prepend>
             <q-icon name="mdi-account" />
           </template>
         </q-input>
 
-        <q-input v-model="filter.fullName" placeholder="搜尋姓名" outlined dense clearable style="width: 180px">
+        <q-input v-model="filter.fullName" :placeholder="t('user.placeholder.fullName')" outlined dense clearable style="width: 180px">
           <template #prepend>
             <q-icon name="mdi-account-box" />
           </template>
         </q-input>
 
-        <q-input v-model="filter.email" placeholder="搜尋電子信箱" outlined dense clearable style="width: 220px">
+        <q-input v-model="filter.email" :placeholder="t('user.placeholder.email')" outlined dense clearable style="width: 220px">
           <template #prepend>
             <q-icon name="mdi-email-outline" />
           </template>
         </q-input>
 
-        <q-select v-model="filter.roleName" :options="roleNameOptions" label="角色" outlined dense clearable options-dense style="width: 180px" />
+        <q-select
+          v-model="filter.roleName"
+          :options="roleNameOptions"
+          :label="t('user.field.role')"
+          outlined
+          dense
+          clearable
+          options-dense
+          style="width: 180px"
+        />
 
         <q-select
           v-model="filter.accountStatus"
           :options="accountStatusOptions"
-          label="帳號狀態"
+          :label="t('user.field.accountStatus')"
           outlined
           dense
           clearable
@@ -49,8 +60,8 @@
         <q-space />
 
         <template v-if="hasActiveFilter">
-          <div class="text-caption text-grey-7">找到 {{ filteredRows.length }} 筆／共 {{ rows.length }} 筆</div>
-          <q-btn flat color="grey" icon="mdi-filter-remove-outline" label="清除篩選" @click="clearFilter" />
+          <div class="text-caption text-grey-7">{{ t('user.filterSummary', { found: filteredRows.length, total: rows.length }) }}</div>
+          <q-btn flat color="grey" icon="mdi-filter-remove-outline" :label="t('user.action.clearFilters')" @click="clearFilter" />
         </template>
       </div>
     </q-card-section>
@@ -67,7 +78,7 @@
         <template #body-cell-account="props">
           <q-td :props="props">
             <span>{{ props.value }}</span>
-            <q-badge v-if="props.row.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+            <q-badge v-if="props.row.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">{{ t('user.status.systemDefault') }}</q-badge>
           </q-td>
         </template>
 
@@ -78,22 +89,24 @@
                 {{ roleName }}
               </q-chip>
             </template>
-            <span v-else class="text-caption text-grey-6">未指派角色</span>
+            <span v-else class="text-caption text-grey-6">{{ t('user.empty.noRole') }}</span>
           </q-td>
         </template>
 
         <template #body-cell-loginState="props">
           <q-td :props="props">
-            <q-badge v-if="props.row.hasNoLogin" color="grey-5" class="q-ma-xs">尚未綁定登入方式</q-badge>
-            <q-badge v-if="props.row.isLocked" color="negative" class="q-ma-xs">鎖定中</q-badge>
-            <span v-if="!props.row.hasNoLogin && !props.row.isLocked" class="text-caption text-grey-6">正常</span>
+            <q-badge v-if="props.row.hasNoLogin" color="grey-5" class="q-ma-xs">{{ t('user.status.noLogin') }}</q-badge>
+            <q-badge v-if="props.row.isLocked" color="negative" class="q-ma-xs">{{ t('user.status.locked') }}</q-badge>
+            <span v-if="!props.row.hasNoLogin && !props.row.isLocked" class="text-caption text-grey-6">{{ t('user.status.normal') }}</span>
           </q-td>
         </template>
 
         <template #body-cell-isDisabled="props">
           <q-td :props="props">
             <!-- 只顯示狀態，不提供切換；與檢視頁、編輯頁的標籤用同一組樣式 -->
-            <q-badge :color="props.row.isDisabled ? 'grey-6' : 'positive'">{{ props.row.isDisabled ? '已停用' : '啟用中' }}</q-badge>
+            <q-badge :color="props.row.isDisabled ? 'grey-6' : 'positive'">
+              {{ props.row.isDisabled ? t('user.status.disabled') : t('user.status.enabled') }}
+            </q-badge>
           </q-td>
         </template>
 
@@ -101,7 +114,7 @@
           <!-- 只有第一列帶錨點，避免每一列都產生同名錨點 -->
           <q-td :props="props" :data-tour="props.rowIndex === 0 ? 'user-row-actions' : undefined">
             <x-icon
-              tooltip="檢視"
+              :tooltip="t('user.action.view')"
               color="primary"
               icon="mdi-eye-outline"
               :size="props.isDense ? 'sm' : 'md'"
@@ -110,7 +123,7 @@
               :to="{ name: 'userManagementView', params: { userId: props.row.id } }"
             />
             <x-icon
-              tooltip="編輯"
+              :tooltip="t('common.action.edit')"
               color="warning"
               icon="mdi-file-document-edit-outline"
               :size="props.isDense ? 'sm' : 'md'"
@@ -127,6 +140,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import { useNotify } from '@/composables/useNotify'
@@ -136,6 +150,7 @@ import type { ResponseStructure } from '@/services/axiosService'
 import type { AdminUserManagementAccountStatusOption, AdminUserManagementFilter, AdminUserManagementRow } from '@/pages/AdminUserManagement/types'
 
 const route = useRoute()
+const { t } = useI18n()
 const notify = useNotify()
 const logger = useLogger({ prefix: 'AdminUserManagementList', enabled: import.meta.env.DEV })
 
@@ -143,22 +158,23 @@ const isLoading = ref(false)
 const rows = ref<AdminUserManagementRow[]>([])
 const filter = reactive<AdminUserManagementFilter>({ account: null, fullName: null, email: null, roleName: roleNameFromQuery(), accountStatus: null })
 const pagination = ref<XPagination>({ sortBy: 'account', descending: false, page: 1, rowsPerPage: 0 })
-const columns: XTableColumn[] = [
-  { name: 'number', align: 'center', label: '項次', field: '', style: 'width: 60px' },
-  { name: 'account', align: 'left', label: '帳號', field: (row) => row.account },
-  { name: 'fullName', align: 'left', label: '姓名', field: (row) => row.fullName || '-' },
-  { name: 'email', align: 'left', label: '電子信箱', field: (row) => row.email },
-  { name: 'roleNames', align: 'left', label: '角色', field: '' },
-  { name: 'loginState', align: 'center', label: '登入狀態', field: '', style: 'width: 150px' },
-  { name: 'isDisabled', align: 'center', label: '帳號狀態', field: '', style: 'width: 120px' },
-  { name: 'action', align: 'center', label: '操作', field: '', style: 'width: 120px' },
-]
-// 用詞與表格裡的狀態標籤一致，避免同一欄位在篩選與列表上叫不同名字
-const accountStatusOptions: AdminUserManagementAccountStatusOption[] = [
-  { value: 'enabled', label: '啟用中' },
-  { value: 'disabled', label: '已停用' },
-]
 
+// 欄位標題隨語系切換
+const columns = computed<XTableColumn[]>(() => [
+  { name: 'number', align: 'center', label: t('common.column.index'), field: '', style: 'width: 60px' },
+  { name: 'account', align: 'left', label: t('user.column.account'), field: (row) => row.account },
+  { name: 'fullName', align: 'left', label: t('user.column.fullName'), field: (row) => row.fullName || '-' },
+  { name: 'email', align: 'left', label: t('user.column.email'), field: (row) => row.email },
+  { name: 'roleNames', align: 'left', label: t('user.column.roles'), field: '' },
+  { name: 'loginState', align: 'center', label: t('user.column.loginState'), field: '', style: 'width: 150px' },
+  { name: 'isDisabled', align: 'center', label: t('user.column.accountStatus'), field: '', style: 'width: 120px' },
+  { name: 'action', align: 'center', label: t('user.column.actions'), field: '', style: 'width: 120px' },
+])
+// 用詞與表格裡的狀態標籤一致，避免同一欄位在篩選與列表上叫不同名字
+const accountStatusOptions = computed<AdminUserManagementAccountStatusOption[]>(() => [
+  { value: 'enabled', label: t('user.status.enabled') },
+  { value: 'disabled', label: t('user.status.disabled') },
+])
 /** 角色篩選的選項，取自目前列表裡出現過的角色名稱 */
 const roleNameOptions = computed<string[]>(() => {
   const roleNames = new Set<string>()
@@ -189,7 +205,7 @@ watch(
   () => [filter.account, filter.fullName, filter.email, filter.roleName, filter.accountStatus],
   () => {
     pagination.value.page = 1
-  },
+  }
 )
 
 /** 載入用戶列表 */
@@ -206,7 +222,7 @@ async function loadUsers() {
         fullName: user.fullName,
         isSystemDefault: user.isSystemDefault,
         isDisabled: user.isDisabled,
-        roleNames: user.roleMappings.map((mapping) => mapping.roleName ?? '（未命名角色）'),
+        roleNames: user.roleMappings.map((mapping) => mapping.roleName ?? t('user.empty.unnamedRole')),
         hasNoLogin: user.logins.length === 0,
         isLocked: user.logins.some((login) => login.lockedUntil !== null),
       }))
@@ -214,7 +230,7 @@ async function loadUsers() {
       notify.notifyError(response.result.error.message, 0)
     }
   } catch (error) {
-    const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
+    const errorMessage = (error as ResponseStructure<null>).errorMessage || t('common.unknownError')
     logger.error('載入用戶列表失敗', errorMessage)
     notify.notifyError(errorMessage, 0)
   } finally {

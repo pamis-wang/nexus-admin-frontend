@@ -1,0 +1,97 @@
+{
+  "title": "User Management",
+  "addTitle": "Add User",
+  "editTitle": "Edit User",
+  "viewTitle": "View User",
+  "section": {
+    "basic": "Basic Information",
+    "roles": "Roles",
+    "logins": "Login Methods"
+  },
+  "field": {
+    "account": "Account",
+    "email": "Email",
+    "fullName": "Full Name",
+    "role": "Role",
+    "roles": "Roles",
+    "accountStatus": "Account Status",
+    "activateAt": "Activated At",
+    "lastLoginAt": "Last Login Time"
+  },
+  "column": {
+    "account": "Account",
+    "fullName": "Full Name",
+    "email": "Email",
+    "roles": "Roles",
+    "loginState": "Login Status",
+    "accountStatus": "Account Status",
+    "actions": "Actions",
+    "loginMethod": "Login Method",
+    "providerEmail": "Linked Email",
+    "status": "Status",
+    "failedCount": "Consecutive Failures",
+    "lockedUntil": "Locked Until",
+    "lastUsedAt": "Last Used"
+  },
+  "placeholder": {
+    "account": "Search account",
+    "fullName": "Search name",
+    "email": "Search email"
+  },
+  "hint": {
+    "createOnly": "This only creates the account itself. The new account has no login method yet and must be activated separately before it can log in.",
+    "accountImmutable": "The account can't be changed after it's created. The email and full name can still be edited later on the edit page.",
+    "accountReadonly": "Can't be changed in the admin console for now",
+    "disabledReadonly": "An account's disabled status can't be changed in the admin console for now. The list and this page only show the status, and saving keeps the value as it was when loaded.",
+    "loginsReadonly": "The following information is read-only. Unlocking, clearing failed attempts, and resetting passwords have no admin endpoints yet and must be handled by the operations team.",
+    "roles": "You can assign multiple roles. An account without roles has no permissions after logging in."
+  },
+  "action": {
+    "add": "Add User",
+    "edit": "Edit User",
+    "view": "View",
+    "clearFilters": "Clear Filters"
+  },
+  "status": {
+    "systemDefault": "System Default",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "noLogin": "No Login Method",
+    "locked": "Locked",
+    "normal": "Normal",
+    "unverified": "Unverified",
+    "requiresReset": "Password Reset Required",
+    "usable": "Available",
+    "unusable": "Unavailable"
+  },
+  "empty": {
+    "noRole": "No role assigned",
+    "noRoleDetail": "No role assigned. This account has no permissions after logging in.",
+    "noLogin": "No login method is linked yet, so this account can't log in.",
+    "noRolesAvailable": "No roles are available to assign. Please create one in Role Management first.",
+    "unnamedRole": "(Unnamed role)"
+  },
+  "loading": {
+    "user": "Loading user data…",
+    "roles": "Loading roles…"
+  },
+  "validation": {
+    "accountRequired": "Enter an account",
+    "emailRequired": "Enter an email",
+    "emailFormat": "Invalid email format"
+  },
+  "filterSummary": "Showing {found} of {total}",
+  "createFailed": "Failed to add the user.",
+  "created": "User \"{account}\" created. This account has no login method yet and must be activated separately before it can log in.",
+  "roleAssignFailed": "User \"{account}\" was created, but assigning roles failed ({message}). Please assign them again on the edit page.",
+  "roleAssignFailedTitle": "Roles Not Set",
+  "missingId": "The user ID is missing.",
+  "notFound": "The specified user was not found.",
+  "loadFailedTitle": "Failed to Load User",
+  "updateFailed": "Failed to update the user.",
+  "updated": "User \"{account}\" updated.",
+  "roleUpdateFailed": "The basic information of user \"{account}\" was updated, but the roles were not ({message}). Please try again.",
+  "roleUpdateFailedTitle": "Roles Not Updated",
+  "loadRolesFailed": "Failed to load the role list.",
+  "loadRolesFailedRetry": "Failed to load the role list. Please try again later."
+}

@@ -1,0 +1,11 @@
+/*
+ * 站別樣式
+ *
+ * 由 styles.scss 在檔尾載入；四站共用的殼層樣式寫在 styles.scss，這裡只放這個站和其他站不同的部分。
+ * 色值定義在 quasar.variables.scss。
+ */
+
+/* 暗色模式：勾選框的勾是白色，框底變淡後看不清楚，改深色 */
+body.body--dark .q-checkbox__svg {
+  color: $dark;
+}

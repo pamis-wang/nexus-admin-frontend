@@ -4,9 +4,11 @@ import { createMemoryHistory, createRouter, type Router } from 'vue-router'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import customPlugin from '@/plugins/custom'
 import quasarPlugin from '@/plugins/quasar'
+import { i18n } from '@/plugins/i18n'
 import { useUserStore, type ResourcePermission } from '@/stores/useUser'
 import AdminRoleManagementView from '@/pages/AdminRoleManagement/AdminRoleManagementView.vue'
 import type { AdminRolePermissionMatrixResponse, AdminRoleUserResponse } from '@/services/admin/adminRoleService'
+import type { AuthorizationPermissionResponse } from '@/services/auth/authService'
 import type { DeletedResponse, ResponseStructure } from '@/services/axiosService'
 
 const getAdminRolePermissionMatrix = vi.fn<(roleId: string) => Promise<ResponseStructure<AdminRolePermissionMatrixResponse>>>()
@@ -69,11 +71,25 @@ function buildMatrixResponse(userCount: number, isSystemDefault = false): Respon
   })
 }
 
+/**
+ * 組出授權狀態的權限節點
+ * @param resourceName 資源完整路徑
+ * @param permission 四種權限
+ */
+function buildPermissionNode(resourceName: string, permission: ResourcePermission): AuthorizationPermissionResponse {
+  return { resourceId: `resource-${resourceName}`, parentId: null, resourceName, level: 2, displayOrder: 0, children: [], ...permission }
+}
+
 /** 準備有全部權限的登入者 */
 function seedPermissions(): Pinia {
   const pinia = createPinia()
   setActivePinia(pinia)
-  useUserStore().resourcePermissions = { '系統管理>角色管理': FULL_PERMISSION, '系統管理>用戶管理': FULL_PERMISSION }
+  useUserStore().authorization = {
+    permissionMode: 'audit',
+    roles: [],
+    activeRoles: [],
+    permissions: [buildPermissionNode('系統管理>角色管理', FULL_PERMISSION), buildPermissionNode('系統管理>用戶管理', FULL_PERMISSION)],
+  }
   return pinia
 }
 
@@ -91,7 +107,7 @@ async function mountPage(): Promise<{ wrapper: ReturnType<typeof mount>; router:
   })
   await router.push('/roles/role-1')
 
-  const wrapper = mount(AdminRoleManagementView, { global: { plugins: [quasarPlugin, customPlugin, router, seedPermissions()] } })
+  const wrapper = mount(AdminRoleManagementView, { global: { plugins: [quasarPlugin, i18n, customPlugin, router, seedPermissions()] } })
   await vi.waitFor(() => expect(wrapper.text()).toContain('權限設定'))
 
   return { wrapper, router }
@@ -122,7 +138,7 @@ describe('AdminRoleManagementView', () => {
       buildResponse([
         { id: 'user-1', account: 'alice', fullName: '王小明', isDisabled: false },
         { id: 'user-2', account: 'bob', fullName: null, isDisabled: true },
-      ]),
+      ])
     )
     const { wrapper } = await mountPage()
 

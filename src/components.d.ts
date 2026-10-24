@@ -9,5 +9,6 @@ declare module 'vue' {
     XSwitch: typeof import('@/components/XSwitch.vue').default
     XPageHeader: typeof import('@/components/XPageHeader.vue').default
     XSectionHeaderBar: typeof import('@/components/XSectionHeaderBar.vue').default
+    XDraggableTable: typeof import('@/components/XDraggableTable.vue').default
   }
 }

@@ -20,7 +20,7 @@
 
     <template v-slot:no-data>
       <div class="full-width row flex-center q-gutter-sm">
-        <span>查無資料</span>
+        <span>{{ t('table.noData') }}</span>
       </div>
     </template>
 
@@ -50,22 +50,22 @@
           <div class="row justify-between items-center full-width">
             <!-- 左側：每頁顯示選擇器與緊湊開關 -->
             <div class="row items-center" :class="isDense ? 'q-gutter-xs' : 'q-gutter-sm'">
-              <span :class="isDense ? 'text-body2' : 'text-body1'">每頁顯示:</span>
+              <span :class="isDense ? 'text-body2' : 'text-body1'">{{ t('table.rowsPerPage') }}</span>
               <q-select
                 v-model="selectedRowsPerPage"
                 :options="rowsPerPageOptions"
                 :dense="isDense"
                 :options-dense="isDense"
                 borderless
+                emit-value
                 map-options
                 v-on:update:model-value="onRowsPerPageChange"
               />
-
               <x-switch
                 v-model="isDense"
                 :size="isDense ? 'xs' : 'sm'"
-                active-text="緊湊"
-                inactive-text="標準"
+                :active-text="t('table.dense')"
+                :inactive-text="t('table.standard')"
                 active-color="primary"
                 inactive-color="secondary"
               />
@@ -92,7 +92,7 @@
 
             <!-- 右側：顯示資料範圍資訊 -->
             <div :class="isDense ? 'text-body2 text-grey-7' : 'text-body1 text-grey-7'">
-              第 {{ startRecord }} - {{ endRecord }} 筆 / 共 {{ totalRecords }} 筆
+              {{ t('table.range', { start: startRecord, end: endRecord, total: totalRecords }) }}
             </div>
           </div>
         </q-td>
@@ -104,6 +104,7 @@
 <script setup lang="ts">
 import type { QTableColumn } from 'quasar'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 /** 分頁 */
 export interface Pagination {
@@ -136,6 +137,11 @@ export interface XTableProps {
   /** 預設啟用緊湊模式 */
   dense?: boolean
 }
+
+/** 每頁顯示筆數的選項，0 代表全部 */
+const ROWS_PER_PAGE_VALUES = [5, 10, 25, 50, 0]
+
+const { t } = useI18n()
 
 /** 定義 props 的預設值 */
 const props = withDefaults(defineProps<XTableProps>(), {
@@ -191,17 +197,11 @@ const processedColumns = computed(() => {
   })
 })
 
-/** 每頁顯示選項 */
-const rowsPerPageOptions = [
-  { label: '5', value: 5 },
-  { label: '10', value: 10 },
-  { label: '25', value: 25 },
-  { label: '50', value: 50 },
-  { label: '全部', value: 0 },
-]
+/** 每頁顯示選項；「全部」要隨語系切換，所以用 computed */
+const rowsPerPageOptions = computed(() => ROWS_PER_PAGE_VALUES.map((value) => ({ label: value === 0 ? t('table.all') : String(value), value })))
 
-/** 選中的每頁顯示選項（用於顯示 label） */
-const selectedRowsPerPage = ref(rowsPerPageOptions.find((option) => option.value === pagination.value.rowsPerPage) || rowsPerPageOptions[4])
+/** 選中的每頁顯示筆數；存數值而不是選項物件，切換語系後才會對應到新的選項文字。不在選項內的筆數顯示為「全部」 */
+const selectedRowsPerPage = ref(ROWS_PER_PAGE_VALUES.find((value) => value === pagination.value.rowsPerPage) ?? 0)
 
 /** 計算總頁數 */
 const pagesNumber = computed(() => {
@@ -233,9 +233,7 @@ function onPageChange(newPage: number) {
 
 /** 處理每頁筆數變化 */
 function onRowsPerPageChange() {
-  if (selectedRowsPerPage.value) {
-    pagination.value = { ...pagination.value, rowsPerPage: selectedRowsPerPage.value.value, page: 1 }
-  }
+  pagination.value = { ...pagination.value, rowsPerPage: selectedRowsPerPage.value, page: 1 }
   emit('change:rows-per-page')
   emit('change:page')
 }

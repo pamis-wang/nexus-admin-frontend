@@ -2,20 +2,23 @@
   <q-dialog v-model="isVisible" persistent>
     <q-card style="min-width: 460px; max-width: 560px">
       <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6 text-primary">移到其他層級</div>
+        <div class="text-h6 text-primary">{{ t('resource.action.move') }}</div>
         <q-space />
         <q-btn v-close-popup icon="mdi-close" flat round dense />
       </q-card-section>
 
       <q-card-section class="q-pb-none">
-        <div class="text-body2">
-          要把
-          <span class="text-weight-bold">{{ nodeName || '（未命名）' }}</span>
-          移到哪個位置？
-        </div>
+        <i18n-t keypath="resource.move.question" tag="div" class="text-body2" scope="global">
+          <template #name>
+            <span class="text-weight-bold">{{ nodeName || t('resource.empty.unnamed') }}</span>
+          </template>
+        </i18n-t>
         <div class="text-caption text-grey-7 q-mt-xs">
-          目前完整名稱 {{ nodeFullPath }}
-          <template v-if="descendantCount > 0">；底下有 {{ descendantCount }} 個子項目會一起搬移</template>
+          {{
+            descendantCount > 0
+              ? t('resource.move.currentPathWithDescendants', { path: nodeFullPath, n: descendantCount }, descendantCount)
+              : t('resource.move.currentPath', { path: nodeFullPath })
+          }}
         </div>
       </q-card-section>
 
@@ -37,7 +40,7 @@
             <q-item-section>
               <q-item-label>{{ target.label }}</q-item-label>
               <q-item-label caption>
-                移入後為第 {{ target.level }} 層
+                {{ t('resource.move.targetLevel', { level: target.level }) }}
                 <template v-if="target.disabledReason !== null">・{{ target.disabledReason }}</template>
               </q-item-label>
             </q-item-section>
@@ -45,18 +48,30 @@
         </q-list>
 
         <q-banner v-if="selectedTarget !== null" class="bg-info text-white q-mt-md" rounded dense>
-          <div class="text-caption">
-            搬移後的完整資源名稱會變成
-            <span class="text-weight-bold">{{ previewPath }}</span>
-            <template v-if="descendantCount > 0">，底下 {{ descendantCount }} 個子項目的名稱也會跟著重寫</template>
-            。實際的 displayOrder 由後端依樹狀位置重算。
-          </div>
+          <i18n-t
+            v-if="descendantCount > 0"
+            keypath="resource.move.previewWithDescendants"
+            :plural="descendantCount"
+            tag="div"
+            class="text-caption"
+            scope="global"
+          >
+            <template #path>
+              <span class="text-weight-bold">{{ previewPath }}</span>
+            </template>
+            <template #n>{{ descendantCount }}</template>
+          </i18n-t>
+          <i18n-t v-else keypath="resource.move.preview" tag="div" class="text-caption" scope="global">
+            <template #path>
+              <span class="text-weight-bold">{{ previewPath }}</span>
+            </template>
+          </i18n-t>
         </q-banner>
       </q-card-section>
 
       <q-card-actions align="center" class="q-pt-none q-pb-md">
-        <q-btn v-close-popup flat label="取消" color="grey" class="q-px-xl" />
-        <q-btn unelevated label="確認搬移" color="primary" class="q-px-xl" :disable="selectedTarget === null" @click="handleConfirm" />
+        <q-btn v-close-popup flat :label="t('common.action.cancel')" color="grey" class="q-px-xl" />
+        <q-btn unelevated :label="t('resource.action.confirmMove')" color="primary" class="q-px-xl" :disable="selectedTarget === null" @click="handleConfirm" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -64,8 +79,11 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import type { AdminResourceMoveTarget } from '@/pages/AdminResourceManagement/types'
+
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<Props>(), {
   nodeName: '',

@@ -3,6 +3,8 @@ import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import { useStorage } from '@vueuse/core'
 import { Dark } from 'quasar'
+import { siteConfig } from '@/config/site'
+import { STORAGE_KEY_PREFIX } from '@/stores/useUser'
 import type { LayoutConfig } from '@/types/layout'
 
 /** 點擊頂部欄按鈕時的色彩方案循環順序：亮色 → 暗色 → 跟隨系統 → 亮色 */
@@ -12,13 +14,8 @@ const NEXT_COLOR_SCHEME: Record<LayoutConfig['colorScheme'], LayoutConfig['color
   system: 'light',
 }
 
-/**
- * 佈局設定的預設值
- *
- * 使用時一律複製一份：localStorage 沒有資料時 useStorage 會直接沿用傳入的物件，
- * 若共用同一個物件，之後的設定變更會連預設值一起改掉，重置就失效。
- */
-const DEFAULT_LAYOUT_CONFIG: LayoutConfig = {
+/** 四站共用的佈局預設值；站別不同的項目寫在 siteConfig.layoutDefaults */
+const SHARED_LAYOUT_DEFAULTS: LayoutConfig = {
   layout: 'vertical',
   colorScheme: 'light',
   topbarColor: 'light',
@@ -26,12 +23,27 @@ const DEFAULT_LAYOUT_CONFIG: LayoutConfig = {
   sidebarSize: 'default',
 }
 
+/**
+ * 組出佈局設定的預設值：共用預設套上站別的 layoutDefaults
+ *
+ * 每次都回傳新的物件：localStorage 沒有資料時 useStorage 會直接沿用傳入的物件，
+ * 若共用同一個物件，之後的設定變更會連預設值一起改掉，重置就失效。
+ * @returns 佈局設定的預設值
+ */
+export function buildDefaultLayoutConfig(): LayoutConfig {
+  return { ...SHARED_LAYOUT_DEFAULTS, ...siteConfig.layoutDefaults }
+}
+
 export const useLayoutStore = defineStore('layout', () => {
   /** 設定面板開關狀態 */
   const isSettingPanelOpen = ref(false)
 
-  /** 宣告佈局設定 */
-  const layoutConfig = useStorage<LayoutConfig>('layoutConfig', { ...DEFAULT_LAYOUT_CONFIG })
+  /**
+   * 宣告佈局設定
+   *
+   * mergeDefaults：之前存下的設定缺少後來新增的欄位（例如 sidebarSize）時用預設值補上，不必整份重置
+   */
+  const layoutConfig = useStorage<LayoutConfig>(`${STORAGE_KEY_PREFIX}layoutConfig`, buildDefaultLayoutConfig(), localStorage, { mergeDefaults: true })
 
   /** 目前是否實際處於暗色：colorScheme 為 'system' 時由作業系統偏好決定，故不可只看設定值 */
   const isDarkActive = computed(() => Dark.isActive)
@@ -58,7 +70,7 @@ export const useLayoutStore = defineStore('layout', () => {
 
   /** 重置設定 */
   async function resetConfig() {
-    layoutConfig.value = { ...DEFAULT_LAYOUT_CONFIG }
+    layoutConfig.value = buildDefaultLayoutConfig()
     applyColorScheme(layoutConfig.value.colorScheme)
   }
 
@@ -106,23 +118,23 @@ export const useLayoutStore = defineStore('layout', () => {
       case 'light':
         return 'bg-grey-1 text-dark'
       case 'dark':
-        return 'bg-grey-9 text-white'
+        return 'bg-brand-night text-white'
       case 'brand':
       default:
         return 'bg-primary text-white'
     }
   }
 
-  /** 根據選單顏色設定返回對應的 CSS 類別 */
+  /** 根據選單顏色設定返回對應的 CSS 類別；深底選單加 menu-on-dark，選取項目才不會用主色字而看不見 */
   function getMenuColorClass() {
     switch (layoutConfig.value.menuColor) {
       case 'light':
         return 'bg-grey-1 text-dark'
       case 'dark':
-        return 'bg-grey-9 text-white'
+        return 'bg-brand-night text-white menu-on-dark'
       case 'brand':
       default:
-        return 'bg-primary text-white'
+        return 'bg-primary text-white menu-on-dark'
     }
   }
 

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { useUserStore } from '@/stores/useUser'
+import { STORAGE_KEY_PREFIX, useUserStore } from '@/stores/useUser'
 import type { AuthorizationPermissionResponse, CurrentAuthorizationResponse } from '@/services/auth/authService'
 
 /**
@@ -58,7 +58,7 @@ describe('useUserStore 的權限判斷', () => {
             }),
           ],
         }),
-      ]),
+      ])
     )
 
     expect(userStore.hasPermission('內容管理')).toBe(true)
@@ -69,7 +69,7 @@ describe('useUserStore 的權限判斷', () => {
   it('四種權限各自獨立，預設查的是訪問權限', async () => {
     const userStore = useUserStore()
     await userStore.storageAuthorization(
-      buildAuthorization([buildPermission('系統管理>用戶管理', { canAccess: true, canCreate: true, canUpdate: false, canDelete: false })]),
+      buildAuthorization([buildPermission('系統管理>用戶管理', { canAccess: true, canCreate: true, canUpdate: false, canDelete: false })])
     )
 
     expect(userStore.hasPermission('系統管理>用戶管理')).toBe(true)
@@ -91,9 +91,9 @@ describe('useUserStore 的權限判斷', () => {
     const userStore = useUserStore()
     await userStore.storageAuthorization(buildAuthorization([buildPermission('首頁')]))
 
-    expect(userStore.permissionMode).toBe('audit')
-    expect(userStore.assignedRoles.map((role) => role.name)).toEqual(['管理員', '檢視者'])
-    expect(userStore.activeRoles.map((role) => role.name)).toEqual(['管理員'])
+    expect(userStore.authorization?.permissionMode).toBe('audit')
+    expect(userStore.authorization?.roles.map((role) => role.name)).toEqual(['管理員', '檢視者'])
+    expect(userStore.authorization?.activeRoles.map((role) => role.name)).toEqual(['管理員'])
   })
 
   it('登出後權限一併清空，避免下一個人沿用前一個人的選單', async () => {
@@ -103,18 +103,49 @@ describe('useUserStore 的權限判斷', () => {
     await userStore.clearUser()
 
     expect(userStore.hasPermission('首頁')).toBe(false)
-    expect(userStore.permissionMode).toBe('unknown')
-    expect(userStore.assignedRoles).toEqual([])
-    expect(userStore.activeRoles).toEqual([])
+    expect(userStore.authorization).toBeNull()
   })
 
   it('變更生效角色只換存取權杖，不動刷新權杖', async () => {
     const userStore = useUserStore()
     await userStore.storageUser('old-access', 'refresh-token', { id: '1', account: 'admin', email: 'a@b.c', fullName: null, roles: [] })
 
-    userStore.updateAccessToken('new-access')
+    await userStore.updateAccessToken('new-access')
 
     expect(userStore.accessToken).toBe('new-access')
     expect(userStore.refreshToken).toBe('refresh-token')
+  })
+})
+
+describe('useUserStore 的登入用戶資料', () => {
+  beforeEach(async () => {
+    setActivePinia(createPinia())
+    await useUserStore().clearUser()
+  })
+
+  it('顯示名稱優先用姓名，沒有姓名時用帳號，未登入時為空字串', async () => {
+    const userStore = useUserStore()
+    expect(userStore.displayName).toBe('')
+    expect(userStore.userId).toBeNull()
+
+    await userStore.storageUser('access', 'refresh', { id: 'user-1', account: 'admin', email: 'a@b.c', fullName: null, roles: [] })
+    expect(userStore.displayName).toBe('admin')
+    expect(userStore.userId).toBe('user-1')
+
+    await userStore.storageUser('access', 'refresh', { id: 'user-1', account: 'admin', email: 'a@b.c', fullName: '王小明', roles: [] })
+    expect(userStore.displayName).toBe('王小明')
+  })
+
+  it('登入狀態與授權狀態存在加了前綴的 localStorage 鍵', async () => {
+    const userStore = useUserStore()
+    await userStore.storageUser('access', 'refresh', { id: 'user-1', account: 'admin', email: 'a@b.c', fullName: null, roles: [] })
+    await userStore.storageAuthorization(buildAuthorization([buildPermission('首頁')]))
+
+    expect(localStorage.getItem(`${STORAGE_KEY_PREFIX}accessToken`)).toBe('access')
+    expect(localStorage.getItem(`${STORAGE_KEY_PREFIX}refreshToken`)).toBe('refresh')
+    expect(localStorage.getItem(`${STORAGE_KEY_PREFIX}isAuthenticated`)).toBe('true')
+    expect(JSON.parse(localStorage.getItem(`${STORAGE_KEY_PREFIX}userProfile`) ?? 'null')?.id).toBe('user-1')
+    expect(JSON.parse(localStorage.getItem(`${STORAGE_KEY_PREFIX}authorization`) ?? 'null')?.permissionMode).toBe('audit')
+    expect(localStorage.getItem('accessToken')).toBeNull()
   })
 })

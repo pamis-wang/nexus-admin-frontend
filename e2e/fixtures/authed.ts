@@ -4,10 +4,13 @@
  * 登入狀態與權限都放在 localStorage，路由守衛只讀這些值，因此直接種進去就能繞過登入頁；
  * 後端在測試環境不存在，API 一律攔截後回傳假資料。
  *
- * 權限查詢表要種齊：守衛是用 meta.resourceName 去查這張表，少一個鍵那一頁就會被導去 403，
- * 導覽會停在一個永遠等不到錨點的頁面上。
+ * 授權狀態的權限樹要種齊：守衛是用 meta.resourceName 去查這棵樹，少一個資源那一頁就會被導去 403，
+ * 導覽會停在一個永遠等不到錨點的頁面上。版面掛載時查的授權狀態端點回同一份。
  */
 import { test as base, type Page } from '@playwright/test'
+
+/** localStorage 鍵的前綴，與 src/stores/useUser.ts 的 STORAGE_KEY_PREFIX 相同 */
+const STORAGE_KEY_PREFIX = 'nexus-admin:'
 
 /** 測試用的假使用者 */
 const USER_PROFILE = {
@@ -108,14 +111,11 @@ export { expect } from '@playwright/test'
 async function seedAuthState(page: Page) {
   const storageEntries: Record<string, string> = {
     // useStorage 對字串型別直接存原值，不做 JSON 編碼
-    accessToken: 'e2e-access-token',
-    refreshToken: 'e2e-refresh-token',
-    isAuthenticated: 'true',
-    permissionMode: 'union',
-    userProfile: JSON.stringify(USER_PROFILE),
-    assignedRoles: JSON.stringify(ASSIGNED_ROLES),
-    activeRoles: JSON.stringify([ASSIGNED_ROLES[0]]),
-    resourcePermissions: JSON.stringify(buildResourcePermissions()),
+    [`${STORAGE_KEY_PREFIX}accessToken`]: 'e2e-access-token',
+    [`${STORAGE_KEY_PREFIX}refreshToken`]: 'e2e-refresh-token',
+    [`${STORAGE_KEY_PREFIX}isAuthenticated`]: 'true',
+    [`${STORAGE_KEY_PREFIX}userProfile`]: JSON.stringify(USER_PROFILE),
+    [`${STORAGE_KEY_PREFIX}authorization`]: JSON.stringify(buildAuthorization()),
   }
 
   await page.addInitScript((entries: Record<string, string>) => {
@@ -137,12 +137,7 @@ async function mockApi(page: Page) {
   // 避免漏網的請求打到不存在的後端，讓頁面跳出錯誤對話框蓋住導覽
   await fulfillJson(page, '**/api/**', null)
 
-  await fulfillJson(page, '**/api/auth/authorization', {
-    permissionMode: 'union',
-    roles: ASSIGNED_ROLES,
-    activeRoles: [ASSIGNED_ROLES[0]],
-    permissions: buildPermissionTree(),
-  })
+  await fulfillJson(page, '**/api/auth/authorization', buildAuthorization())
 
   await fulfillJson(page, '**/api/admin-users', ADMIN_USERS)
   await fulfillJson(page, '**/api/admin-roles', ADMIN_ROLES)
@@ -170,17 +165,16 @@ async function fulfillJson(page: Page, urlPattern: string, data: unknown) {
 }
 
 /**
- * 組出攤平的權限查詢表，全部資源都給滿四種權限
- * @returns 資源完整路徑對應到四種權限
+ * 組出授權狀態：聯集模式、第一個角色生效、全部資源都給滿四種權限
+ * @returns 授權狀態
  */
-function buildResourcePermissions(): Record<string, Record<string, boolean>> {
-  const table: Record<string, Record<string, boolean>> = {}
-
-  for (const resourceName of RESOURCE_NAMES) {
-    table[resourceName] = { canAccess: true, canCreate: true, canUpdate: true, canDelete: true }
+function buildAuthorization(): unknown {
+  return {
+    permissionMode: 'union',
+    roles: ASSIGNED_ROLES,
+    activeRoles: [ASSIGNED_ROLES[0]],
+    permissions: buildPermissionTree(),
   }
-
-  return table
 }
 
 /**
@@ -221,7 +215,7 @@ function buildRolePermissionTree(): unknown[] {
 function buildRolePermissionNode(resourceName: string): unknown {
   const index = RESOURCE_NAMES.indexOf(resourceName)
   const directChildNames = RESOURCE_NAMES.filter(
-    (candidate) => candidate.startsWith(`${resourceName}>`) && candidate.split('>').length === resourceName.split('>').length + 1,
+    (candidate) => candidate.startsWith(`${resourceName}>`) && candidate.split('>').length === resourceName.split('>').length + 1
   )
 
   return {

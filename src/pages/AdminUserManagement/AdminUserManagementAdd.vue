@@ -1,14 +1,14 @@
 <template>
   <x-breadcrumb
     :items="[
-      { label: '首頁', icon: 'mdi-home', to: { name: 'home' } },
-      { label: '系統管理' },
-      { label: '用戶管理', to: { name: 'userManagementList' } },
-      { label: '新增用戶' },
+      { label: t('menu.home'), icon: 'mdi-home', to: { name: 'home' } },
+      { label: t('menu.systemManagement') },
+      { label: t('user.title'), to: { name: 'userManagementList' } },
+      { label: t('user.addTitle') },
     ]"
   />
 
-  <x-page-header title="新增用戶" icon="mdi-account-plus-outline" />
+  <x-page-header :title="t('user.addTitle')" icon="mdi-account-plus-outline" />
 
   <q-card flat bordered class="q-mt-xs">
     <q-card-section>
@@ -16,18 +16,18 @@
         <template #avatar>
           <q-icon name="mdi-information-outline" />
         </template>
-        <div class="text-caption">※ 這裡只建立帳號本身。新帳號尚未綁定登入方式，需另行啟用後才能登入。</div>
-        <div class="text-caption">※ 帳號建立後不可修改，電子信箱與姓名之後仍可在編輯頁調整。</div>
+        <div class="text-caption">{{ t('user.hint.createOnly') }}</div>
+        <div class="text-caption">{{ t('user.hint.accountImmutable') }}</div>
       </q-banner>
 
       <q-form @submit="handleSubmit">
-        <x-section-header-bar title="基本資料" />
+        <x-section-header-bar :title="t('user.section.basic')" />
         <div class="row q-col-gutter-md q-mt-xs" data-tour="user-form-basic">
           <div class="col-12 col-md-6">
             <q-input
               v-model="formData.account"
-              label="登入帳號"
-              :rules="[(value) => !!value?.trim() || '請輸入登入帳號']"
+              :label="t('user.field.account')"
+              :rules="[(value) => !!value?.trim() || t('user.validation.accountRequired')]"
               maxlength="50"
               counter
               outlined
@@ -42,8 +42,11 @@
             <q-input
               v-model="formData.email"
               type="email"
-              label="電子信箱"
-              :rules="[(value) => !!value?.trim() || '請輸入電子信箱', (value) => EMAIL_PATTERN.test(value ?? '') || '電子信箱格式不正確']"
+              :label="t('user.field.email')"
+              :rules="[
+                (value) => !!value?.trim() || t('user.validation.emailRequired'),
+                (value) => EMAIL_PATTERN.test(value ?? '') || t('user.validation.emailFormat'),
+              ]"
               maxlength="100"
               outlined
               dense
@@ -54,7 +57,7 @@
             </q-input>
           </div>
           <div class="col-12 col-md-6">
-            <q-input v-model="formData.fullName" label="姓名" maxlength="50" outlined dense>
+            <q-input v-model="formData.fullName" :label="t('user.field.fullName')" maxlength="50" outlined dense>
               <template #prepend>
                 <div style="width: 8px" />
               </template>
@@ -69,8 +72,8 @@
 
         <div class="q-pa-md q-mt-lg" data-tour="user-form-submit">
           <div class="row q-gutter-sm justify-center">
-            <q-btn flat label="取消" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
-            <q-btn unelevated label="儲存" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />
+            <q-btn flat :label="t('common.action.cancel')" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
+            <q-btn unelevated :label="t('common.action.save')" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />
           </div>
         </div>
       </q-form>
@@ -80,6 +83,7 @@
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
@@ -91,6 +95,7 @@ import type { ResponseStructure } from '@/services/axiosService'
 import type { AdminUserManagementCreateFormData } from '@/pages/AdminUserManagement/types'
 
 const router = useRouter()
+const { t } = useI18n()
 const dialog = useDialog()
 const notify = useNotify()
 const logger = useLogger({ prefix: 'AdminUserManagementAdd', enabled: import.meta.env.DEV })
@@ -118,18 +123,18 @@ async function handleSubmit() {
     })
 
     if (!response.success || response.result.data?.id == null) {
-      notify.notifyError(response.result.error?.message || '新增用戶失敗', 0)
+      notify.notifyError(response.result.error?.message || t('user.createFailed'), 0)
       return
     }
 
     const isRolesAssigned = await assignRoles(response.result.data.id, account)
     if (isRolesAssigned) {
-      dialog.showSuccess(`用戶「${account}」已建立。此帳號尚未綁定登入方式，需另行啟用後才能登入。`)
+      dialog.showSuccess(t('user.created', { account }))
     }
     router.push({ name: 'userManagementList' })
   } catch (error) {
     const failure = error as ResponseStructure<null>
-    const errorMessage = failure.errorMessage || '未知錯誤'
+    const errorMessage = failure.errorMessage || t('common.unknownError')
     logger.error('新增用戶失敗', { status: failure.status, errorMessage })
 
     if (failure.status === 409) {
@@ -160,9 +165,9 @@ async function assignRoles(userId: string, account: string): Promise<boolean> {
     }
     throw response
   } catch (error) {
-    const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
+    const errorMessage = (error as ResponseStructure<null>).errorMessage || t('common.unknownError')
     logger.error('指派角色失敗', errorMessage)
-    dialog.showWarning(`用戶「${account}」已建立，但角色指派失敗（${errorMessage}），請到編輯頁重新指派。`, '角色未設定')
+    dialog.showWarning(t('user.roleAssignFailed', { account, message: errorMessage }), t('user.roleAssignFailedTitle'))
     return false
   }
 }

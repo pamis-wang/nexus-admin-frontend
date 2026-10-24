@@ -1,0 +1,8 @@
+{
+  "noData": "查無資料",
+  "rowsPerPage": "每頁顯示:",
+  "dense": "緊湊",
+  "standard": "標準",
+  "all": "全部",
+  "range": "第 {start} - {end} 筆 / 共 {total} 筆"
+}

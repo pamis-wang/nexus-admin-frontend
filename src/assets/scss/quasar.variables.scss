@@ -2,21 +2,25 @@
 // D:\SideProject\Hyper_v5.4.2\Admin\src\assets\scss\config\creative\_variables.scss
 // 例外：$primary 由 Hyper 的 #3d73dd 加深（色相不變、只降明度）。原值配白字對比 4.47，未達 WCAG AA 的 4.5；
 // 加深後白字 5.36，主色字疊在 $brand-soft 淡底（分頁目前頁）上也有 4.52
-$primary   : #2864d9
-$secondary : #6c757d
-$accent    : #727cf5
+$primary: #2864d9;
+$secondary: #6c757d;
+$accent: #727cf5;
 
-$dark      : #313a46
+$dark: #313a46;
 
-$positive  : #10c469
-$negative  : #ff5b5b
-$info      : #35b8e0
-$warning   : #f9c851
+$positive: #10c469;
+$negative: #ff5b5b;
+$info: #35b8e0;
+$warning: #f9c851;
 
 // 主色淡底：分區標題列、分頁目前頁；半透明疊在卡片上，亮色、暗色模式都適用。色名類別寫在 assets/scss/styles.scss
-$brand-soft : rgba($primary, 0.12)
+$brand-soft: rgba($primary, 0.12);
 
 // 暗色模式的主色文字：主色疊在暗色卡片（$dark）上對比只有 2.15，文字與指示色改用這個色。
 // 主色與白色各半混合（Sass 的 mix(#fff, $primary, 50%)；全域 mix() 已棄用，改主色時照這個算法重算）：
-// 暗色卡片上 5.39，疊在 $brand-soft 淡底上 4.98。底色仍用 $primary（白字 5.36），覆寫寫在 assets/scss/styles.scss
-$primary-on-dark : #94b2ec
+// 暗色卡片上 5.39，疊在 $brand-soft 淡底上 4.98。底色仍用 $primary（白字 5.36），覆寫寫在 assets/scss/styles.scss。
+// 變數名稱與其他站相同，共用的 styles.scss 才讀得到
+$brand-on-dark: #94b2ec;
+
+// 深色頂部列與深色選單的底色（Quasar 的 grey-9）；共用的 styles.scss 用它產生 bg-brand-night 類別
+$brand-night: #424242;

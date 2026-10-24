@@ -1,0 +1,61 @@
+{
+  "action": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "confirm": "OK",
+    "back": "Back",
+    "previousStep": "Previous",
+    "nextStep": "Next",
+    "submit": "Submit",
+    "reset": "Reset",
+    "resend": "Resend",
+    "add": "Add",
+    "edit": "Edit",
+    "save": "Save",
+    "return": "Back",
+    "resetForm": "Reset",
+    "refresh": "Refresh",
+    "backToList": "Back to List"
+  },
+  "dialog": {
+    "success": "Success",
+    "confirm": "Confirm",
+    "warning": "Warning",
+    "error": "Error",
+    "info": "Information",
+    "loadFailed": "Loading Failed",
+    "loadListFailed": "Failed to Load List",
+    "createFailed": "Creation Failed",
+    "updateFailed": "Update Failed",
+    "deleteFailed": "Deletion Failed",
+    "confirmDelete": "Confirm Deletion",
+    "saveFailed": "Save Failed",
+    "validationFailed": "Validation Failed"
+  },
+  "switch": {
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "unknownError": "An unknown error occurred.",
+  "operationFailed": "The operation failed.",
+  "yes": "Yes",
+  "no": "No",
+  "optional": "Optional",
+  "labelColon": "{label}:",
+  "noResults": "No results",
+  "comingSoon": "Coming soon",
+  "phone": {
+    "countryCodeDefault": "Country Code (default +886)",
+    "areaCode": "Area Code",
+    "countryCode": "Country Code",
+    "countryCodeWithDefault": "Country Code (default +886)",
+    "number": "Number"
+  },
+  "column": {
+    "index": "No.",
+    "actions": "Actions"
+  },
+  "field": {
+    "memo": "Notes"
+  }
+}

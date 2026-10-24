@@ -5,7 +5,7 @@
     :loading="isLoading"
     :disable="disable"
     :hint="hintMessage"
-    label="角色"
+    :label="t('user.field.roles')"
     emit-value
     map-options
     multiple
@@ -24,7 +24,7 @@
         <q-item-section>
           <q-item-label>
             {{ scope.opt.label }}
-            <q-badge v-if="scope.opt.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+            <q-badge v-if="scope.opt.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">{{ t('user.status.systemDefault') }}</q-badge>
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -32,7 +32,7 @@
 
     <template #no-option>
       <q-item>
-        <q-item-section class="text-grey-6">{{ isLoading ? '載入角色清單中…' : NO_ROLE_MESSAGE }}</q-item-section>
+        <q-item-section class="text-grey-6">{{ isLoading ? t('user.loading.roles') : t('user.empty.noRolesAvailable') }}</q-item-section>
       </q-item>
     </template>
   </q-select>
@@ -40,13 +40,13 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { useLogger } from '@/composables/useLogger'
 import { getAdminRoles } from '@/services/admin/adminRoleService'
 import type { AdminUserManagementRoleOption } from '@/pages/AdminUserManagement/types'
 
-/** 一個角色都沒有時的說明，選單內與欄位提示共用 */
-const NO_ROLE_MESSAGE = '目前沒有可指派的角色，請先到角色管理建立'
+const { t } = useI18n()
 
 withDefaults(defineProps<Props>(), {
   disable: false,
@@ -64,12 +64,12 @@ const logger = useLogger({ prefix: 'AdminUserRoleSelector', enabled: import.meta
 const roleOptions = ref<AdminUserManagementRoleOption[]>([])
 const isLoading = ref(false)
 
-/** 欄位提示；一個角色都沒有時改成提醒先去建立，不必展開選單才看得到 */
+/** 欄位提示；一個角色都沒有時改成提醒先去建立（與選單內的說明相同），不必展開選單才看得到 */
 const hintMessage = computed<string>(() => {
   if (!isLoading.value && roleOptions.value.length === 0) {
-    return NO_ROLE_MESSAGE
+    return t('user.empty.noRolesAvailable')
   }
-  return '可指派多個角色；未指派角色的帳號登入後沒有任何權限'
+  return t('user.hint.roles')
 })
 
 /** 元件參數 */
@@ -93,10 +93,10 @@ async function loadRoleOptions() {
       return
     }
 
-    emit('loadFailed', response.result.error?.message || '載入角色清單失敗')
+    emit('loadFailed', response.result.error?.message || t('user.loadRolesFailed'))
   } catch {
     logger.error('載入角色清單失敗')
-    emit('loadFailed', '載入角色清單失敗，請稍後再試')
+    emit('loadFailed', t('user.loadRolesFailedRetry'))
   } finally {
     isLoading.value = false
   }

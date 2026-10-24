@@ -55,7 +55,7 @@ watch(
     miniModeState.value = isSmallScreen || sidebarSize === 'sm-hover'
     miniExpandState.value = !miniModeState.value
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 /** 點擊選單按鈕：小螢幕時僅暫時展開/收合；桌面時在「常駐展開」與「常駐收合」設定間切換 */

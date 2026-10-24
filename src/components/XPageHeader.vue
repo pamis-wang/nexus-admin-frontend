@@ -38,7 +38,7 @@
  * @example
  * <x-page-header overline="編輯角色" :title="role.name" icon="mdi-shield-edit-outline">
  *   <template #badges>
- *     <q-badge v-if="isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+ *     <q-badge v-if="isSystemDefault" class="q-ml-sm">系統預設</q-badge>
  *   </template>
  *   <template #meta>用戶人數 3</template>
  * </x-page-header>

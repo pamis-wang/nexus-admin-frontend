@@ -5,19 +5,19 @@
         <q-th class="text-center" style="width: 40px">
           <q-icon name="mdi-drag" size="xs" />
         </q-th>
-        <q-th class="text-left">選單名稱</q-th>
-        <q-th class="text-center" style="width: 90px">層級</q-th>
-        <q-th class="text-left" style="width: 220px">完整資源名稱</q-th>
+        <q-th class="text-left">{{ t('resource.column.name') }}</q-th>
+        <q-th class="text-center" style="width: 90px">{{ t('resource.column.level') }}</q-th>
+        <q-th class="text-left" style="width: 220px">{{ t('resource.column.fullName') }}</q-th>
         <q-th class="text-left" style="width: 180px">
-          資源代碼
-          <div class="text-caption text-weight-regular">唯讀</div>
+          {{ t('resource.column.code') }}
+          <div class="text-caption text-weight-regular">{{ t('resource.status.readonly') }}</div>
         </q-th>
         <q-th class="text-center" style="width: 130px">
-          順序
-          <div class="text-caption text-weight-regular">displayOrder</div>
+          {{ t('resource.column.order') }}
+          <div class="text-caption text-weight-regular">{{ t('resource.column.orderField') }}</div>
         </q-th>
-        <q-th class="text-center" style="width: 110px">顯示狀態</q-th>
-        <q-th class="text-center" style="width: 170px">操作</q-th>
+        <q-th class="text-center" style="width: 110px">{{ t('resource.column.visibility') }}</q-th>
+        <q-th class="text-center" style="width: 170px">{{ t('resource.column.actions') }}</q-th>
       </q-tr>
     </thead>
 
@@ -37,7 +37,7 @@
         <!-- 拖曳把手 -->
         <q-td class="text-center">
           <q-icon name="mdi-drag" size="xs" :class="canDrag ? 'text-grey-6 drag-handle cursor-pointer' : 'text-grey-4'">
-            <q-tooltip>{{ canDrag ? '拖曳可調整同一層的順序，跨層請用「移到其他層級」' : '搜尋中無法拖曳排序' }}</q-tooltip>
+            <q-tooltip>{{ canDrag ? t('resource.hint.drag') : t('resource.hint.dragDisabled') }}</q-tooltip>
           </q-icon>
         </q-td>
 
@@ -64,22 +64,24 @@
               outlined
               autofocus
               maxlength="50"
-              placeholder="輸入這一層的名稱"
+              :placeholder="t('resource.placeholder.name')"
               class="q-mr-sm"
               style="min-width: 220px"
               @keyup="(event: KeyboardEvent) => handleEditKeyup(event, element.row.rowKey)"
             />
             <template v-else>
-              <span :class="element.row.isEnabled ? '' : 'text-grey-6'">{{ element.row.name || '（未命名）' }}</span>
-              <q-badge v-if="element.row.id === null" color="positive" class="q-ml-sm">新增</q-badge>
-              <q-badge v-if="element.childCount > 0 && !element.isExpanded" color="grey-5" class="q-ml-sm">含 {{ element.childCount }} 項</q-badge>
+              <span :class="element.row.isEnabled ? '' : 'text-grey-6'">{{ element.row.name || t('resource.empty.unnamed') }}</span>
+              <q-badge v-if="element.row.id === null" color="positive" class="q-ml-sm">{{ t('resource.status.new') }}</q-badge>
+              <q-badge v-if="element.childCount > 0 && !element.isExpanded" color="grey-5" class="q-ml-sm">
+                {{ t('resource.childCount', element.childCount) }}
+              </q-badge>
             </template>
           </div>
         </q-td>
 
         <!-- 層級 -->
         <q-td class="text-center">
-          <q-badge :color="levelColor(element.row.level)" outline>第 {{ element.row.level }} 層</q-badge>
+          <q-badge :color="levelColor(element.row.level)" outline>{{ t('resource.levelLabel', { level: element.row.level }) }}</q-badge>
         </q-td>
 
         <!-- 完整資源名稱（送出給後端的 resourceName） -->
@@ -96,7 +98,7 @@
             <q-badge color="grey-3" text-color="dark" class="text-caption">
               <q-icon name="mdi-lock-outline" size="xs" class="q-mr-xs" />
               {{ element.row.resourceCode }}
-              <q-tooltip>已綁定端點權限，由後端種子資料維護，畫面不可修改</q-tooltip>
+              <q-tooltip>{{ t('resource.hint.codeLocked') }}</q-tooltip>
             </q-badge>
           </template>
         </q-td>
@@ -105,11 +107,11 @@
         <q-td class="text-center">
           <div class="row items-center justify-center no-wrap">
             <q-btn flat dense round size="sm" icon="mdi-chevron-up" @click="emit('nudge', element.row.rowKey, -1)">
-              <q-tooltip>上移</q-tooltip>
+              <q-tooltip>{{ t('resource.action.moveUp') }}</q-tooltip>
             </q-btn>
             <span class="text-caption text-grey-7">{{ element.row.displayOrder || '-' }}</span>
             <q-btn flat dense round size="sm" icon="mdi-chevron-down" @click="emit('nudge', element.row.rowKey, 1)">
-              <q-tooltip>下移</q-tooltip>
+              <q-tooltip>{{ t('resource.action.moveDown') }}</q-tooltip>
             </q-btn>
           </div>
         </q-td>
@@ -119,8 +121,8 @@
           <x-switch
             :model-value="element.row.isEnabled"
             size="sm"
-            active-text="顯示"
-            inactive-text="隱藏"
+            :active-text="t('resource.status.visible')"
+            :inactive-text="t('resource.status.hidden')"
             active-color="positive"
             inactive-color="grey"
             @update:model-value="(value: boolean) => emit('toggleEnabled', element.row.rowKey, value)"
@@ -131,21 +133,21 @@
         <q-td class="text-center">
           <template v-if="editingRowKey === element.row.rowKey">
             <q-btn flat dense round color="positive" icon="mdi-check" @click="emit('commitEdit', element.row.rowKey)">
-              <q-tooltip>完成</q-tooltip>
+              <q-tooltip>{{ t('resource.action.done') }}</q-tooltip>
             </q-btn>
             <q-btn flat dense round color="negative" icon="mdi-close" @click="emit('cancelEdit', element.row.rowKey)">
-              <q-tooltip>取消</q-tooltip>
+              <q-tooltip>{{ t('common.action.cancel') }}</q-tooltip>
             </q-btn>
           </template>
           <template v-else>
             <q-btn flat dense round color="primary" icon="mdi-file-document-edit-outline" @click="emit('startEdit', element.row.rowKey)">
-              <q-tooltip>改名</q-tooltip>
+              <q-tooltip>{{ t('resource.action.rename') }}</q-tooltip>
             </q-btn>
             <q-btn v-if="element.row.level < maxLevel" flat dense round color="primary" icon="mdi-plus" @click="emit('addChild', element.row.rowKey)">
-              <q-tooltip>新增第 {{ element.row.level + 1 }} 層</q-tooltip>
+              <q-tooltip>{{ t('resource.action.addChild', { level: element.row.level + 1 }) }}</q-tooltip>
             </q-btn>
             <q-btn flat dense round color="primary" icon="mdi-folder-move-outline" @click="emit('requestMove', element.row.rowKey)">
-              <q-tooltip>移到其他層級</q-tooltip>
+              <q-tooltip>{{ t('resource.action.move') }}</q-tooltip>
             </q-btn>
           </template>
         </q-td>
@@ -153,13 +155,16 @@
     </VueDraggable>
   </q-markup-table>
 
-  <div v-if="rows.length === 0" class="q-pa-lg text-center text-grey-6">沒有符合條件的選單項目</div>
+  <div v-if="rows.length === 0" class="q-pa-lg text-center text-grey-6">{{ t('resource.empty.noMatch') }}</div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { VueDraggable, type DraggableEvent } from 'vue-draggable-plus'
 
 import type { AdminResourceDragMove, AdminResourceTableRow } from '@/pages/AdminResourceManagement/types'
+
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<Props>(), {
   editingRowKey: null,

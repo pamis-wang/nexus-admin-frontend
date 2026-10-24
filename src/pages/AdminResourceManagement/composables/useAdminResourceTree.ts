@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue'
 
+import { i18n } from '@/plugins/i18n'
 import { useDialog } from '@/composables/useDialog'
 import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
@@ -25,6 +26,8 @@ const PATH_SEPARATOR = '>'
  * 這個版本的 admin_resources 沒有軟刪除欄位，因此整頁不提供刪除資源的功能，送出的樹一律含全部既有節點：
  * removeRow 只用在「新增了一列但取消命名」這種丟棄未送出資料的情況，changeSummary 也因此只算
  * 新增／更新／位置變動。
+ *
+ * 單元測試直接呼叫、不掛元件，拿不到 useI18n，訊息改用 i18n.global.t 在呼叫當下翻譯。
  */
 export function useAdminResourceTree() {
   const logger = useLogger({ prefix: 'AdminResourceTree', enabled: import.meta.env.DEV })
@@ -93,7 +96,7 @@ export function useAdminResourceTree() {
         notify.notifyError(response.result.error.message, 0)
       }
     } catch (error) {
-      const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
+      const errorMessage = (error as ResponseStructure<null>).errorMessage || i18n.global.t('common.unknownError')
       logger.error('載入資源樹失敗', errorMessage)
       notify.notifyError(errorMessage, 0)
     } finally {
@@ -108,7 +111,7 @@ export function useAdminResourceTree() {
   async function saveTree(): Promise<boolean> {
     const validation = validateTree()
     if (!validation.isValid) {
-      dialog.showWarning(validation.message || '選單設定尚未通過檢查')
+      dialog.showWarning(validation.message || i18n.global.t('resource.validationFailed'))
       return false
     }
 
@@ -127,15 +130,15 @@ export function useAdminResourceTree() {
         return true
       }
 
-      notify.notifyError(response.result.error?.message || '儲存選單設定失敗', 0)
+      notify.notifyError(response.result.error?.message || i18n.global.t('resource.saveFailed'), 0)
       return false
     } catch (error) {
       const failure = error as ResponseStructure<null>
-      const errorMessage = failure.errorMessage || '未知錯誤'
+      const errorMessage = failure.errorMessage || i18n.global.t('common.unknownError')
       logger.error('資源樹儲存失敗', { status: failure.status, errorMessage })
 
       if (failure.status === 409) {
-        dialog.showWarning('這份選單設定在你編輯期間已被其他人修改，請重新載入後再調整。', '版本衝突')
+        dialog.showWarning(i18n.global.t('resource.conflict'), i18n.global.t('resource.conflictTitle'))
       } else if (failure.status === 403) {
         notify.notifyError(errorMessage, 0)
       } else {
@@ -282,13 +285,13 @@ export function useAdminResourceTree() {
     const level = parent === null ? 1 : parent.level + 1
 
     if (level > MAX_LEVEL) {
-      notify.notifyWarning(`資源層級最多 ${MAX_LEVEL} 層`)
+      notify.notifyWarning(i18n.global.t('resource.maxLevel', MAX_LEVEL))
       return null
     }
 
     const siblings = childrenOf(parentRowKey)
     if (siblings.length >= MAX_SIBLINGS) {
-      notify.notifyWarning(`同一層最多 ${MAX_SIBLINGS} 筆`)
+      notify.notifyWarning(i18n.global.t('resource.maxSiblings', MAX_SIBLINGS))
       return null
     }
 
@@ -425,13 +428,13 @@ export function useAdminResourceTree() {
 
     const targetLevel = target === null ? 1 : target.level + 1
     if (targetLevel + subtreeHeightOf(rowKey) - 1 > MAX_LEVEL) {
-      notify.notifyWarning(`搬移後會超過 ${MAX_LEVEL} 層`)
+      notify.notifyWarning(i18n.global.t('resource.move.tooDeep', MAX_LEVEL))
       return false
     }
 
     const siblings = childrenOf(targetParentRowKey)
     if (siblings.length >= MAX_SIBLINGS) {
-      notify.notifyWarning(`目標層級已有 ${siblings.length} 筆，同一層最多 ${MAX_SIBLINGS} 筆`)
+      notify.notifyWarning(i18n.global.t('resource.move.targetFull', { count: siblings.length, max: MAX_SIBLINGS }, siblings.length))
       return false
     }
 
@@ -463,7 +466,7 @@ export function useAdminResourceTree() {
     const isRootFull = row.parentRowKey !== null && childrenOf(null).length >= MAX_SIBLINGS
     targets.push({
       parentRowKey: null,
-      label: '（移到第一層）',
+      label: i18n.global.t('resource.move.toRoot'),
       level: 1,
       disabled: row.parentRowKey === null || isRootFull || height > MAX_LEVEL,
       disabledReason: buildDisabledReason(row.parentRowKey === null, isRootFull, height > MAX_LEVEL),
@@ -492,13 +495,13 @@ export function useAdminResourceTree() {
   /** 組出候選父節點不可選的原因 */
   function buildDisabledReason(isCurrentParent: boolean, isFull: boolean, isTooDeep: boolean): string | null {
     if (isCurrentParent) {
-      return '目前所在位置'
+      return i18n.global.t('resource.move.currentPosition')
     }
     if (isTooDeep) {
-      return `搬移後會超過 ${MAX_LEVEL} 層`
+      return i18n.global.t('resource.move.tooDeep', MAX_LEVEL)
     }
     if (isFull) {
-      return `已達同層上限 ${MAX_SIBLINGS} 筆`
+      return i18n.global.t('resource.move.siblingLimit', MAX_SIBLINGS)
     }
     return null
   }
@@ -506,22 +509,22 @@ export function useAdminResourceTree() {
   /** 送出前的整棵樹檢查，先擋掉後端會回 400／403 的情況 */
   function validateTree(): AdminResourceTreeValidation {
     if (rows.value.length === 0) {
-      return { isValid: false, message: '整批替換是全量語意，空的樹會刪除全部資源，請至少保留一筆第一層選單。' }
+      return { isValid: false, message: i18n.global.t('resource.validation.emptyTree') }
     }
 
     const blankRow = rows.value.find((row) => row.name.trim().length === 0)
     if (blankRow !== undefined) {
-      return { isValid: false, message: '有選單名稱是空白的，請先填寫；未命名的新增列可在編輯狀態按取消收掉。' }
+      return { isValid: false, message: i18n.global.t('resource.validation.blankName') }
     }
 
     const separatorRow = rows.value.find((row) => row.name.includes(PATH_SEPARATOR))
     if (separatorRow !== undefined) {
-      return { isValid: false, message: `選單名稱不可包含「${PATH_SEPARATOR}」，該符號是階層分隔用的。` }
+      return { isValid: false, message: i18n.global.t('resource.validation.nameSeparator', { separator: PATH_SEPARATOR }) }
     }
 
     const overLevelRow = rows.value.find((row) => row.level > MAX_LEVEL)
     if (overLevelRow !== undefined) {
-      return { isValid: false, message: `資源層級最多 ${MAX_LEVEL} 層。` }
+      return { isValid: false, message: i18n.global.t('resource.validation.maxLevel', MAX_LEVEL) }
     }
 
     const parentRowKeys = new Set<string | null>([null, ...rows.value.map((row) => row.parentRowKey)])
@@ -529,8 +532,9 @@ export function useAdminResourceTree() {
       const siblings = childrenOf(parentRowKey)
       if (siblings.length > MAX_SIBLINGS) {
         const parent = parentRowKey === null ? null : findRow(parentRowKey)
-        const scope = parent === null ? '第一層' : `「${fullPathOf(parent)}」底下`
-        return { isValid: false, message: `${scope}有 ${siblings.length} 筆，同一層最多 ${MAX_SIBLINGS} 筆。` }
+        const scope =
+          parent === null ? i18n.global.t('resource.validation.scopeRoot') : i18n.global.t('resource.validation.scopeUnder', { path: fullPathOf(parent) })
+        return { isValid: false, message: i18n.global.t('resource.validation.tooManySiblings', { scope, count: siblings.length, max: MAX_SIBLINGS }) }
       }
     }
 
@@ -538,7 +542,7 @@ export function useAdminResourceTree() {
     for (const row of rows.value) {
       const path = fullPathOf(row)
       if (seenPaths.has(path)) {
-        return { isValid: false, message: `資源名稱「${path}」重複，整棵樹內的完整名稱必須唯一。` }
+        return { isValid: false, message: i18n.global.t('resource.validation.duplicateName', { path }) }
       }
       seenPaths.add(path)
     }

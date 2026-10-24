@@ -1,0 +1,97 @@
+{
+  "title": "用戶管理",
+  "addTitle": "新增用戶",
+  "editTitle": "編輯用戶",
+  "viewTitle": "檢視用戶",
+  "section": {
+    "basic": "基本資料",
+    "roles": "角色",
+    "logins": "登入方式"
+  },
+  "field": {
+    "account": "登入帳號",
+    "email": "電子信箱",
+    "fullName": "姓名",
+    "role": "角色",
+    "roles": "角色",
+    "accountStatus": "帳號狀態",
+    "activateAt": "啟用時間",
+    "lastLoginAt": "最後登入時間"
+  },
+  "column": {
+    "account": "帳號",
+    "fullName": "姓名",
+    "email": "電子信箱",
+    "roles": "角色",
+    "loginState": "登入狀態",
+    "accountStatus": "帳號狀態",
+    "actions": "操作",
+    "loginMethod": "登入方式",
+    "providerEmail": "綁定信箱",
+    "status": "狀態",
+    "failedCount": "連續失敗",
+    "lockedUntil": "鎖定至",
+    "lastUsedAt": "最後使用"
+  },
+  "placeholder": {
+    "account": "搜尋帳號",
+    "fullName": "搜尋姓名",
+    "email": "搜尋電子信箱"
+  },
+  "hint": {
+    "createOnly": "※ 這裡只建立帳號本身。新帳號尚未綁定登入方式，需另行啟用後才能登入。",
+    "accountImmutable": "※ 帳號建立後不可修改，電子信箱與姓名之後仍可在編輯頁調整。",
+    "accountReadonly": "目前不開放在後台修改",
+    "disabledReadonly": "帳號的停用狀態目前不開放在後台變更，列表與本頁都只顯示狀態，儲存時會把載入當下的值原樣帶回。",
+    "loginsReadonly": "以下資料唯讀。解除鎖定、清除失敗次數與重設密碼目前沒有對應的後台端點，需由維運處理。",
+    "roles": "可指派多個角色；未指派角色的帳號登入後沒有任何權限"
+  },
+  "action": {
+    "add": "新增用戶",
+    "edit": "編輯用戶",
+    "view": "檢視",
+    "clearFilters": "清除篩選"
+  },
+  "status": {
+    "systemDefault": "系統預設",
+    "enabled": "啟用中",
+    "disabled": "已停用",
+    "noLogin": "尚未綁定登入方式",
+    "locked": "鎖定中",
+    "normal": "正常",
+    "unverified": "未驗證",
+    "requiresReset": "待重設密碼",
+    "usable": "可用",
+    "unusable": "不可用"
+  },
+  "empty": {
+    "noRole": "未指派角色",
+    "noRoleDetail": "未指派角色，此帳號登入後沒有任何權限",
+    "noLogin": "尚未綁定任何登入方式，此帳號還不能登入。",
+    "noRolesAvailable": "目前沒有可指派的角色，請先到角色管理建立",
+    "unnamedRole": "（未命名角色）"
+  },
+  "loading": {
+    "user": "載入用戶資料中...",
+    "roles": "載入角色清單中…"
+  },
+  "validation": {
+    "accountRequired": "請輸入登入帳號",
+    "emailRequired": "請輸入電子信箱",
+    "emailFormat": "電子信箱格式不正確"
+  },
+  "filterSummary": "找到 {found} 筆／共 {total} 筆",
+  "createFailed": "新增用戶失敗",
+  "created": "用戶「{account}」已建立。此帳號尚未綁定登入方式，需另行啟用後才能登入。",
+  "roleAssignFailed": "用戶「{account}」已建立，但角色指派失敗（{message}），請到編輯頁重新指派。",
+  "roleAssignFailedTitle": "角色未設定",
+  "missingId": "缺少用戶唯一編號",
+  "notFound": "找不到指定用戶",
+  "loadFailedTitle": "載入用戶失敗",
+  "updateFailed": "更新用戶失敗",
+  "updated": "用戶「{account}」已更新",
+  "roleUpdateFailed": "用戶「{account}」的基本資料已更新，但角色未更新（{message}），請重新操作一次。",
+  "roleUpdateFailedTitle": "角色未更新",
+  "loadRolesFailed": "載入角色清單失敗",
+  "loadRolesFailedRetry": "載入角色清單失敗，請稍後再試"
+}

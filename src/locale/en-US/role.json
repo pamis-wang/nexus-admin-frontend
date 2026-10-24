@@ -1,0 +1,118 @@
+{
+  "title": "Role Management",
+  "addTitle": "Add Role",
+  "editTitle": "Edit Role",
+  "viewTitle": "View Role",
+  "overline": "Role",
+  "section": {
+    "basic": "Basic Information",
+    "permissions": "Permissions",
+    "users": "Users with This Role ({n})"
+  },
+  "field": {
+    "name": "Role Name",
+    "template": "Start from an Existing Role"
+  },
+  "column": {
+    "name": "Role Name",
+    "userCount": "Users",
+    "actions": "Actions",
+    "feature": "Feature"
+  },
+  "placeholder": {
+    "search": "Search role name",
+    "searchFeature": "Search feature name"
+  },
+  "hint": {
+    "template": "Only the permissions are copied. The two roles are independent afterward.",
+    "autoGrantRule": "Selecting \"Add\", \"Edit\", or \"Delete\" also selects \"View\".",
+    "newRoleUnsaved": "The new role won't affect any users until it's saved.",
+    "deleteRule": "System default roles can't be deleted. To delete a role that users still have, change those users' roles first.",
+    "viewUsers": "View users with this role",
+    "autoGrantAccess": "\"View\" was selected automatically: Add, Edit, and Delete all require View.",
+    "autoRevokeDependent": "Add, Edit, and Delete were also cleared: they can't be used without View.",
+    "menuDisabled": "The menu is temporarily turned off. The permissions here are kept as they are and take effect as soon as the menu is re-enabled.",
+    "notApplicable": "\"{name}\" doesn't support {action}"
+  },
+  "meta": {
+    "userCount": "{n} user | {n} users",
+    "saveImpact": "· Saving will immediately change this user's permissions | · Saving will immediately change the permissions of these {n} users"
+  },
+  "action": {
+    "add": "Add Role",
+    "edit": "Edit Role",
+    "view": "View",
+    "update": "Edit",
+    "delete": "Delete",
+    "viewUsers": "View Users",
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All"
+  },
+  "status": {
+    "systemDefault": "System Default",
+    "userDisabled": "(Disabled)",
+    "menuDisabled": "Menu Disabled",
+    "granted": "Granted",
+    "partial": "Partial",
+    "notGranted": "Not Granted",
+    "notApplicable": "N/A"
+  },
+  "empty": {
+    "users": "No users have this role",
+    "noMatchingFeatures": "No matching features",
+    "noFeatures": "No features to configure"
+  },
+  "loading": {
+    "permissions": "Loading permissions…",
+    "role": "Loading role data…",
+    "users": "Loading users…"
+  },
+  "option": {
+    "noTemplate": "No template (start from scratch)",
+    "systemDefault": "{name} (System Default)"
+  },
+  "validation": {
+    "nameRequired": "Enter a role name"
+  },
+  "matrix": {
+    "grantedSummary": "{ratio} feature granted | {ratio} features granted",
+    "ratio": "{granted}/{total}",
+    "changedCount": "{n} change | {n} changes",
+    "wholeRow": "Whole Row",
+    "columnAria": "Entire {action} column",
+    "columnTooltip": "Entire {action} column (applies only to search results while searching)",
+    "expandAria": "Expand {name}",
+    "collapseAria": "Collapse {name}",
+    "cellAria": "{name}: {action}",
+    "rowAria": "{name}: all permissions",
+    "legendChanged": "Different from when loaded (not saved yet)",
+    "legendPartial": "Partially granted (some features below are selected and some aren't)",
+    "legendPartialReadonly": "{term}: some features below are granted and some aren't",
+    "legendNotApplicable": "{term}: this feature doesn't have that action"
+  },
+  "unsavedCount": "{n} unsaved change | {n} unsaved changes",
+  "noUnsavedChanges": "No unsaved changes",
+  "loadFailed": "Failed to load the role.",
+  "loadFailedTitle": "Failed to Load Role",
+  "loadPermissionsFailed": "Failed to load permissions: {message}",
+  "noRolesForPermissions": "No roles were found, so the permission items can't be loaded. Please contact the system administrator.",
+  "templateApplied": "Applied the permissions of \"{name}\" as a starting point. You can adjust them further.",
+  "loadTemplateFailed": "Failed to load the template role's permissions.",
+  "created": "Role \"{name}\" added.",
+  "createFailed": "Failed to add the role.",
+  "reverted": "Reverted to the settings as loaded.",
+  "leaveConfirmNew": "The new role hasn't been saved. What you've entered will be lost if you leave.",
+  "leaveConfirm": "{n} unsaved change will be lost if you leave. | {n} unsaved changes will be lost if you leave.",
+  "leaveTitle": "Leave This Page?",
+  "updated": "Role \"{name}\" updated.",
+  "updateFailed": "Failed to update the role.",
+  "conflict": "This role was changed by someone else while you were editing, or its name is already used by another role. Please reload and try again.",
+  "conflictTitle": "Version Conflict",
+  "deleteConfirm": "Delete the role \"{name}\"? Its permission settings will also be removed. This can't be undone.",
+  "deleteTitle": "Delete Role",
+  "deleted": "Role \"{name}\" deleted.",
+  "deleteFailed": "Failed to delete the role.",
+  "deleteBlockedSystemDefault": "System default roles can't be deleted.",
+  "deleteBlockedInUse": "{n} user still has this role. Change their role before deleting it. | {n} users still have this role. Change their roles before deleting it.",
+  "loadUsersFailed": "Unable to load the user list: {message}"
+}

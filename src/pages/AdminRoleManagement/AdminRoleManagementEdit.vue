@@ -1,42 +1,42 @@
 <template>
   <x-breadcrumb
     :items="[
-      { label: '首頁', icon: 'mdi-home', to: { name: 'home' } },
-      { label: '系統管理' },
-      { label: '角色管理', to: { name: 'roleManagementList' } },
-      { label: '編輯角色' },
+      { label: t('menu.home'), icon: 'mdi-home', to: { name: 'home' } },
+      { label: t('menu.systemManagement') },
+      { label: t('role.title'), to: { name: 'roleManagementList' } },
+      { label: t('role.editTitle') },
     ]"
   />
 
-  <x-loading-state :loading="isLoading" message="載入角色資料中..." />
+  <x-loading-state :loading="isLoading" :message="t('role.loading.role')" />
 
   <template v-if="!isLoading && role !== null">
     <!-- 標題放載入當下的名稱，不隨下方輸入框跳動 -->
-    <x-page-header overline="編輯角色" :title="role.name" icon="mdi-shield-edit-outline">
+    <x-page-header :overline="t('role.editTitle')" :title="role.name" icon="mdi-shield-edit-outline">
       <template #badges>
-        <q-badge v-if="role.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+        <q-badge v-if="role.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">{{ t('role.status.systemDefault') }}</q-badge>
       </template>
       <template #meta>
-        用戶人數 {{ role.userCount }}
-        <span v-if="role.userCount > 0">・儲存後這 {{ role.userCount }} 位用戶的權限立即改變</span>
+        {{ t('role.meta.userCount', role.userCount) }}
+        <span v-if="role.userCount > 0">{{ t('role.meta.saveImpact', role.userCount) }}</span>
       </template>
     </x-page-header>
 
     <q-card flat bordered class="q-mt-xs">
       <q-card-section>
-        <x-section-header-bar title="基本資料" />
+        <x-section-header-bar :title="t('role.section.basic')" />
         <q-form ref="formRef" @submit="handleSubmit">
           <div class="row q-col-gutter-md q-mt-xs">
             <div class="col-12 col-md-6">
               <q-input
                 v-model="formData.name"
-                label="角色名稱"
+                :label="t('role.field.name')"
                 maxlength="50"
                 counter
                 outlined
                 dense
                 autocomplete="off"
-                :rules="[(value: string) => value.trim() !== '' || '請輸入角色名稱']"
+                :rules="[(value: string) => value.trim() !== '' || t('role.validation.nameRequired')]"
               >
                 <template #prepend>
                   <q-icon name="mdi-asterisk" color="negative" size="8px" />
@@ -46,8 +46,8 @@
           </div>
         </q-form>
 
-        <x-section-header-bar title="權限設定" class="q-mt-md" />
-        <div class="text-caption q-mt-xs q-mb-sm">勾選「新增／修改／刪除」時會自動勾選「檢視」</div>
+        <x-section-header-bar :title="t('role.section.permissions')" class="q-mt-md" />
+        <div class="text-caption q-mt-xs q-mb-sm">{{ t('role.hint.autoGrantRule') }}</div>
         <AdminRolePermissionMatrix :rows="matrix.rows.value" @set-cell="handleSetCell" @toggle-row="handleToggleRow" @toggle-column="handleToggleColumn" />
       </q-card-section>
     </q-card>
@@ -66,15 +66,15 @@
               size="sm"
               class="q-mr-xs"
             />
-            {{ changedCount > 0 ? `有 ${changedCount} 項未儲存的變更` : '沒有未儲存的變更' }}
+            {{ changedCount > 0 ? t('role.unsavedCount', changedCount) : t('role.noUnsavedChanges') }}
           </div>
-          <q-btn flat color="grey" label="取消" :to="buildViewRoute()" />
-          <q-btn flat color="grey" label="重設" :disable="changedCount === 0" @click="handleReset" />
+          <q-btn flat color="grey" :label="t('common.action.cancel')" :to="buildViewRoute()" />
+          <q-btn flat color="grey" :label="t('common.action.resetForm')" :disable="changedCount === 0" @click="handleReset" />
           <q-btn
             unelevated
             color="primary"
             icon="mdi-content-save-outline"
-            label="儲存"
+            :label="t('common.action.save')"
             :loading="isSubmitting"
             :disable="changedCount === 0"
             @click="handleSubmit"
@@ -87,6 +87,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, useTemplateRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { onBeforeRouteLeave, useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 import type { QForm } from 'quasar'
 
@@ -101,6 +102,7 @@ import type { AdminRoleManagementFormData, AdminRoleManagementSummary, AdminRole
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const dialog = useDialog()
 const notify = useNotify()
 const logger = useLogger({ prefix: 'AdminRoleManagementEdit', enabled: import.meta.env.DEV })
@@ -147,9 +149,9 @@ async function loadRole() {
     formData.name = data.role.name
     matrix.load(data.permissions)
   } catch (error) {
-    const errorMessage = (error as ResponseStructure<null>).errorMessage || '載入角色失敗'
+    const errorMessage = (error as ResponseStructure<null>).errorMessage || t('role.loadFailed')
     logger.error('載入角色失敗', errorMessage)
-    dialog.showError(errorMessage, '載入角色失敗')
+    dialog.showError(errorMessage, t('role.loadFailedTitle'))
     await router.push({ name: 'roleManagementList' })
   } finally {
     isLoading.value = false
@@ -168,7 +170,7 @@ async function handleSubmit() {
     const name = formData.name.trim()
     await updateAdminRole(roleId, { name, version: role.value.version, permissions: matrix.buildPermissionItems() })
     isSaved.value = true
-    notify.notifySuccess(`角色「${name}」已更新`)
+    notify.notifySuccess(t('role.updated', { name }))
     await router.push(buildViewRoute())
   } catch (error) {
     const failure = error as ResponseStructure<null>
@@ -176,9 +178,9 @@ async function handleSubmit() {
 
     // 版本不符（別人先存了）或名稱重複都回 409；留在原頁讓使用者決定要不要重新整理
     if (failure.status === 409) {
-      dialog.showWarning('這個角色在你編輯期間已被其他人修改，或名稱與現有角色重複，請重新載入後再調整。', '版本衝突')
+      dialog.showWarning(t('role.conflict'), t('role.conflictTitle'))
     } else {
-      notify.notifyError(failure.errorMessage || '更新角色失敗', 0)
+      notify.notifyError(failure.errorMessage || t('role.updateFailed'), 0)
     }
   } finally {
     isSubmitting.value = false
@@ -190,7 +192,7 @@ function handleReset() {
   formData.name = role.value?.name ?? ''
   matrix.reset()
   formRef.value?.resetValidation()
-  notify.notifyInfo('已還原為載入時的設定')
+  notify.notifyInfo(t('role.reverted'))
 }
 
 function handleSetCell(resourceId: string, action: AdminRolePermissionAction, value: boolean) {
@@ -205,16 +207,19 @@ function handleToggleColumn(action: AdminRolePermissionAction, leafIds: string[]
   notifyHint(matrix.toggleColumn(action, leafIds))
 }
 
-/** 連動了其他操作時告訴使用者發生了什麼 */
-function notifyHint(hint: string | null) {
-  if (hint !== null) notify.notifyInfo(hint)
+/**
+ * 連動了其他操作時告訴使用者發生了什麼
+ * @param hintKey 說明的翻譯鍵；沒有連動時為 null
+ */
+function notifyHint(hintKey: string | null) {
+  if (hintKey !== null) notify.notifyInfo(t(hintKey))
 }
 
 /** 離開前確認；回傳是否離開 */
 function confirmLeave(): Promise<boolean> {
   return new Promise((resolve) => {
     dialog
-      .showConfirm(`有 ${changedCount.value} 項未儲存的變更，離開後會遺失。`, '離開這一頁？')
+      .showConfirm(t('role.leaveConfirm', changedCount.value), t('role.leaveTitle'))
       .onOk(() => resolve(true))
       .onCancel(() => resolve(false))
       .onDismiss(() => resolve(false))

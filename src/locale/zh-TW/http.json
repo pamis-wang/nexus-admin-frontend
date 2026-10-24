@@ -1,0 +1,12 @@
+{
+  "timeout": "請求逾時，請稍後再試",
+  "network": "網路連線異常，請檢查網路後重試",
+  "badRequest": "請求資料有誤，請確認後重試",
+  "unauthorized": "登入狀態已過期，請重新登入",
+  "forbidden": "沒有權限執行此操作",
+  "notFound": "找不到指定的資料",
+  "unprocessable": "資料格式不正確，請確認後重試",
+  "server": "伺服器發生錯誤，請稍後再試",
+  "unexpected": "發生未預期的錯誤（{status}）",
+  "uploadFailed": "檔案上傳失敗：{reason}"
+}

@@ -24,10 +24,16 @@ const TOURS_DIR = fileURLToPath(new URL('../src/tours', import.meta.url))
  */
 const TEST_PATH_BY_ROUTE_NAME: Record<string, string> = {}
 
+/** 雙語文字；測試以繁中比對 */
+interface TourText {
+  'zh-TW': string
+  'en-US': string
+}
+
 /** 導覽定義檔的形狀，只取本測試需要的欄位 */
 interface TourStep {
   anchor: string | null
-  title: string
+  title: TourText
   routeName: string | null
 }
 
@@ -35,8 +41,8 @@ interface TourStep {
 interface TourFile {
   fileName: string
   id: string
-  name: string
-  requiresRouteName: string | null
+  name: TourText
+  requiresRouteNames: string[]
   steps: TourStep[]
 }
 
@@ -65,32 +71,29 @@ test('每一份導覽定義都通過驗證並出現在導覽選單', async ({ pa
   await expect(
     page.locator('.q-menu .q-item'),
     `src/tours/ 共有 ${TOURS.length} 份導覽定義（${fileList}），但導覽選單列出的數量不符，` +
-      `代表有定義檔沒有通過格式驗證而被略過，或是它的 resourceName 對不上任何一筆權限`,
+      `代表有定義檔沒有通過格式驗證而被略過，或是它的 resourceCode 對不上任何一筆權限`
   ).toHaveCount(TOURS.length)
 })
 
 for (const tour of TOURS) {
-  test(`導覽「${tour.name}」的每個錨點都存在於畫面上`, async ({ page }) => {
+  test(`導覽「${tour.name['zh-TW']}」的每個錨點都存在於畫面上`, async ({ page }) => {
     await page.goto(resolveStartPath(tour))
     await startTour(page, tour)
 
     const popover = page.locator('.driver-popover')
 
     for (const [index, step] of tour.steps.entries()) {
-      const stepLabel = `[${tour.id}] 第 ${index + 1} 步「${step.title}」`
+      const stepLabel = `[${tour.id}] 第 ${index + 1} 步「${step.title['zh-TW']}」`
 
       if (index > 0) await popover.locator('.driver-popover-next-btn').click()
 
-      await expect(popover, `${stepLabel}：導覽沒有停在這一步，前一步可能卡住了`).toContainText(step.title, {
+      await expect(popover, `${stepLabel}：導覽沒有停在這一步，前一步可能卡住了`).toContainText(step.title['zh-TW'], {
         timeout: POPOVER_TIMEOUT,
       })
 
       // 錨點存在不代表畫面是好的：頁面載入失敗時錯誤對話框會蓋在上面，
       // 而放在外層容器的錨點依然找得到。這一條用來抓那種情況。
-      await expect(
-        page.locator('.q-dialog'),
-        `${stepLabel}：畫面出現非預期的對話框，該頁可能沒有正常載入（例如 API 回應格式不符）`,
-      ).toHaveCount(0)
+      await expect(page.locator('.q-dialog'), `${stepLabel}：畫面出現非預期的對話框，該頁可能沒有正常載入（例如 API 回應格式不符）`).toHaveCount(0)
 
       // anchor 為 null 代表這一步刻意不指向元素，泡泡置中顯示
       if (step.anchor === null) continue
@@ -98,14 +101,14 @@ for (const tour of TOURS) {
       await expect(
         page.locator(`[data-tour="${step.anchor}"]`),
         `${stepLabel}找不到錨點 data-tour="${step.anchor}"（頁面：${step.routeName ?? '不指定'}）。\n` +
-          `該元素可能已被移除或改名。請把 data-tour 加回原本的元素，或同步修改 src/tours/${tour.fileName} 的這一步。`,
+          `該元素可能已被移除或改名。請把 data-tour 加回原本的元素，或同步修改 src/tours/${tour.fileName} 的這一步。`
       ).toHaveClass(/driver-active-element/)
 
       // 錨點存在、也被高亮了，仍可能整個在畫面外——那時使用者只會看到遮罩框住空白處。
       // 導覽負責把目標捲進視野，這一條就是在守那件事。
       await expect(
         page.locator(`[data-tour="${step.anchor}"]`),
-        `${stepLabel}的錨點不在可視範圍內。導覽應該先把它捲進畫面再顯示說明，否則使用者會看到遮罩框在空白處。`,
+        `${stepLabel}的錨點不在可視範圍內。導覽應該先把它捲進畫面再顯示說明，否則使用者會看到遮罩框在空白處。`
       ).toBeInViewport()
     }
   })
@@ -117,14 +120,12 @@ for (const tour of TOURS) {
  * @returns 起始網址
  */
 function resolveStartPath(tour: TourFile): string {
-  if (tour.requiresRouteName === null) return '/'
+  const routeName = tour.requiresRouteNames[0]
+  if (routeName === undefined) return '/'
 
-  const startPath = TEST_PATH_BY_ROUTE_NAME[tour.requiresRouteName]
+  const startPath = TEST_PATH_BY_ROUTE_NAME[routeName]
   if (startPath === undefined) {
-    throw new Error(
-      `導覽 ${tour.fileName} 綁定路由「${tour.requiresRouteName}」，` +
-        `請在 e2e/tour-anchors.spec.ts 的 TEST_PATH_BY_ROUTE_NAME 補上該頁的測試網址。`,
-    )
+    throw new Error(`導覽 ${tour.fileName} 綁定路由「${routeName}」，` + `請在 e2e/tour-anchors.spec.ts 的 TEST_PATH_BY_ROUTE_NAME 補上該頁的測試網址。`)
   }
 
   return startPath
@@ -138,9 +139,9 @@ function resolveStartPath(tour: TourFile): string {
 async function startTour(page: Page, tour: TourFile) {
   await page.locator('[data-tour="topbar-tour-entry"]').click()
 
-  const entry = page.locator('.q-menu .q-item').filter({ hasText: tour.name })
+  const entry = page.locator('.q-menu .q-item').filter({ hasText: tour.name['zh-TW'] })
 
-  await expect(entry, `導覽選單裡找不到「${tour.name}」，請確認 src/tours/${tour.fileName} 有通過格式驗證`).toHaveCount(1)
+  await expect(entry, `導覽選單裡找不到「${tour.name['zh-TW']}」，請確認 src/tours/${tour.fileName} 有通過格式驗證`).toHaveCount(1)
 
   await entry.click()
 }

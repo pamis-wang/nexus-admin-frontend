@@ -1,0 +1,61 @@
+{
+  "action": {
+    "ok": "確認",
+    "cancel": "取消",
+    "confirm": "確定",
+    "back": "上一頁",
+    "previousStep": "上一步",
+    "nextStep": "下一步",
+    "submit": "送出",
+    "reset": "重置",
+    "resend": "重新發送",
+    "add": "新增",
+    "edit": "編輯",
+    "save": "儲存",
+    "return": "返回",
+    "resetForm": "重設",
+    "refresh": "重新整理",
+    "backToList": "返回列表"
+  },
+  "dialog": {
+    "success": "成功",
+    "confirm": "確認",
+    "warning": "警告",
+    "error": "錯誤",
+    "info": "資訊",
+    "loadFailed": "載入失敗",
+    "loadListFailed": "載入列表失敗",
+    "createFailed": "新增失敗",
+    "updateFailed": "更新失敗",
+    "deleteFailed": "刪除失敗",
+    "confirmDelete": "確認刪除",
+    "saveFailed": "儲存失敗",
+    "validationFailed": "驗證失敗"
+  },
+  "switch": {
+    "enabled": "啟用",
+    "disabled": "停用"
+  },
+  "unknownError": "未知錯誤",
+  "operationFailed": "操作失敗",
+  "yes": "是",
+  "no": "否",
+  "optional": "選填",
+  "labelColon": "{label}：",
+  "noResults": "查無結果",
+  "comingSoon": "敬請期待",
+  "phone": {
+    "countryCodeDefault": "預設+886",
+    "areaCode": "區碼",
+    "countryCode": "國碼",
+    "countryCodeWithDefault": "國碼 (預設+886)",
+    "number": "號碼"
+  },
+  "column": {
+    "index": "項次",
+    "actions": "管理功能"
+  },
+  "field": {
+    "memo": "備註"
+  }
+}

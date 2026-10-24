@@ -1,0 +1,19 @@
+{
+  "entry": "操作導覽",
+  "empty": "目前沒有可用的導覽",
+  "group": {
+    "common": "通用"
+  },
+  "hint": {
+    "notFound": "找不到這份導覽",
+    "noPermission": "沒有這個功能的使用權限",
+    "requiresPage": "請先進入該功能頁面再開啟",
+    "seen": "已看過，可重看",
+    "unseen": "尚未看過"
+  },
+  "button": {
+    "next": "下一步",
+    "prev": "上一步",
+    "done": "完成"
+  }
+}

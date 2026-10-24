@@ -14,8 +14,9 @@
 
     <div class="row flex flex-center window-width window-height">
       <q-card flat bordered class="q-mx-md" style="width: 100%; max-width: 420px">
-        <q-card-section class="bg-primary text-center">
-          <img :src="logoLockupWhite" alt="logo" style="height: 28px; width: auto" />
+        <q-card-section class="bg-white text-center">
+          <img :src="logoLockupBlue" :alt="t('layout.appTitle')" :style="{ height: `${siteConfig.logoHeight.login}px`, width: 'auto' }" />
+          <div v-if="loginSubtitle !== ''" class="text-subtitle1 text-grey-8 q-mt-sm" data-test="login-subtitle">{{ loginSubtitle }}</div>
         </q-card-section>
         <q-card-section>
           <slot></slot>
@@ -23,13 +24,24 @@
       </q-card>
     </div>
 
-    <footer class="fixed-bottom text-center text-grey q-pb-sm">© {{ currentYear }} Nexus</footer>
+    <footer class="fixed-bottom text-center text-grey q-pb-sm">{{ t('layout.copyright', { year: currentYear }) }}</footer>
+
+    <!-- 登入前的頁面也要能切換語系：瀏覽器語言不是使用者慣用的語言時，要能在登入前自己切換 -->
+    <locale-switcher class="fixed-top-right q-ma-md" />
   </div>
 </template>
 
 <script setup lang="ts">
-import logoLockupWhite from '@/assets/images/nexus-lockup-white.svg'
+import { useI18n } from 'vue-i18n'
+import LocaleSwitcher from '@/components/LocaleSwitcher.vue'
+import { siteConfig } from '@/config/site'
+import { siteHooks } from '@/config/siteHooks'
+import logoLockupBlue from '@/assets/images/brand-lockup-blue.svg'
 
+const { t } = useI18n()
+
+/** 標誌下方的副標，由站別決定（例如網址所屬單位的名稱）；沒有時不顯示 */
+const loginSubtitle = siteHooks.useLoginSubtitle()
 const currentYear = new Date().getFullYear()
 </script>
 

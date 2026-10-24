@@ -67,3 +67,19 @@ export function checkCapsLock(event: KeyboardEvent | EventWithNative): boolean {
 
   return false
 }
+
+/**
+ * 鍵盤工具函式 Composable（保留向後相容）
+ * 提供鍵盤事件處理相關的工具函式
+ * @returns 包含所有鍵盤工具函式的物件
+ * @example
+ * import { useKeyboard } from '@/composables/useKeyboard'
+ * const { allowNumbersAndEnter, checkCapsLock } = useKeyboard()
+ */
+export function useKeyboard() {
+  return {
+    allowNumbersAndEnter,
+    allowNumbersAndLetters,
+    checkCapsLock,
+  }
+}

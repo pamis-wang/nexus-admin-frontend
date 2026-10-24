@@ -1,30 +1,53 @@
 {
   "id": "role-management-overview",
-  "name": "角色管理：看懂這個畫面",
+  "name": {
+    "zh-TW": "角色管理：看懂這個畫面",
+    "en-US": "Role Management: Understand This Screen"
+  },
+  "groupName": null,
   "order": 40,
-  "requiresRouteName": null,
-  "resourceName": "系統管理>角色管理",
+  "requiresRouteNames": [],
+  "resourceCode": "系統管理>角色管理",
+  "requiresAnchor": null,
   "steps": [
     {
       "anchor": "menu-systemManagement",
-      "title": "權限是掛在角色上，不是掛在人身上",
-      "description": "從「系統管理 → 角色管理」進來。系統不會針對某一個人設定權限，而是先定義好角色（例如業務、審核人員、稽核），再把角色指派給人。所以「讓某人多看一個功能」有兩種作法：改他的角色，或幫他加一個角色——不要為了一個人的特例去改整個角色的權限，那會連帶影響所有用這個角色的人。",
+      "title": {
+        "zh-TW": "權限是掛在角色上，不是掛在人身上",
+        "en-US": "Permissions belong to roles, not to people"
+      },
+      "description": {
+        "zh-TW": "從「系統管理 → 角色管理」進來。系統不會針對某一個人設定權限，而是先定義好角色（例如業務、審核人員、稽核），再把角色指派給人。所以「讓某人多看一個功能」有兩種作法：改他的角色，或幫他加一個角色——不要為了一個人的特例去改整個角色的權限，那會連帶影響所有用這個角色的人。",
+        "en-US": "You get here from \"System Management → Role Management\". The system doesn't set permissions for individual people. Instead, you first define roles (for example, Sales, Reviewer or Auditor) and then assign roles to people. So there are two ways to \"let someone see one more feature\": change their role, or give them an additional role. Don't change a whole role's permissions for one person's special case, because that affects everyone who has that role."
+      },
       "routeName": "roleManagementList",
       "side": "right",
       "align": "start"
     },
     {
       "anchor": "role-result-table",
-      "title": "「用戶人數」是改動前要先看的數字",
-      "description": "這一欄是目前有多少人正在用這個角色，也就是你改動它的權限時會一次影響多少人。數字大的角色改之前要更謹慎；點數字可以直接看是哪些人。標示為「系統預設」的角色由系統建立，不能刪除，權限也不建議大幅調整——那類角色通常是系統運作的前提。",
+      "title": {
+        "zh-TW": "「用戶人數」是改動前要先看的數字",
+        "en-US": "\"Users\" is the number to check before you make changes"
+      },
+      "description": {
+        "zh-TW": "這一欄是目前有多少人正在用這個角色，也就是你改動它的權限時會一次影響多少人。數字大的角色改之前要更謹慎；點數字可以直接看是哪些人。標示為「系統預設」的角色由系統建立，不能刪除，權限也不建議大幅調整——那類角色通常是系統運作的前提。",
+        "en-US": "This column shows how many people currently have this role, which is how many people you affect at once when you change its permissions. Be extra careful before changing a role with a large number; click the number to see exactly who they are. Roles marked \"System Default\" are created by the system and can't be deleted, and we don't recommend making major changes to their permissions either, because the system usually depends on them to work."
+      },
       "routeName": "roleManagementList",
       "side": "top",
       "align": "center"
     },
     {
       "anchor": "role-row-actions",
-      "title": "刪不掉通常不是故障，是還有人在用",
-      "description": "「檢視」用唯讀的方式看這個角色能做什麼，以及有哪些人在用，適合在調整前先確認現況。只要還有人在用這個角色，刪除鈕就是停用的，滑過去會說明還有幾個人在用——請先把那些人改成其他角色再回來刪。系統預設角色的刪除鈕一律停用。",
+      "title": {
+        "zh-TW": "刪不掉通常不是故障，是還有人在用",
+        "en-US": "If you can't delete a role, it's usually still in use, not broken"
+      },
+      "description": {
+        "zh-TW": "「檢視」用唯讀的方式看這個角色能做什麼，以及有哪些人在用，適合在調整前先確認現況。只要還有人在用這個角色，刪除鈕就是停用的，滑過去會說明還有幾個人在用——請先把那些人改成其他角色再回來刪。系統預設角色的刪除鈕一律停用。",
+        "en-US": "\"View\" shows, in read-only mode, what this role can do and who has it, which is useful for checking the current setup before making changes. As long as anyone still has this role, the \"Delete\" button is disabled; hover over it to see how many people still have it. Change those people to other roles first, then come back to delete it. The \"Delete\" button is always disabled for system default roles."
+      },
       "routeName": "roleManagementList",
       "side": "left",
       "align": "start"

@@ -14,11 +14,11 @@ import type {
 /** 四種操作；檢視是其他三種的前提，固定排第一個 */
 export const PERMISSION_ACTIONS: AdminRolePermissionAction[] = ['canAccess', 'canCreate', 'canUpdate', 'canDelete']
 
-/** 勾新增／修改／刪除時一併勾上檢視的說明 */
-export const AUTO_GRANT_ACCESS_HINT = '已自動勾選「檢視」：新增、修改、刪除都要先能檢視'
+/** 勾新增／修改／刪除時一併勾上檢視的說明（翻譯鍵，由頁面依目前語系翻譯） */
+export const AUTO_GRANT_ACCESS_HINT = 'role.hint.autoGrantAccess'
 
-/** 取消檢視時一併取消其他三種的說明 */
-export const AUTO_REVOKE_DEPENDENT_HINT = '已一併取消新增、修改、刪除：沒有檢視就無法操作'
+/** 取消檢視時一併取消其他三種的說明（翻譯鍵，由頁面依目前語系翻譯） */
+export const AUTO_REVOKE_DEPENDENT_HINT = 'role.hint.autoRevokeDependent'
 
 /** 後端的權限動作對到矩陣的旗標欄位 */
 const ACTION_BY_RESPONSE: Record<AdminRolePermissionActionResponse, AdminRolePermissionAction> = {
@@ -107,7 +107,7 @@ export function useAdminRolePermissionMatrix() {
   function applyTemplate(tree: AdminRolePermissionNodeResponse[]) {
     const templatePermissions = extractLeafPermissions(tree)
     permissions.value = Object.fromEntries(
-      Object.keys(permissions.value).map((resourceId) => [resourceId, { ...(templatePermissions[resourceId] ?? emptyState()) }]),
+      Object.keys(permissions.value).map((resourceId) => [resourceId, { ...(templatePermissions[resourceId] ?? emptyState()) }])
     )
   }
 
@@ -126,7 +126,7 @@ export function useAdminRolePermissionMatrix() {
    * @param resourceId 資源唯一編號
    * @param action 操作
    * @param value 勾選或取消
-   * @returns 連動了其他操作時的說明；沒有連動為 null
+   * @returns 連動了其他操作時的說明（翻譯鍵）；沒有連動為 null
    */
   function setCell(resourceId: string, action: AdminRolePermissionAction, value: boolean): string | null {
     return firstHint(leafIdsUnder(resourceId).map((leafId) => applyToLeaf(leafId, action, value)))
@@ -137,7 +137,7 @@ export function useAdminRolePermissionMatrix() {
    *
    * 取消時從刪除往檢視倒著做，才不會在中途觸發「取消檢視連帶取消其他操作」的說明
    * @param resourceId 資源唯一編號
-   * @returns 連動了其他操作時的說明；沒有連動為 null
+   * @returns 連動了其他操作時的說明（翻譯鍵）；沒有連動為 null
    */
   function toggleRow(resourceId: string): string | null {
     const value = rowStateOf(resourceId) !== 'all'
@@ -150,7 +150,7 @@ export function useAdminRolePermissionMatrix() {
    * 整欄切換：指定的功能還沒全勾就全部勾上，已經全勾就全部取消；沒有這種操作的功能略過
    * @param action 操作
    * @param leafIds 要套用的功能（有搜尋時只有搜尋結果，收合起來的群組照樣套用）
-   * @returns 連動了其他操作時的說明；沒有連動為 null
+   * @returns 連動了其他操作時的說明（翻譯鍵）；沒有連動為 null
    */
   function toggleColumn(action: AdminRolePermissionAction, leafIds: string[]): string | null {
     const applicableLeafIds = leafIds.filter((leafId) => isApplicable(leafId, action))
@@ -179,7 +179,7 @@ export function useAdminRolePermissionMatrix() {
 
   /**
    * 套用到單一葉節點，並處理「檢視是其他操作前提」的連動；這個功能沒有該操作時不做事
-   * @returns 連動了其他操作時的說明；沒有連動為 null
+   * @returns 連動了其他操作時的說明（翻譯鍵）；沒有連動為 null
    */
   function applyToLeaf(leafId: string, action: AdminRolePermissionAction, value: boolean): string | null {
     const state = permissions.value[leafId]
@@ -315,7 +315,7 @@ function extractLeafPermissions(tree: AdminRolePermissionNodeResponse[]): Record
   return Object.fromEntries(
     flattenTree(tree)
       .filter((node) => node.children.length === 0)
-      .map((node) => [node.resourceId, { canAccess: node.canAccess, canCreate: node.canCreate, canUpdate: node.canUpdate, canDelete: node.canDelete }]),
+      .map((node) => [node.resourceId, { canAccess: node.canAccess, canCreate: node.canCreate, canUpdate: node.canUpdate, canDelete: node.canDelete }])
   )
 }
 
