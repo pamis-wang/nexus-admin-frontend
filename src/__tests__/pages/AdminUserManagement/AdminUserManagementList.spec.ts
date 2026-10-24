@@ -79,8 +79,11 @@ function buildUsers(): AdminUserResponse[] {
   ]
 }
 
-/** 掛載列表頁並等待資料載入 */
-async function mountAdminUserManagementList() {
+/**
+ * 掛載列表頁並等待資料載入
+ * @param query 網址上的查詢參數，模擬從其他頁帶著篩選條件進來
+ */
+async function mountAdminUserManagementList(query: Record<string, string> = {}) {
   const router = createRouter({
     history: createWebHistory(),
     routes: [
@@ -91,10 +94,10 @@ async function mountAdminUserManagementList() {
       { path: '/users/:userId/edit', name: 'userManagementEdit', component: { render: () => null } },
     ],
   })
-  await router.push({ name: 'userManagementList' })
+  await router.push({ name: 'userManagementList', query })
 
   const wrapper = mount(AdminUserManagementList, { global: { plugins: [quasarPlugin, customPlugin, router] } })
-  await vi.waitFor(() => expect(wrapper.text()).toContain('newcomer'))
+  await vi.waitFor(() => expect(wrapper.text()).toContain('editor'))
 
   return wrapper
 }
@@ -135,6 +138,14 @@ describe('AdminUserManagementList', () => {
       success: true,
       timestamp: Date.now(),
     })
+  })
+
+  it('從角色頁帶著 ?roleName= 進來時，直接套用角色篩選', async () => {
+    const wrapper = await mountAdminUserManagementList({ roleName: '編輯者' })
+
+    expect(findRowByAccount(wrapper, 'editor')).toBeDefined()
+    expect(findRowByAccount(wrapper, 'newcomer')).toBeUndefined()
+    expect(findSelectByLabel(wrapper, '角色')?.props('modelValue')).toBe('編輯者')
   })
 
   it('列出角色、登入狀態與系統預設標記', async () => {

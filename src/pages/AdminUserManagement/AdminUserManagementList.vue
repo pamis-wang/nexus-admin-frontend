@@ -127,6 +127,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 import { useNotify } from '@/composables/useNotify'
 import { useLogger } from '@/composables/useLogger'
@@ -134,12 +135,13 @@ import { getAdminUsers } from '@/services/admin/adminUserService'
 import type { ResponseStructure } from '@/services/axiosService'
 import type { AdminUserManagementAccountStatusOption, AdminUserManagementFilter, AdminUserManagementRow } from '@/pages/AdminUserManagement/types'
 
+const route = useRoute()
 const notify = useNotify()
 const logger = useLogger({ prefix: 'AdminUserManagementList', enabled: import.meta.env.DEV })
 
 const isLoading = ref(false)
 const rows = ref<AdminUserManagementRow[]>([])
-const filter = reactive<AdminUserManagementFilter>({ account: null, fullName: null, email: null, roleName: null, accountStatus: null })
+const filter = reactive<AdminUserManagementFilter>({ account: null, fullName: null, email: null, roleName: roleNameFromQuery(), accountStatus: null })
 const pagination = ref<XPagination>({ sortBy: 'account', descending: false, page: 1, rowsPerPage: 0 })
 const columns: XTableColumn[] = [
   { name: 'number', align: 'center', label: '項次', field: '', style: 'width: 60px' },
@@ -218,6 +220,17 @@ async function loadUsers() {
   } finally {
     isLoading.value = false
   }
+}
+
+/**
+ * 網址上帶的角色篩選
+ *
+ * 從角色檢視頁的「查看用戶」進來時會帶 ?roleName=，直接套用；角色名稱整個系統內不重複，可以當篩選值
+ * @returns 角色名稱；沒帶或是空白時為 null
+ */
+function roleNameFromQuery(): string | null {
+  const roleName = route.query.roleName
+  return typeof roleName === 'string' && roleName.trim() !== '' ? roleName : null
 }
 
 /**
