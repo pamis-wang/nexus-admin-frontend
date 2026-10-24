@@ -7,7 +7,7 @@
   "groupName": null,
   "order": 60,
   "requiresRouteNames": [],
-  "resourceCode": "系統管理>資源管理",
+  "resourceCode": "admin_resources",
   "requiresAnchor": null,
   "steps": [
     {
@@ -17,8 +17,8 @@
         "en-US": "This tree is the basis for permissions across the system"
       },
       "description": {
-        "zh-TW": "從「系統管理 → 選單設定」進來。這裡維護的是「資源」——角色管理那張權限表的項目就是從這棵樹來的：在這裡新增一個節點，角色管理裡就會多一列可以勾權限。左側選單看得到什麼，則是由你對這些資源有沒有權限決定的。所以這一頁的改動會往外擴散到角色與選單，調整前先想一下影響範圍。",
-        "en-US": "You get here from \"System Management → Menu Settings\". What you maintain here are \"resources\": the items in the permission table in Role Management come from this tree, so adding a node here adds a row in Role Management where permissions can be selected. What appears in the left menu, in turn, depends on whether you have permission for these resources. Changes on this page therefore ripple out to roles and menus, so think about the impact before you make adjustments."
+        "zh-TW": "從「系統管理 → 選單設定」進來。這裡維護的是「資源」——角色管理那張權限表的項目就是從這棵樹來的。資源由系統內建、跟著新功能一起上線，這一頁不能新增或刪除，只能調整名稱、順序、層級與是否顯示。左側選單看得到什麼，則是由你對這些資源有沒有權限決定的。",
+        "en-US": "You get here from \"System Management → Menu Settings\". What you maintain here are \"resources\": the items in the permission table in Role Management come from this tree. Resources are built into the system and arrive with new features, so you can't add or delete them on this page; you can only change their names, order, levels and visibility. What appears in the left menu, in turn, depends on whether you have permission for these resources."
       },
       "routeName": "menuSettingsList",
       "side": "right",
@@ -31,8 +31,8 @@
         "en-US": "Know these four things first to avoid some pitfalls"
       },
       "description": {
-        "zh-TW": "最關鍵的是第三點：完整資源名稱由層級名稱自動組成，所以改一個節點的名字或把它搬到別層，底下所有子項目的名稱都會一起重寫。而權限正是靠這個完整名稱對應到各個功能頁面的——名稱一改，原本對得上的頁面就對不上了，那個功能會直接從選單消失、直接輸入網址進去也會被擋在權限外。既有節點請盡量不要改名或搬移，真的要改就得同步請工程人員調整程式裡的對應。",
-        "en-US": "The most important is the third one: full resource names are built from the level names automatically, so renaming a node or moving it to another level rewrites the names of all the items under it. And permissions are matched to each feature page by exactly this full name. Once the name changes, pages that used to match no longer do: the feature disappears from the menu, and even entering its URL directly gets blocked for lack of permission. Try not to rename or move existing nodes; if you really have to, ask the engineers to update the mapping in the code at the same time."
+        "zh-TW": "最關鍵的是第四點：資源由後端種子資料建立，這一頁只能調整，不能新增或刪除。權限是靠資源代碼對應到各個功能頁面的，代碼不會變——所以改名或搬移不會影響誰能用哪個功能，第三點說的完整名稱改寫，只會改變角色管理權限表上看到的名稱。",
+        "en-US": "The most important is the fourth one: resources are created by the back-end seed data, so this page can only adjust them, not add or delete them. Permissions are matched to each feature page by the resource code, which never changes. Renaming or moving a node therefore doesn't affect who can use which feature; the full-name rewrite in the third point only changes the names shown in the permission table in Role Management."
       },
       "routeName": "menuSettingsList",
       "side": "bottom",
@@ -45,8 +45,8 @@
         "en-US": "Searching turns off dragging, and that's intentional"
       },
       "description": {
-        "zh-TW": "搜尋只影響畫面顯示，不會改變要儲存的內容——儲存送出的永遠是完整的樹。也因為搜尋後看到的順序不是真正的順序，這時拖曳會被停用，避免你照著篩選後的畫面排出錯誤的次序。要調整順序請先清掉搜尋。「新增第一層」加的是最上層的選單群組，要在既有節點底下加子項目，請用該列自己的新增。",
-        "en-US": "Search only affects what's shown, not what will be saved: saving always submits the whole tree. And because the order you see after searching isn't the real order, dragging is disabled while searching, so you don't end up arranging items in the wrong order based on a filtered view. To change the order, clear the search first. \"Add Top Level\" adds a menu group at the very top level; to add an item under an existing node, use the add button on that node's own row."
+        "zh-TW": "搜尋只影響畫面顯示，不會改變要儲存的內容——儲存送出的永遠是完整的樹。也因為搜尋後看到的順序不是真正的順序，這時拖曳會被停用，避免你照著篩選後的畫面排出錯誤的次序。要調整順序請先清掉搜尋。",
+        "en-US": "Search only affects what's shown, not what will be saved: saving always submits the whole tree. And because the order you see after searching isn't the real order, dragging is disabled while searching, so you don't end up arranging items in the wrong order based on a filtered view. To change the order, clear the search first."
       },
       "routeName": "menuSettingsList",
       "side": "bottom",
@@ -73,8 +73,8 @@
         "en-US": "You can make many changes, but only this click saves them"
       },
       "description": {
-        "zh-TW": "新增、改名、切換顯示、拖曳排序，在按下儲存之前都只存在於畫面上。畫面上方會出現黃色提示，列出你目前累積了幾筆新增、幾筆更新、幾筆位置變動，旁邊的「全部還原」可以一次退回載入時的狀態。反過來說，中途離開或重新整理，這些變更就沒了——改完記得儲存。",
-        "en-US": "Additions, renames, visibility changes and drag-and-drop reordering exist only on screen until you click \"Save\". A yellow notice appears at the top of the page showing how many items you've added, updated and moved so far, and \"Revert All\" next to it takes everything back to how it was when loaded. On the other hand, if you leave or refresh the page partway through, these changes are lost, so remember to save when you're done."
+        "zh-TW": "改名、切換顯示、拖曳排序與搬移，在按下儲存之前都只存在於畫面上。畫面上方會出現黃色提示，列出你目前累積了幾筆更新、幾筆位置變動，旁邊的「全部還原」可以一次退回載入時的狀態。反過來說，中途離開或重新整理，這些變更就沒了——改完記得儲存。",
+        "en-US": "Renames, visibility changes, drag-and-drop reordering and moves exist only on screen until you click \"Save\". A yellow notice appears at the top of the page showing how many items you've updated and moved so far, and \"Revert All\" next to it takes everything back to how it was when loaded. On the other hand, if you leave or refresh the page partway through, these changes are lost, so remember to save when you're done."
       },
       "routeName": "menuSettingsList",
       "side": "bottom",

@@ -19,13 +19,11 @@ const PATH_SEPARATOR = '>'
 /**
  * 選單設定的資源樹狀態管理
  *
- * 後端是嵌套樹 ＋ 版本戳記的全量替換（PUT /api/admin-resources/tree）：
- * 不在樹中的既有資源會被刪除，parentId／level／displayOrder 由嵌套位置重算，
- * 但 resourceName 不會重算 —— 所以改名或搬移後，本層與所有子孫的完整路徑都由前端重寫。
- *
- * 這個版本的 admin_resources 沒有軟刪除欄位，因此整頁不提供刪除資源的功能，送出的樹一律含全部既有節點：
- * removeRow 只用在「新增了一列但取消命名」這種丟棄未送出資料的情況，changeSummary 也因此只算
- * 新增／更新／位置變動。
+ * 後端是嵌套樹 ＋ 版本戳記的整批更新（PUT /api/admin-resources/tree）：
+ * 資源只由後端種子資料建立，送出的樹必須剛好是全部既有節點，不能新增也不能刪除，
+ * 所以這頁只做改名、切換顯示、排序與搬移，changeSummary 也只算更新與位置變動。
+ * parentId／level／displayOrder 由嵌套位置重算，但 resourceName 不會重算 ——
+ * 所以改名或搬移後，本層與所有子孫的完整路徑都由前端重寫。
  *
  * 單元測試直接呼叫、不掛元件，拿不到 useI18n，訊息改用 i18n.global.t 在呼叫當下翻譯。
  */
@@ -43,24 +41,15 @@ export function useAdminResourceTree() {
   const isLoading = ref(false)
   const isSaving = ref(false)
 
-  let newRowSeq = 1
-
   const changeSummary = computed<AdminResourceChangeSummary>(() => {
     const originalMap = new Map(originalRows.value.map((row) => [row.id, row]))
 
-    let addedCount = 0
     let updatedCount = 0
     let movedCount = 0
 
     rows.value.forEach((row) => {
-      if (row.id === null) {
-        addedCount += 1
-        return
-      }
-
       const before = originalMap.get(row.id)
       if (before === undefined) {
-        addedCount += 1
         return
       }
       if (before.name !== row.name || before.isEnabled !== row.isEnabled) {
@@ -72,10 +61,9 @@ export function useAdminResourceTree() {
     })
 
     return {
-      addedCount,
       updatedCount,
       movedCount,
-      hasChanges: addedCount > 0 || updatedCount > 0 || movedCount > 0,
+      hasChanges: updatedCount > 0 || movedCount > 0,
     }
   })
 
@@ -154,7 +142,6 @@ export function useAdminResourceTree() {
   /** 以後端回應重建畫面狀態與比對用快照 */
   function applyTreeResponse(newVersion: string | null, items: AdminResourceTreeNodeResponse[]) {
     version.value = newVersion
-    newRowSeq = 1
     rows.value = flattenNodes(items, null, 1)
     originalRows.value = rows.value.map((row) => ({ ...row }))
   }
@@ -273,64 +260,6 @@ export function useAdminResourceTree() {
     }
     row.level = level
     childrenOf(rowKey).forEach((child) => relevel(child.rowKey, level + 1))
-  }
-
-  /**
-   * 新增節點
-   * @param parentRowKey 父節點識別碼；null 表示新增第一層
-   * @returns 新增的節點；已達層級或筆數上限時回 null
-   */
-  function addRow(parentRowKey: string | null): AdminResourceRow | null {
-    const parent = parentRowKey === null ? null : findRow(parentRowKey)
-    const level = parent === null ? 1 : parent.level + 1
-
-    if (level > MAX_LEVEL) {
-      notify.notifyWarning(i18n.global.t('resource.maxLevel', MAX_LEVEL))
-      return null
-    }
-
-    const siblings = childrenOf(parentRowKey)
-    if (siblings.length >= MAX_SIBLINGS) {
-      notify.notifyWarning(i18n.global.t('resource.maxSiblings', MAX_SIBLINGS))
-      return null
-    }
-
-    const row: AdminResourceRow = {
-      rowKey: `new-${newRowSeq++}`,
-      id: null,
-      parentRowKey,
-      level,
-      name: '',
-      resourceCode: null,
-      isEnabled: true,
-      displayOrder: 0,
-      position: siblings.length + 1,
-    }
-
-    rows.value.push(row)
-    logger.info('新增節點', { rowKey: row.rowKey, level })
-    return row
-  }
-
-  /**
-   * 把節點連同子孫移出畫面上的樹
-   *
-   * 頁面唯一的使用時機是「新增了一列但取消命名」，用來丟棄還沒送出的空白列——
-   * 這個版本沒有刪除既有資源的功能，既有節點不會走到這裡。
-   * @param rowKey 要移除的節點
-   */
-  function removeRow(rowKey: string) {
-    const row = findRow(rowKey)
-    if (row === null) {
-      return
-    }
-
-    const removedKeys = new Set([rowKey, ...descendantsOf(rowKey).map((child) => child.rowKey)])
-    const parentRowKey = row.parentRowKey
-
-    rows.value = rows.value.filter((item) => !removedKeys.has(item.rowKey))
-    renumber(parentRowKey)
-    logger.info('移除節點', { rowKey, removedCount: removedKeys.size })
   }
 
   /**
@@ -598,8 +527,6 @@ export function useAdminResourceTree() {
     buildRequestItems,
 
     // 編輯操作
-    addRow,
-    removeRow,
     renameRow,
     toggleRow,
     nudgeRow,

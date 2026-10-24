@@ -25,7 +25,6 @@
       <div class="text-caption">
         {{
           t('resource.hint.unsavedSummary', {
-            added: changeSummary.addedCount,
             updated: changeSummary.updatedCount,
             moved: changeSummary.movedCount,
           })
@@ -63,7 +62,6 @@
 
       <q-space />
 
-      <q-btn :label="t('resource.action.addRoot')" color="primary" icon="mdi-plus" @click="handleAddRoot" />
       <q-btn
         :label="t('common.action.save')"
         color="primary"
@@ -98,7 +96,6 @@
         @cancel-edit="handleCancelEdit"
         @toggle-enabled="handleToggleEnabled"
         @nudge="handleNudge"
-        @add-child="handleAddChild"
         @request-move="handleRequestMove"
         @drag-move="handleDragMove"
       />
@@ -147,8 +144,6 @@ const {
   visibleRows,
   moveTargetsFor,
   validateTree,
-  addRow,
-  removeRow,
   renameRow,
   toggleRow,
   nudgeRow,
@@ -212,7 +207,7 @@ async function handleSave() {
   }
 
   const summary = changeSummary.value
-  const message = t('resource.saveConfirm', { added: summary.addedCount, updated: summary.updatedCount, moved: summary.movedCount })
+  const message = t('resource.saveConfirm', { updated: summary.updatedCount, moved: summary.movedCount })
 
   dialog.showConfirm(message, t('resource.saveTitle')).onOk(async () => {
     const isSuccess = await saveTree()
@@ -229,9 +224,7 @@ async function handleSave() {
 function filteredRows(): AdminResourceRow[] {
   const text = keyword.value?.trim() ?? ''
 
-  return visibleRows(null).filter(
-    (row) => row.name.includes(text) || fullPathOf(row).includes(text) || (row.resourceCode !== null && row.resourceCode.includes(text))
-  )
+  return visibleRows(null).filter((row) => row.name.includes(text) || fullPathOf(row).includes(text) || row.resourceCode.includes(text))
 }
 
 /**
@@ -287,19 +280,10 @@ function handleCommitEdit(rowKey: string) {
   editingName.value = ''
 }
 
-/**
- * 取消行內編輯
- * @param rowKey 正在編輯的節點
- */
-function handleCancelEdit(rowKey: string) {
-  const row = findRow(rowKey)
+/** 取消行內編輯 */
+function handleCancelEdit() {
   editingRowKey.value = null
   editingName.value = ''
-
-  // 還沒命名就取消的新增列，直接收掉，不留一筆空白
-  if (row !== null && row.id === null && row.name.length === 0) {
-    removeRow(rowKey)
-  }
 }
 
 /**
@@ -319,25 +303,6 @@ function handleToggleEnabled(rowKey: string, isEnabled: boolean) {
 function handleNudge(rowKey: string, offset: number) {
   if (!nudgeRow(rowKey, offset)) {
     dialog.showInfo(offset < 0 ? t('resource.alreadyFirst') : t('resource.alreadyLast'))
-  }
-}
-
-function handleAddRoot() {
-  const created = addRow(null)
-  if (created !== null) {
-    handleStartEdit(created.rowKey)
-  }
-}
-
-/**
- * 在指定節點底下新增子節點
- * @param parentRowKey 父節點
- */
-function handleAddChild(parentRowKey: string) {
-  const created = addRow(parentRowKey)
-  if (created !== null) {
-    expandedRowKeys.value.add(parentRowKey)
-    handleStartEdit(created.rowKey)
   }
 }
 

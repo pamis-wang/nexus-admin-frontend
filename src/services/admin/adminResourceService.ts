@@ -13,8 +13,8 @@ export interface AdminResourceResponse {
   level: number
   /** 資源名稱（完整路徑，例：系統管理>選單設定） */
   resourceName: string
-  /** 資源代碼，端點權限的判斷鍵；null 表示尚未指定 */
-  resourceCode: string | null
+  /** 資源代碼，端點權限的判斷鍵 */
+  resourceCode: string
   /** 顯示順序，格式 1AA2BB3CC，同時作為排序依據 */
   displayOrder: number
   /** 是否啟用 */
@@ -31,8 +31,8 @@ export interface AdminResourceWithPermissionResponse {
   level: number
   /** 資源名稱（完整路徑，例：系統管理>選單設定） */
   resourceName: string
-  /** 資源代碼，端點權限的判斷鍵；null 表示尚未指定 */
-  resourceCode: string | null
+  /** 資源代碼，端點權限的判斷鍵 */
+  resourceCode: string
   /** 顯示順序，格式 1AA2BB3CC，同時作為排序依據 */
   displayOrder: number
   /** 訪問權限 */
@@ -55,8 +55,8 @@ export interface AdminResourceTreeNodeResponse {
   level: number
   /** 資源名稱（完整路徑，例：系統管理>選單設定） */
   resourceName: string
-  /** 資源代碼（唯讀）；有值代表綁定端點權限，該節點不允許刪除 */
-  resourceCode: string | null
+  /** 資源代碼（唯讀），端點權限的判斷鍵 */
+  resourceCode: string
   /** 顯示順序，格式 1AA2BB3CC，由樹狀位置重算 */
   displayOrder: number
   /** 是否啟用 */
@@ -75,8 +75,8 @@ export interface AdminResourceTreeResponse {
 
 /** 後台資源樹節點請求 */
 export interface AdminResourceTreeNodeRequest {
-  /** 資源唯一編號；null 表示新增，由後端產生 */
-  id: string | null
+  /** 既有資源的唯一編號；資源只由後端種子資料建立，這裡不能新增 */
+  id: string
   /** 資源名稱，需送完整路徑（例：系統管理>選單設定），整棵樹內不可重複 */
   resourceName: string
   /** 是否啟用 */
@@ -130,11 +130,11 @@ export async function getAdminResourceTree(): Promise<ResponseStructure<AdminRes
 }
 
 /**
- * 以整棵樹整批替換全部後台資源
+ * 以整棵樹整批更新全部後台資源的名稱、位置與啟用狀態
  * @description
- * 全量語意、單一交易：不在樹中的既有資源會被刪除（連同其角色權限設定），id 為 null 的節點新增，
- * 既有 id 的節點更新並支援跨父節點搬移。parentId／level／displayOrder 由嵌套位置重算，送了也會被忽略。
- * 空樹回 400、version 不符回 409、刪除綁定 resourceCode 的節點回 403。
+ * 單一交易：資源只由後端種子資料建立，樹中必須剛好是全部的既有資源——沒帶 id 的節點回 400，
+ * 少了既有資源回 403。既有節點更新名稱與啟用狀態並支援跨父節點搬移；parentId／level／displayOrder
+ * 由嵌套位置重算，送了也會被忽略。空樹回 400、version 不符回 409。
  * @param data 嵌套的資源樹與讀取時取得的版本戳記
  * @returns 寫入後的資源樹與新版本戳記
  */

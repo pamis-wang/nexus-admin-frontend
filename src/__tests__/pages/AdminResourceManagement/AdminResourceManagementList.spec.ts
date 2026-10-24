@@ -27,7 +27,7 @@ function buildTreeResponse(): ResponseStructure<AdminResourceTreeResponse> {
             parentId: null,
             level: 1,
             resourceName: '系統管理',
-            resourceCode: null,
+            resourceCode: 'system_management',
             displayOrder: 10000,
             isEnabled: true,
             children: [
@@ -46,7 +46,7 @@ function buildTreeResponse(): ResponseStructure<AdminResourceTreeResponse> {
                 parentId: 'id-system',
                 level: 2,
                 resourceName: '系統管理>選單設定',
-                resourceCode: null,
+                resourceCode: 'admin_resources',
                 displayOrder: 10200,
                 isEnabled: false,
                 children: [],
@@ -111,13 +111,15 @@ describe('AdminResourceManagementList', () => {
     expect(userRow?.text()).toContain('第 2 層')
   })
 
-  it('沒有任何列提供刪除入口，其餘操作照常提供', async () => {
+  it('沒有新增或刪除的入口，其餘操作照常提供', async () => {
     const wrapper = await mountAdminResourceManagementList()
 
-    // admin_resources 沒有軟刪除欄位，刪掉救不回來，所以整頁都不該出現垃圾桶
+    // 資源只由後端種子資料建立，這頁只能調整，不能新增也不能刪除
     // mdi 圖示沒有 ligature 文字，圖示身分只能從 class 判斷
     const iconClasses = wrapper.findAll('tbody tr').flatMap((row) => row.findAll('i.q-icon').flatMap((icon) => icon.classes()))
 
+    expect(findButtonByLabel(wrapper, '新增')).toBeUndefined()
+    expect(iconClasses).not.toContain('mdi-plus')
     expect(iconClasses).not.toContain('mdi-trash-can-outline')
     expect(iconClasses).toContain('mdi-file-document-edit-outline')
     expect(iconClasses).toContain('mdi-folder-move-outline')
@@ -131,14 +133,19 @@ describe('AdminResourceManagementList', () => {
     expect(wrapper.text()).not.toContain('有未儲存的變更')
   })
 
-  it('新增第一層會多一列並顯示未儲存變更提示', async () => {
+  it('改名後顯示未儲存變更提示，儲存按鈕可以按', async () => {
     const wrapper = await mountAdminResourceManagementList()
+    const renameButton = findRowByText(wrapper, '用戶管理')
+      ?.findAll('button')
+      .find((button) => button.find('i.mdi-file-document-edit-outline').exists())
 
-    await findButtonByLabel(wrapper, '新增第一層')?.trigger('click')
-    await vi.waitFor(() => expect(wrapper.findAll('tbody tr')).toHaveLength(4))
+    await renameButton?.trigger('click')
+    const input = wrapper.find('tbody input')
+    await input.setValue('帳號管理')
+    await input.trigger('keyup', { key: 'Enter' })
 
-    expect(wrapper.text()).toContain('有未儲存的變更')
-    expect(wrapper.text()).toContain('新增 1 筆')
+    await vi.waitFor(() => expect(wrapper.text()).toContain('有未儲存的變更'))
+    expect(wrapper.text()).toContain('更新 1 筆')
     expect(findButtonByLabel(wrapper, '儲存')?.classes()).not.toContain('disabled')
   })
 })

@@ -30,7 +30,7 @@ vi.mock('@/composables/useDialog', () => ({
 
 // 權限矩陣只拿路由表對應選單圖示，換成空路由表就好，不必載入真正的路由與守衛
 vi.mock('@/router', () => ({
-  default: { getRoutes: () => [] },
+  default: { options: { routes: [] } },
 }))
 
 const FULL_PERMISSION: ResourcePermission = { canAccess: true, canCreate: true, canUpdate: true, canDelete: true }
@@ -73,11 +73,20 @@ function buildMatrixResponse(userCount: number, isSystemDefault = false): Respon
 
 /**
  * 組出授權狀態的權限節點
- * @param resourceName 資源完整路徑
+ * @param resourceCode 資源代碼
  * @param permission 四種權限
  */
-function buildPermissionNode(resourceName: string, permission: ResourcePermission): AuthorizationPermissionResponse {
-  return { resourceId: `resource-${resourceName}`, parentId: null, resourceName, level: 2, displayOrder: 0, children: [], ...permission }
+function buildPermissionNode(resourceCode: string, permission: ResourcePermission): AuthorizationPermissionResponse {
+  return {
+    resourceId: `resource-${resourceCode}`,
+    parentId: null,
+    resourceName: resourceCode,
+    resourceCode,
+    level: 2,
+    displayOrder: 0,
+    children: [],
+    ...permission,
+  }
 }
 
 /** 準備有全部權限的登入者 */
@@ -88,7 +97,7 @@ function seedPermissions(): Pinia {
     permissionMode: 'audit',
     roles: [],
     activeRoles: [],
-    permissions: [buildPermissionNode('系統管理>角色管理', FULL_PERMISSION), buildPermissionNode('系統管理>用戶管理', FULL_PERMISSION)],
+    permissions: [buildPermissionNode('admin_roles', FULL_PERMISSION), buildPermissionNode('admin_users', FULL_PERMISSION)],
   }
   return pinia
 }

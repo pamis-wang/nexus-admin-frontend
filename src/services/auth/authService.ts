@@ -194,8 +194,10 @@ export interface AuthorizationPermissionResponse {
   resourceId: string
   /** 父資源唯一編號；第一層為 null */
   parentId: string | null
-  /** 資源名稱，完整路徑（例：系統管理>用戶管理），與路由 meta.resourceName 同格式 */
+  /** 資源名稱（完整路徑，例：系統管理>用戶管理） */
   resourceName: string
+  /** 資源代碼，權限判斷一律用它 */
+  resourceCode: string
   /** 資源層級 (1:一層, 2:二層, 3:三層) */
   level: number
   /** 顯示順序 */

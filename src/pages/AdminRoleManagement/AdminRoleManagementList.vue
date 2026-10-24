@@ -105,11 +105,6 @@ import { deleteAdminRoleById, getAdminRoles } from '@/services/admin/adminRoleSe
 import type { ResponseStructure } from '@/services/axiosService'
 import type { AdminRoleManagementRow } from '@/pages/AdminRoleManagement/types'
 
-/** 角色管理在權限表上的資源名稱 */
-const ROLE_RESOURCE_NAME = '系統管理>角色管理'
-/** 用戶管理在權限表上的資源名稱 */
-const USER_RESOURCE_NAME = '系統管理>用戶管理'
-
 const { t } = useI18n()
 const dialog = useDialog()
 const notify = useNotify()
@@ -136,10 +131,10 @@ const columns = computed<XTableColumn[]>(() => [
   },
   { name: 'action', align: 'center', label: t('role.column.actions'), field: '', style: 'width: 160px' },
 ])
-const canCreate = computed<boolean>(() => userStore.hasPermission(ROLE_RESOURCE_NAME, 'canCreate'))
-const canUpdate = computed<boolean>(() => userStore.hasPermission(ROLE_RESOURCE_NAME, 'canUpdate'))
-const canDelete = computed<boolean>(() => userStore.hasPermission(ROLE_RESOURCE_NAME, 'canDelete'))
-const canViewUsers = computed<boolean>(() => userStore.hasPermission(USER_RESOURCE_NAME))
+const canCreate = computed<boolean>(() => userStore.hasPermission('admin_roles', 'canCreate'))
+const canUpdate = computed<boolean>(() => userStore.hasPermission('admin_roles', 'canUpdate'))
+const canDelete = computed<boolean>(() => userStore.hasPermission('admin_roles', 'canDelete'))
+const canViewUsers = computed<boolean>(() => userStore.hasPermission('admin_users'))
 /** 套用關鍵字後要顯示的列 */
 const filteredRows = computed<AdminRoleManagementRow[]>(() => filterRows())
 /** 分頁物件；總筆數要跟著篩選結果走，否則頁數會拿未篩選的筆數去算 */

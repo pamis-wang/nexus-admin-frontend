@@ -28,8 +28,8 @@ export interface AdminRolePermissionNodeResponse {
   parentId: string | null
   /** 資源名稱（完整路徑，例：系統管理>角色管理） */
   resourceName: string
-  /** 資源代碼；null 表示這筆資源沒有綁定端點權限，只開放檢視 */
-  resourceCode: string | null
+  /** 資源代碼，端點權限的判斷鍵 */
+  resourceCode: string
   /** 資源層級 (1:一層, 2:二層, 3:三層) */
   level: number
   /** 顯示順序，格式 1AA2BB3CC */

@@ -4,7 +4,7 @@
  * 登入狀態與權限都放在 localStorage，路由守衛只讀這些值，因此直接種進去就能繞過登入頁；
  * 後端在測試環境不存在，API 一律攔截後回傳假資料。
  *
- * 授權狀態的權限樹要種齊：守衛是用 meta.resourceName 去查這棵樹，少一個資源那一頁就會被導去 403，
+ * 授權狀態的權限樹要種齊：守衛是用 meta.resourceCode 去查這棵樹，少一個資源那一頁就會被導去 403，
  * 導覽會停在一個永遠等不到錨點的頁面上。版面掛載時查的授權狀態端點回同一份。
  */
 import { test as base, type Page } from '@playwright/test'
@@ -28,22 +28,20 @@ const ASSIGNED_ROLES = [
 ]
 
 /**
- * 全系統的資源，與 src/router 各路由的 meta.resourceName 一一對應
+ * 全系統的資源，與後端 AdminResourceSeed 相同；代碼對應 src/router 各路由的 meta.resourceCode
  *
  * 這份清單就是權限的來源：漏掉一筆，那個功能的選單與頁面都會消失。
  */
-const RESOURCE_NAMES = [
-  '首頁',
-  '系統管理',
-  '系統管理>用戶管理',
-  '系統管理>角色管理',
-  '系統管理>資源管理',
-  '內容管理',
-  '內容管理>文章管理',
-  '內容管理>進階設定',
-  '內容管理>進階設定>分類設定',
-  '內容管理>進階設定>標籤設定',
+const RESOURCES = [
+  { name: '首頁', code: 'home' },
+  { name: '系統管理', code: 'system_management' },
+  { name: '系統管理>用戶管理', code: 'admin_users' },
+  { name: '系統管理>角色管理', code: 'admin_roles' },
+  { name: '系統管理>資源管理', code: 'admin_resources' },
 ]
+
+/** 資源的完整路徑，組樹時依它找父子關係 */
+const RESOURCE_NAMES = RESOURCES.map((resource) => resource.name)
 
 /** 後台用戶的假資料，需要至少兩列才能驗證「只有第一列帶錨點」 */
 const ADMIN_USERS = [
@@ -180,15 +178,16 @@ function buildAuthorization(): unknown {
 /**
  * 組出授權端點要回傳的權限樹
  *
- * 前端只用 resourceName 當鍵，樹的巢狀結構不影響查詢結果，
+ * 前端只用 resourceCode 當鍵，樹的巢狀結構不影響查詢結果，
  * 因此這裡攤平成同一層即可，不必還原真正的父子關係。
  * @returns 權限樹
  */
 function buildPermissionTree(): unknown[] {
-  return RESOURCE_NAMES.map((resourceName, index) => ({
+  return RESOURCES.map((resource, index) => ({
     resourceId: `resource-${index + 1}`,
     parentId: null,
-    resourceName,
+    resourceName: resource.name,
+    resourceCode: resource.code,
     level: 1,
     displayOrder: index + 1,
     canAccess: true,
@@ -222,7 +221,7 @@ function buildRolePermissionNode(resourceName: string): unknown {
     resourceId: `resource-${index + 1}`,
     parentId: resolveParentId(resourceName),
     resourceName,
-    resourceCode: null,
+    resourceCode: RESOURCES[index]?.code ?? null,
     level: resourceName.split('>').length,
     displayOrder: index + 1,
     isEnabled: true,
@@ -245,7 +244,7 @@ function buildFlatResources(): unknown[] {
     parentId: resolveParentId(resourceName),
     level: resourceName.split('>').length,
     resourceName,
-    resourceCode: null,
+    resourceCode: RESOURCES[index]?.code ?? null,
     displayOrder: index + 1,
     isEnabled: true,
   }))
@@ -274,7 +273,7 @@ function buildTreeNode(resourceName: string): unknown {
     parentId: resolveParentId(resourceName),
     level: resourceName.split('>').length,
     resourceName,
-    resourceCode: null,
+    resourceCode: RESOURCES[index]?.code ?? null,
     displayOrder: index + 1,
     isEnabled: true,
     children: directChildNames.map((childName) => buildTreeNode(childName)),

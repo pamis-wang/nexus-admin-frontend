@@ -28,10 +28,10 @@ vi.mock('@/services/auth/authService', () => ({
 
 /**
  * 組一份授權狀態回應
- * @param resourceName 有訪問權限的資源
+ * @param resourceCode 有訪問權限的資源代碼
  * @param activeRoleName 目前生效的角色名稱
  */
-function buildAuthorizationResponse(resourceName: string, activeRoleName: string): ResponseStructure<CurrentAuthorizationResponse> {
+function buildAuthorizationResponse(resourceCode: string, activeRoleName: string): ResponseStructure<CurrentAuthorizationResponse> {
   return {
     result: {
       data: {
@@ -45,7 +45,8 @@ function buildAuthorizationResponse(resourceName: string, activeRoleName: string
           {
             resourceId: 'resource-0',
             parentId: null,
-            resourceName,
+            resourceName: resourceCode,
+            resourceCode,
             level: 1,
             displayOrder: 0,
             canAccess: true,
@@ -79,7 +80,7 @@ async function mountAuthentication() {
     routes: [
       { path: '/', name: 'home', component: { template: '<div />' } },
       { path: '/login', name: 'login', component: { template: '<div />' } },
-      { path: '/users', name: 'userManagementList', meta: { resourceName: '系統管理>用戶管理' }, component: { template: '<div />' } },
+      { path: '/users', name: 'userManagementList', meta: { resourceCode: 'admin_users' }, component: { template: '<div />' } },
       { path: '/error-403', name: 'error403', component: { template: '<div />' } },
     ],
   })
@@ -163,7 +164,7 @@ describe('useAuthentication - 生效角色', () => {
       success: true,
       timestamp: Date.now(),
     })
-    getCurrentAuthorizationMock.mockResolvedValue(buildAuthorizationResponse('系統管理>角色管理', '檢視者'))
+    getCurrentAuthorizationMock.mockResolvedValue(buildAuthorizationResponse('admin_roles', '檢視者'))
     const { authentication } = await mountAuthentication()
     const userStore = useUserStore()
     await userStore.storageUser('old-access-token', 'refresh-token', mockUserProfile)
@@ -178,7 +179,7 @@ describe('useAuthentication - 生效角色', () => {
     // 刷新權杖不隨之輪替
     expect(userStore.refreshToken).toBe('refresh-token')
     expect(getCurrentAuthorizationMock).toHaveBeenCalled()
-    expect(userStore.hasPermission('系統管理>角色管理')).toBe(true)
+    expect(userStore.hasPermission('admin_roles')).toBe(true)
     expect(userStore.authorization?.activeRoles.map((role) => role.name)).toEqual(['檢視者'])
   })
 
@@ -199,11 +200,11 @@ describe('useAuthentication - 生效角色', () => {
       success: true,
       timestamp: Date.now(),
     })
-    getCurrentAuthorizationMock.mockResolvedValue(buildAuthorizationResponse('系統管理>角色管理', '檢視者'))
+    getCurrentAuthorizationMock.mockResolvedValue(buildAuthorizationResponse('admin_roles', '檢視者'))
     const { authentication, router } = await mountAuthentication()
     const userStore = useUserStore()
     await userStore.storageUser('old-access-token', 'refresh-token', mockUserProfile)
-    await userStore.storageAuthorization(buildAuthorizationResponse('系統管理>用戶管理', '管理員').result.data!)
+    await userStore.storageAuthorization(buildAuthorizationResponse('admin_users', '管理員').result.data!)
     await router.push({ name: 'userManagementList' })
 
     const result = await authentication.changeActiveRoles(['role-2'])
@@ -237,10 +238,10 @@ describe('useAuthentication - 生效角色', () => {
     getCurrentAuthorizationMock.mockRejectedValue(new Error('network error'))
     const { authentication } = await mountAuthentication()
     const userStore = useUserStore()
-    await userStore.storageAuthorization(buildAuthorizationResponse('首頁', '管理員').result.data!)
+    await userStore.storageAuthorization(buildAuthorizationResponse('admin_users', '管理員').result.data!)
 
     await expect(authentication.loadAuthorization()).resolves.toBe(false)
 
-    expect(userStore.hasPermission('首頁')).toBe(true)
+    expect(userStore.hasPermission('admin_users')).toBe(true)
   })
 })

@@ -4,12 +4,7 @@ import { useAuthentication } from '@/composables/useAuthentication'
 import { refresh } from '@/services/auth/authService'
 import { useUserStore } from '@/stores/useUser'
 
-/**
- * nexus 後台的站別行為，各函式的用途見 siteTypes.ts
- *
- * 過渡期：/api/auth/authorization 的權限樹還沒有 ResourceCode，resourceCode 參數目前收的是資源名稱路徑
- * （例：系統管理>用戶管理），與路由 meta.resourceName 同格式；後端補上 ResourceCode 後改成資源代碼
- */
+/** nexus 後台的站別行為，各函式的用途見 siteTypes.ts */
 export const siteHooks: SiteHooks = {
   canAccess(resourceCode, action = 'canAccess') {
     return useUserStore().hasPermission(resourceCode, action)
@@ -40,7 +35,7 @@ export const siteHooks: SiteHooks = {
     return { name: 'error403' }
   },
   prepareNavigation() {
-    // 共用路由守衛才會呼叫；nexus 目前用自己的守衛，也沒有網址所屬單位這一層
+    // nexus 後台沒有網址所屬單位這一層，不必先檢查
     return Promise.resolve(undefined)
   },
 }

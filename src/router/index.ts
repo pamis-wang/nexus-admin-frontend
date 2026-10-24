@@ -9,15 +9,15 @@ import type { PermissionAction } from '@/types/permission'
 /** 定義路由元訊息 */
 declare module 'vue-router' {
   interface RouteMeta {
-    /** 顯示名稱，填 menu 字典的 key（顯示時用 t(`menu.${title}`)）；如果沒設定或是空值就不會出現在選單 */
+    /** 選單標題，填語系檔 menu 底下的 key（慣例用路由 name）；沒設定或是空值就不會出現在選單 */
     title?: MenuTitleKey | ''
     /** 顯示圖示 */
     icon?: string
     /** 是否需要驗證 */
     requiresAuth?: boolean
-    /** 要求資源名稱，用於多層選單判斷目前路由所屬的資源群組 */
-    resourceName?: string
-    /** 要求的操作，預設為檢視 */
+    /** 要求的資源代碼，對應後端端點要求的權限，由 siteHooks.canAccess 判斷；沒設定代表登入即可進入 */
+    resourceCode?: string
+    /** 要求的操作，預設為檢視；新增頁、編輯頁分別要求新增、修改，直接輸入網址也進不去 */
     permissionAction?: PermissionAction
   }
 }
@@ -32,45 +32,47 @@ const logger = useLogger({ prefix: 'Router', enabled: import.meta.env.DEV })
 /**
  * 路由守衛
  *
- * 三段：未驗證導向登入頁、已驗證時登入頁導回首頁、無資源權限導向 403。
- *
- * 權限判斷一律走 isRouteAccessible，不另外包組合函式——守衛不在元件的 setup context 內，
- * 組合函式若在頂層呼叫 useRoute()／useRouter() 會 inject 不到東西。
- *
- * 這裡擋的只是畫面。每個端點的權限由後端各自驗證，前端擋不住的一樣進不了 API。
+ * 先做站別檢查（siteHooks.prepareNavigation，例如網址所屬單位不存在導 404），
+ * 再三段：未驗證導向登入頁、已驗證時登入頁導回上一頁、沒有該頁的資源權限時導向 403。
+ * 登入頁、首頁與 403 頁的位置由 siteHooks 提供。權限只是讓畫面不顯示用不到的功能，真正的把關在後端每個端點
  */
-router.beforeEach((to, from) => {
+router.beforeEach(async (to, from) => {
+  const siteRedirect = await siteHooks.prepareNavigation(to)
+  if (siteRedirect !== undefined) {
+    logger.warn('站別檢查不通過，改導向', { 目標路由: to.path })
+    return siteRedirect
+  }
+
   const userStore = useUserStore()
 
   if (to.meta.requiresAuth && !userStore.isAuthenticated) {
     logger.warn('未驗證，導向登入頁', { 目標路由: to.path })
-    return { name: 'login' }
+    return siteHooks.loginLocation(to)
   }
 
   if (to.name === 'login' && userStore.isAuthenticated) {
-    logger.debug('已驗證，登入頁導向首頁')
-    return { name: from.name ? from.name : 'home' }
+    logger.debug('已驗證，登入頁導回上一頁')
+    return from.name ? { name: from.name } : siteHooks.homeLocation(to)
   }
 
-  if (to.meta.requiresAuth === true && !isRouteAccessible(to)) {
-    logger.warn('無訪問權限，導向 403', { 資源: to.meta.resourceName, 操作: to.meta.permissionAction, 目標路由: to.path })
-    return { name: 'error403' }
+  if (to.meta.requiresAuth && !isRouteAccessible(to)) {
+    logger.warn('沒有資源權限，導向 403', { 目標路由: to.path, 資源代碼: to.meta.resourceCode, 操作: to.meta.permissionAction })
+    return siteHooks.forbiddenLocation(to)
   }
 })
 
 /**
- * 目前生效角色能不能進入這個路由
+ * 目前使用者能不能進入這個路由
  *
- * 沒有 resourceName 的路由（登入頁、錯誤頁）不做權限檢查，否則 403 自己也會被擋而形成迴圈。
- * 過渡期：權限樹還沒有資源代碼，傳給 siteHooks.canAccess 的是 meta.resourceName
+ * meta 沿 matched 由父到子合併，資源代碼一律標在葉節點的路由上
  * @param route 路由位置
- * @returns 沒有要求資源權限，或生效角色有對應的操作權限時為 true
+ * @returns 沒有要求資源權限，或站別判斷（siteHooks.canAccess）放行對應的操作時為 true
  */
 export function isRouteAccessible(route: RouteLocationNormalizedLoaded): boolean {
-  const resourceName = route.meta.resourceName
-  if (resourceName === undefined) return true
+  const resourceCode = route.meta.resourceCode
+  if (resourceCode === undefined) return true
 
-  return siteHooks.canAccess(resourceName, route.meta.permissionAction ?? 'canAccess')
+  return siteHooks.canAccess(resourceCode, route.meta.permissionAction ?? 'canAccess')
 }
 
 export default router

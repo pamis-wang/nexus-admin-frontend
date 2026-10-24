@@ -1,17 +1,17 @@
 /** 選單設定的樹節點（頁面內部以扁平陣列操作，送出前才組回嵌套樹） */
 export interface AdminResourceRow {
-  /** 前端穩定識別碼；新增列還沒有後端 id，表格 rowKey 與父子指向都靠這個 */
+  /** 前端穩定識別碼，表格 rowKey 與父子指向都靠這個 */
   rowKey: string
-  /** 資源唯一編號；null 表示新增，由後端配號 */
-  id: string | null
+  /** 資源唯一編號 */
+  id: string
   /** 父節點的前端識別碼；第一層為 null */
   parentRowKey: string | null
   /** 資源層級 (1:一層, 2:二層, 3:三層) */
   level: number
   /** 這一層的顯示名稱（不含父路徑） */
   name: string
-  /** 資源代碼，唯讀；有值代表綁定端點權限，只能由後端種子資料維護 */
-  resourceCode: string | null
+  /** 資源代碼，唯讀；端點權限的判斷鍵，跟著資源由後端種子資料建立 */
+  resourceCode: string
   /** 是否啟用 */
   isEnabled: boolean
   /** 顯示順序，格式 1AA2BB3CC；由後端依樹狀位置重算，畫面唯讀 */
@@ -50,8 +50,6 @@ export interface AdminResourceTreeValidation {
 
 /** 未儲存變更摘要 */
 export interface AdminResourceChangeSummary {
-  /** 新增筆數 */
-  addedCount: number
   /** 改名或啟用狀態變動的筆數 */
   updatedCount: number
   /** 位置變動筆數（同層排序或跨層搬移） */

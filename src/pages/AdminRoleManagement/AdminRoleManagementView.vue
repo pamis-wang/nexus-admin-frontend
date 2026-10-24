@@ -86,11 +86,6 @@ import { useAdminRolePermissionMatrix } from '@/pages/AdminRoleManagement/compos
 import AdminRolePermissionMatrix from '@/pages/AdminRoleManagement/components/AdminRolePermissionMatrix.vue'
 import type { AdminRoleManagementSummary, AdminRoleManagementUser } from '@/pages/AdminRoleManagement/types'
 
-/** 角色管理在權限表上的資源名稱 */
-const ROLE_RESOURCE_NAME = '系統管理>角色管理'
-/** 用戶管理在權限表上的資源名稱 */
-const USER_RESOURCE_NAME = '系統管理>用戶管理'
-
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
@@ -109,9 +104,9 @@ const users = ref<AdminRoleManagementUser[]>([])
 /** 用戶名單載入失敗的說明；權限矩陣照樣顯示 */
 const usersErrorMessage = ref<string | null>(null)
 
-const canUpdate = computed<boolean>(() => userStore.hasPermission(ROLE_RESOURCE_NAME, 'canUpdate'))
-const canDelete = computed<boolean>(() => userStore.hasPermission(ROLE_RESOURCE_NAME, 'canDelete'))
-const canViewUsers = computed<boolean>(() => userStore.hasPermission(USER_RESOURCE_NAME))
+const canUpdate = computed<boolean>(() => userStore.hasPermission('admin_roles', 'canUpdate'))
+const canDelete = computed<boolean>(() => userStore.hasPermission('admin_roles', 'canDelete'))
+const canViewUsers = computed<boolean>(() => userStore.hasPermission('admin_users'))
 /** 不能刪除的原因；可以刪除時為 null */
 const deleteBlockedReason = computed<string | null>(() => {
   if (role.value === null) return null

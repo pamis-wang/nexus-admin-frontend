@@ -70,8 +70,7 @@
               @keyup="(event: KeyboardEvent) => handleEditKeyup(event, element.row.rowKey)"
             />
             <template v-else>
-              <span :class="element.row.isEnabled ? '' : 'text-grey-6'">{{ element.row.name || t('resource.empty.unnamed') }}</span>
-              <q-badge v-if="element.row.id === null" color="positive" class="q-ml-sm">{{ t('resource.status.new') }}</q-badge>
+              <span :class="element.row.isEnabled ? '' : 'text-grey-6'">{{ element.row.name }}</span>
               <q-badge v-if="element.childCount > 0 && !element.isExpanded" color="grey-5" class="q-ml-sm">
                 {{ t('resource.childCount', element.childCount) }}
               </q-badge>
@@ -91,16 +90,11 @@
 
         <!-- 資源代碼：後端種子資料維護的端點權限判斷鍵，畫面唯讀 -->
         <q-td>
-          <template v-if="element.row.resourceCode === null">
-            <span class="text-caption text-grey-5">-</span>
-          </template>
-          <template v-else>
-            <q-badge color="grey-3" text-color="dark" class="text-caption">
-              <q-icon name="mdi-lock-outline" size="xs" class="q-mr-xs" />
-              {{ element.row.resourceCode }}
-              <q-tooltip>{{ t('resource.hint.codeLocked') }}</q-tooltip>
-            </q-badge>
-          </template>
+          <q-badge color="grey-3" text-color="dark" class="text-caption">
+            <q-icon name="mdi-lock-outline" size="xs" class="q-mr-xs" />
+            {{ element.row.resourceCode }}
+            <q-tooltip>{{ t('resource.hint.codeLocked') }}</q-tooltip>
+          </q-badge>
         </q-td>
 
         <!-- displayOrder -->
@@ -135,16 +129,13 @@
             <q-btn flat dense round color="positive" icon="mdi-check" @click="emit('commitEdit', element.row.rowKey)">
               <q-tooltip>{{ t('resource.action.done') }}</q-tooltip>
             </q-btn>
-            <q-btn flat dense round color="negative" icon="mdi-close" @click="emit('cancelEdit', element.row.rowKey)">
+            <q-btn flat dense round color="negative" icon="mdi-close" @click="emit('cancelEdit')">
               <q-tooltip>{{ t('common.action.cancel') }}</q-tooltip>
             </q-btn>
           </template>
           <template v-else>
             <q-btn flat dense round color="primary" icon="mdi-file-document-edit-outline" @click="emit('startEdit', element.row.rowKey)">
               <q-tooltip>{{ t('resource.action.rename') }}</q-tooltip>
-            </q-btn>
-            <q-btn v-if="element.row.level < maxLevel" flat dense round color="primary" icon="mdi-plus" @click="emit('addChild', element.row.rowKey)">
-              <q-tooltip>{{ t('resource.action.addChild', { level: element.row.level + 1 }) }}</q-tooltip>
             </q-btn>
             <q-btn flat dense round color="primary" icon="mdi-folder-move-outline" @click="emit('requestMove', element.row.rowKey)">
               <q-tooltip>{{ t('resource.action.move') }}</q-tooltip>
@@ -170,7 +161,6 @@ const props = withDefaults(defineProps<Props>(), {
   editingRowKey: null,
   canDrag: true,
   showIndent: true,
-  maxLevel: 3,
 })
 
 /** 行內編輯中的名稱，由上層頁面持有 */
@@ -180,10 +170,9 @@ const emit = defineEmits<{
   toggleExpand: [rowKey: string]
   startEdit: [rowKey: string]
   commitEdit: [rowKey: string]
-  cancelEdit: [rowKey: string]
+  cancelEdit: []
   toggleEnabled: [rowKey: string, isEnabled: boolean]
   nudge: [rowKey: string, offset: number]
-  addChild: [rowKey: string]
   requestMove: [rowKey: string]
   dragMove: [payload: AdminResourceDragMove]
 }>()
@@ -198,8 +187,6 @@ interface Props {
   canDrag?: boolean
   /** 是否依層級縮排；搜尋成平面清單時關掉，避免父節點不在畫面上還留一段空白 */
   showIndent?: boolean
-  /** 資源層級上限 */
-  maxLevel?: number
 }
 
 /** sortablejs onMove 事件，只列這裡會用到的欄位 */
@@ -282,7 +269,7 @@ function handleEditKeyup(event: KeyboardEvent, rowKey: string) {
     return
   }
   if (event.key === 'Escape') {
-    emit('cancelEdit', rowKey)
+    emit('cancelEdit')
   }
 }
 
