@@ -27,8 +27,9 @@ interface Props {
 
 <style lang="scss" scoped>
 .x-section-header-bar {
-  background-color: $brand-soft;
-  color: $primary;
+  /* 讀 CSS 變數而不是 SCSS 變數，暗色模式才會換成 styles.scss 裡的暗色版本 */
+  background-color: var(--q-brand-soft);
+  color: var(--q-primary);
   font-size: 1.1rem;
   font-weight: 400;
   border-radius: 4px;
