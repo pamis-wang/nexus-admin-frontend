@@ -79,6 +79,8 @@ async function mountAuthentication() {
     routes: [
       { path: '/', name: 'home', component: { template: '<div />' } },
       { path: '/login', name: 'login', component: { template: '<div />' } },
+      { path: '/users', name: 'userManagementList', meta: { resourceName: '系統管理>用戶管理' }, component: { template: '<div />' } },
+      { path: '/error-403', name: 'error403', component: { template: '<div />' } },
     ],
   })
 
@@ -90,7 +92,7 @@ async function mountAuthentication() {
         return () => h('div')
       },
     }),
-    { global: { plugins: [router] } },
+    { global: { plugins: [router] } }
   )
   await router.push({ name: 'home' })
 
@@ -166,9 +168,10 @@ describe('useAuthentication - 生效角色', () => {
     const userStore = useUserStore()
     await userStore.storageUser('old-access-token', 'refresh-token', mockUserProfile)
 
-    const result = await authentication.switchActiveRoles(['role-2'])
+    const result = await authentication.changeActiveRoles(['role-2'])
 
     expect(result.success).toBe(true)
+    expect(result.message).toBe('目前生效角色：檢視者')
     expect(setActiveRolesMock).toHaveBeenCalledWith({ roleIds: ['role-2'] })
     // 沒換掉存取權杖的話，後端仍會以舊的生效角色判斷權限
     expect(userStore.accessToken).toBe('new-access-token')
@@ -176,7 +179,37 @@ describe('useAuthentication - 生效角色', () => {
     expect(userStore.refreshToken).toBe('refresh-token')
     expect(getCurrentAuthorizationMock).toHaveBeenCalled()
     expect(userStore.hasPermission('系統管理>角色管理')).toBe(true)
-    expect(userStore.activeRoles.map((role) => role.name)).toEqual(['檢視者'])
+    expect(userStore.authorization?.activeRoles.map((role) => role.name)).toEqual(['檢視者'])
+  })
+
+  it('切換後目前所在的頁面已經沒有權限時導向 403', async () => {
+    setActiveRolesMock.mockResolvedValue({
+      result: {
+        data: {
+          authStatus: 'success',
+          message: null,
+          tokenType: 'Bearer',
+          accessToken: 'new-access-token',
+          activeRoles: [{ id: 'role-2', name: '檢視者' }],
+        },
+        error: null,
+      },
+      status: 200,
+      statusText: 'OK',
+      success: true,
+      timestamp: Date.now(),
+    })
+    getCurrentAuthorizationMock.mockResolvedValue(buildAuthorizationResponse('系統管理>角色管理', '檢視者'))
+    const { authentication, router } = await mountAuthentication()
+    const userStore = useUserStore()
+    await userStore.storageUser('old-access-token', 'refresh-token', mockUserProfile)
+    await userStore.storageAuthorization(buildAuthorizationResponse('系統管理>用戶管理', '管理員').result.data!)
+    await router.push({ name: 'userManagementList' })
+
+    const result = await authentication.changeActiveRoles(['role-2'])
+
+    expect(result.success).toBe(true)
+    expect(router.currentRoute.value.name).toBe('error403')
   })
 
   it('後端回 403 時不動存取權杖，並帶回錯誤訊息', async () => {
@@ -192,7 +225,7 @@ describe('useAuthentication - 生效角色', () => {
     const userStore = useUserStore()
     await userStore.storageUser('old-access-token', 'refresh-token', mockUserProfile)
 
-    const result = await authentication.switchActiveRoles(['role-1', 'role-2'])
+    const result = await authentication.changeActiveRoles(['role-1', 'role-2'])
 
     expect(result.success).toBe(false)
     expect(result.message).toBe('稽核模式下一次只能有一個角色生效')

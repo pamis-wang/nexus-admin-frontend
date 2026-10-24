@@ -13,7 +13,7 @@ export const authRoutes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'login',
-    meta: { title: '登入' },
+    meta: { title: 'login' },
     component: () => import('@/pages/Authentication/LoginPage.vue'),
   },
 ]
@@ -23,7 +23,7 @@ export const featureRoutes: RouteRecordRaw[] = [
   {
     path: '',
     name: 'home',
-    meta: { title: '首頁', icon: 'mdi-home', resourceName: '首頁' },
+    meta: { title: 'home', icon: 'mdi-home', resourceName: '首頁' },
     component: () => import('@/pages/Home/HomeView.vue'),
   },
   systemRoutes,
@@ -58,7 +58,7 @@ export const errorRoutes: RouteRecordRaw[] = [
  * 403 只會發生在已登入的情況，放在版面內保留選單，使用者可以直接轉往有權限的功能。
  * 不設 title 所以不會進選單，也不設 resourceName 所以不會被權限守衛再擋一次。
  */
-const inLayoutErrorRoutes: RouteRecordRaw[] = [
+export const layoutErrorRoutes: RouteRecordRaw[] = [
   {
     path: 'error-403',
     name: 'error403',
@@ -78,7 +78,7 @@ export const mainRoutes: RouteRecordRaw[] = [
     path: '/',
     component: () => import('@/layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
-    children: [...featureRoutes, ...inLayoutErrorRoutes],
+    children: [...featureRoutes, ...layoutErrorRoutes],
   },
 ]
 
@@ -88,23 +88,24 @@ export const allRoutes: RouteRecordRaw[] = [...authRoutes, ...errorRoutes, ...ma
  * 依權限篩掉看不到的選單項目
  *
  * 分組節點（有子選單的那一層）本身不是可以進入的頁面，只看底下還剩不剩子項：
- * 全被擋掉就整組收起來，留一個點不進去的空群組沒有意義；反過來只要還有子項就保留，
- * 因為父層漏設權限而讓整組功能從選單消失太容易誤判。
+ * 全被擋掉、或 children 本來就是空陣列，就整組收起來，留一個點不進去的空群組沒有意義；
+ * 反過來只要還有子項就保留，因為父層漏設權限而讓整組功能從選單消失太容易誤判。
  *
- * 葉節點則看自己有沒有訪問權限。沒有標 resourceName 的節點一律顯示，與守衛的判斷一致。
+ * 葉節點則看自己有沒有訪問權限。沒有標權限欄位的節點一律顯示，與守衛的判斷一致。
+ * 過渡期：權限樹還沒有資源代碼，傳給 canAccess 的是 meta.resourceName。
  *
  * 不做成 computed 放在本檔：這支在模組載入時就會被求值，那時 pinia 還沒安裝，
  * 拿不到 store。由選單元件各自包一層 computed 傳入判斷函式。
  * @param routes 選單樹，通常是 menuRoutes
- * @param hasPermission 判斷是否具備該資源的訪問權限
+ * @param canAccess 判斷某個資源有沒有檢視權限
  * @returns 篩選後的選單樹
  */
-export function filterMenuRoutesByPermission(routes: RouteRecordRaw[], hasPermission: (resourceName: string) => boolean): RouteRecordRaw[] {
+export function filterMenuRoutes(routes: RouteRecordRaw[], canAccess: (resourceCode: string) => boolean): RouteRecordRaw[] {
   const visibleItems: RouteRecordRaw[] = []
 
   for (const route of routes) {
     if (route.children !== undefined) {
-      const children = filterMenuRoutesByPermission(route.children, hasPermission)
+      const children = filterMenuRoutes(route.children, canAccess)
       if (children.length > 0) {
         visibleItems.push({ ...route, children })
       }
@@ -112,7 +113,7 @@ export function filterMenuRoutesByPermission(routes: RouteRecordRaw[], hasPermis
     }
 
     const resourceName = route.meta?.resourceName
-    if (resourceName === undefined || hasPermission(resourceName)) {
+    if (resourceName === undefined || canAccess(resourceName)) {
       visibleItems.push(route)
     }
   }

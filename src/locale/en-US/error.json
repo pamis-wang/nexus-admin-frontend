@@ -1,0 +1,13 @@
+{
+  "backHome": "Back to Home",
+  "back": "Go Back",
+  "forbidden": {
+    "title": "No Permission to View This Page",
+    "description": "Your active role has not been granted access to this feature.",
+    "contact": "If you need access, please contact the system administrator to adjust your role's permissions."
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "The URL may be incorrect, or this page may have been removed."
+  }
+}

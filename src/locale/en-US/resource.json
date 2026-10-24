@@ -1,0 +1,92 @@
+{
+  "title": "Menu Settings",
+  "column": {
+    "name": "Menu Name",
+    "level": "Level",
+    "fullName": "Full Resource Name",
+    "code": "Resource Code",
+    "order": "Order",
+    "orderField": "displayOrder",
+    "visibility": "Visibility",
+    "actions": "Actions"
+  },
+  "placeholder": {
+    "search": "Search menu name or resource code",
+    "name": "Enter a name for this level"
+  },
+  "hint": {
+    "saveWholeTree": "Saving submits the whole tree at once, so additions, renames, and visibility and order changes are all written together.",
+    "dragSameLevel": "Dragging only reorders items within the same level. To move an item to another level, use \"Move to Another Level\" on its row.",
+    "fullNameAuto": "Full resource names are built from the level names automatically. Renaming or moving an item also rewrites the names of the items under it.",
+    "codeReadonly": "Resource codes are maintained in the back-end seed data and are read-only here. This page doesn't support deleting resources.",
+    "unsavedSummary": "Unsaved changes: {added} added, {updated} updated, {moved} moved",
+    "searching": "Search only affects what's shown. Saving still submits the whole tree ({n} item in total). Drag-and-drop sorting is unavailable while searching. | Search only affects what's shown. Saving still submits the whole tree ({n} items in total). Drag-and-drop sorting is unavailable while searching.",
+    "drag": "Drag to reorder within the same level. To move across levels, use \"Move to Another Level\".",
+    "dragDisabled": "Drag-and-drop sorting is unavailable while searching",
+    "codeLocked": "Bound to endpoint permissions and maintained in the back-end seed data. It can't be changed here."
+  },
+  "action": {
+    "revertAll": "Revert All",
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All",
+    "addRoot": "Add Top Level",
+    "done": "Done",
+    "rename": "Rename",
+    "addChild": "Add Level {level}",
+    "move": "Move to Another Level",
+    "moveUp": "Move Up",
+    "moveDown": "Move Down",
+    "confirmMove": "Confirm Move"
+  },
+  "status": {
+    "new": "New",
+    "readonly": "Read-only",
+    "visible": "Visible",
+    "hidden": "Hidden"
+  },
+  "empty": {
+    "noMatch": "No matching menu items",
+    "unnamed": "(Unnamed)"
+  },
+  "levelLabel": "Level {level}",
+  "childCount": "{n} item | {n} items",
+  "move": {
+    "question": "Where do you want to move {name}?",
+    "currentPath": "Current full name: {path}",
+    "currentPathWithDescendants": "Current full name: {path}; {n} child item will be moved with it | Current full name: {path}; {n} child items will be moved with it",
+    "targetLevel": "Level {level} after the move",
+    "preview": "After the move, the full resource name will be {path}. The actual displayOrder is recalculated by the back end from the tree position.",
+    "previewWithDescendants": "After the move, the full resource name will be {path}, and the name of {n} child item will be rewritten too. The actual displayOrder is recalculated by the back end from the tree position. | After the move, the full resource name will be {path}, and the names of {n} child items will be rewritten too. The actual displayOrder is recalculated by the back end from the tree position.",
+    "toRoot": "(Move to top level)",
+    "currentPosition": "Current position",
+    "tooDeep": "Moving would exceed {n} level | Moving would exceed {n} levels",
+    "siblingLimit": "Level limit of {n} item reached | Level limit of {n} items reached",
+    "targetFull": "The target level already has {count} item; each level can have at most {max} | The target level already has {count} items; each level can have at most {max}"
+  },
+  "validation": {
+    "emptyTree": "Saving replaces the whole tree, so an empty tree would delete all resources. Keep at least one top-level menu item.",
+    "blankName": "Some menu names are blank. Fill them in first; an unnamed new row can be removed by clicking Cancel while editing it.",
+    "nameSeparator": "Menu names can't contain \"{separator}\" because it's used to separate levels.",
+    "maxLevel": "Resources can have at most {n} level. | Resources can have at most {n} levels.",
+    "scopeRoot": "The top level",
+    "scopeUnder": "The level under \"{path}\"",
+    "tooManySiblings": "{scope} has {count} items; each level can have at most {max}.",
+    "duplicateName": "The resource name \"{path}\" is duplicated. Full names must be unique across the whole tree."
+  },
+  "validationFailed": "The menu settings haven't passed validation.",
+  "leaveConfirm": "The menu settings have unsaved changes that will be lost if you leave. Leave this page?",
+  "saveConfirm": "The whole tree will be submitted at once: {added} added, {updated} updated, {moved} moved. Save now?",
+  "saveTitle": "Save Menu Settings",
+  "saved": "Menu settings saved.",
+  "saveFailed": "Failed to save the menu settings.",
+  "nameRequired": "The menu name can't be blank.",
+  "nameSeparator": "Menu names can't contain \">\" because it's used to separate levels.",
+  "alreadyFirst": "Already the first item in this level.",
+  "alreadyLast": "Already the last item in this level.",
+  "revertConfirm": "All unsaved changes will be discarded. Revert to the last loaded version?",
+  "revertTitle": "Revert Changes",
+  "conflict": "These menu settings were changed by someone else while you were editing. Please reload and try again.",
+  "conflictTitle": "Version Conflict",
+  "maxLevel": "Resources can have at most {n} level. | Resources can have at most {n} levels.",
+  "maxSiblings": "Each level can have at most {n} item. | Each level can have at most {n} items."
+}

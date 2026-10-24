@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 import quasarPlugin from '@/plugins/quasar'
+import { i18n } from '@/plugins/i18n'
 import XSwitch from '@/components/XSwitch.vue'
 
 /**
@@ -12,11 +14,15 @@ function mountXSwitch(props: { modelValue: boolean } & Record<string, unknown>, 
   return mount(XSwitch, {
     props,
     attrs,
-    global: { plugins: [quasarPlugin] },
+    global: { plugins: [quasarPlugin, i18n] },
   })
 }
 
 describe('XSwitch', () => {
+  afterEach(() => {
+    i18n.global.locale.value = 'zh-TW'
+  })
+
   it('依狀態顯示對應文字', () => {
     const activeWrapper = mountXSwitch({ modelValue: true, activeText: '顯示', inactiveText: '隱藏' })
     const inactiveWrapper = mountXSwitch({ modelValue: false, activeText: '顯示', inactiveText: '隱藏' })
@@ -28,6 +34,28 @@ describe('XSwitch', () => {
   it('未指定文字時使用「啟用」與「停用」', () => {
     expect(mountXSwitch({ modelValue: true }).text()).toBe('啟用')
     expect(mountXSwitch({ modelValue: false }).text()).toBe('停用')
+  })
+
+  it('未指定文字時跟著語系切換', async () => {
+    const wrapper = mountXSwitch({ modelValue: false })
+
+    i18n.global.locale.value = 'en-US'
+    await nextTick()
+
+    expect(wrapper.text()).toBe('Disabled')
+
+    await wrapper.setProps({ modelValue: true })
+
+    expect(wrapper.text()).toBe('Enabled')
+  })
+
+  it('有指定文字時不受語系影響', async () => {
+    const wrapper = mountXSwitch({ modelValue: true, activeText: '緊湊', inactiveText: '標準' })
+
+    i18n.global.locale.value = 'en-US'
+    await nextTick()
+
+    expect(wrapper.text()).toBe('緊湊')
   })
 
   it('點擊時送出相反的狀態', async () => {

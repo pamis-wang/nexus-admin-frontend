@@ -1,0 +1,13 @@
+{
+  "home": "首頁",
+  "login": "登入",
+  "systemManagement": "系統管理",
+  "userManagementList": "用戶管理",
+  "roleManagementList": "角色管理",
+  "menuSettingsList": "選單設定",
+  "contentManagement": "內容管理",
+  "articleManagementList": "文章管理",
+  "advancedSettings": "進階設定",
+  "categorySettingsList": "分類設定",
+  "tagSettingsList": "標籤設定"
+}

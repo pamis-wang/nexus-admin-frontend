@@ -1,8 +1,86 @@
-/* 全域樣式：只放跨頁面共用、Quasar 沒有提供的類別；元件自己的樣式寫在元件的 <style scoped> */
+/*
+ * 全域樣式：四站共用的殼層樣式
+ *
+ * 四站逐字相同，改的時候四站一起改；各站不同的樣式寫在 site.scss（檔尾載入，可以覆寫這裡的樣式）。
+ * 只放跨頁面共用、Quasar 沒有提供的類別；元件自己的樣式寫在元件的 <style scoped>。
+ * 色值定義在各站的 quasar.variables.scss。
+ */
 
-/* 沒有內建類別的品牌色補成 Quasar 色名，元件可以寫 color="brand-soft"、class="bg-brand-soft" */
+body {
+  /* 字型與字級沿用 Quasar 預設的 Roboto 14px（字型檔在 plugins/quasar.ts 載入）；
+     要調整字級改 quasar.variables.scss 的 $body-font-size，不要寫死在這裡 */
+  /* 切換色彩方案時，背景與文字顏色漸變過去 */
+  transition:
+    background-color 0.5s ease-in-out,
+    color 0.5s ease-in-out;
+}
+
+/* 佈局顏色過渡效果：切換頂部欄、選單顏色時漸變過去 */
+.q-toolbar,
+.q-scroll-area,
+.q-list,
+.q-item,
+.q-expansion-item,
+.q-btn,
+.q-card-section {
+  transition:
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 錯誤對話視窗：避免過長無空白字串（如例外訊息）撐開造成水平捲軸 */
+.break-word-dialog .q-dialog__message {
+  overflow-wrap: anywhere;
+}
+
+/*
+ * 操作導覽的泡泡
+ *
+ * 不常操作後台的使用者看套件預設的樣式，字級偏小、按鈕也不顯眼。
+ * 字放大、行距拉開，「下一步」做成實心主色鈕，讓人一眼知道要按哪裡。
+ * 泡泡由 driver.js 掛在 body 上，不在任何元件裡，只能寫在全域樣式。
+ */
+.driver-popover.tour-popover {
+  max-width: 440px;
+  font-family: inherit;
+}
+
+.driver-popover.tour-popover .driver-popover-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--q-primary);
+}
+
+.driver-popover.tour-popover .driver-popover-description {
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.driver-popover.tour-popover .driver-popover-description strong {
+  color: var(--q-negative);
+}
+
+.driver-popover.tour-popover .driver-popover-progress-text {
+  font-size: 0.9rem;
+}
+
+.driver-popover.tour-popover .driver-popover-footer button {
+  font-size: 0.95rem;
+  padding: 6px 14px;
+  text-shadow: none;
+}
+
+.driver-popover.tour-popover .driver-popover-footer .driver-popover-next-btn {
+  background-color: var(--q-primary);
+  border-color: var(--q-primary);
+  color: white;
+}
+
+/* 沒有內建類別的品牌色補成 Quasar 色名，元件可以寫 color="brand-soft"、class="bg-brand-night" */
 :root {
   --q-brand-soft: #{$brand-soft};
+  --q-brand-night: #{$brand-night};
 }
 
 .text-brand-soft {
@@ -13,21 +91,34 @@
   background: var(--q-brand-soft) !important;
 }
 
+.text-brand-night {
+  color: var(--q-brand-night) !important;
+}
+
+.bg-brand-night {
+  background: var(--q-brand-night) !important;
+}
+
+/* 深色、品牌色選單上的選取項目：Quasar 預設用主色字，放在深底上看不見，改成沿用選單的白字再墊一層淡底 */
+.menu-on-dark .q-item.q-router-link--active,
+.menu-on-dark .q-item--active {
+  color: inherit;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
 /*
  * 暗色模式
- * 主色當文字放在暗色卡片上對比只有 2.15，文字與指示色改用 $primary-on-dark。
+ * 主色當文字放在深底上對比不足，文字與指示色改用 $brand-on-dark。
  * 輸入框焦點、開關、選單選取這些 Quasar 內部樣式直接讀 --q-primary，所以改變數，不是只改 .text-primary。
  */
 body.body--dark {
-  --q-primary: #{$primary-on-dark};
+  --q-primary: #{$brand-on-dark};
 
   /* 底色維持主色，按鈕、表頭、品牌色頂部列與選單上的白字對比才夠 */
   .bg-primary {
     background: $primary !important;
   }
-
-  /* 勾選框的勾是白色，框底變淡後看不清楚，改深色 */
-  .q-checkbox__svg {
-    color: $dark;
-  }
 }
+
+/* 站別樣式放最後，可以覆寫上面的共用樣式；@import 才看得到 quasar.variables.scss 注入的色值變數 */
+@import './site.scss';

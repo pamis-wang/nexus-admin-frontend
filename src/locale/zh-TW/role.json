@@ -1,0 +1,118 @@
+{
+  "title": "角色管理",
+  "addTitle": "新增角色",
+  "editTitle": "編輯角色",
+  "viewTitle": "檢視角色",
+  "overline": "角色",
+  "section": {
+    "basic": "基本資料",
+    "permissions": "權限設定",
+    "users": "使用此角色的用戶（{n}）"
+  },
+  "field": {
+    "name": "角色名稱",
+    "template": "以既有角色為範本"
+  },
+  "column": {
+    "name": "角色名稱",
+    "userCount": "用戶人數",
+    "actions": "操作",
+    "feature": "功能"
+  },
+  "placeholder": {
+    "search": "搜尋角色名稱",
+    "searchFeature": "搜尋功能名稱"
+  },
+  "hint": {
+    "template": "只複製權限，之後兩個角色互不影響",
+    "autoGrantRule": "勾選「新增／修改／刪除」時會自動勾選「檢視」",
+    "newRoleUnsaved": "新角色儲存前不會影響任何用戶",
+    "deleteRule": "系統預設角色不能刪除；仍有用戶使用的角色要先調整這些用戶的角色才能刪除。",
+    "viewUsers": "查看使用此角色的用戶",
+    "autoGrantAccess": "已自動勾選「檢視」：新增、修改、刪除都要先能檢視",
+    "autoRevokeDependent": "已一併取消新增、修改、刪除：沒有檢視就無法操作",
+    "menuDisabled": "選單暫時關閉；這裡的權限會原樣保留，選單重新啟用後立即生效",
+    "notApplicable": "「{name}」沒有{action}操作"
+  },
+  "meta": {
+    "userCount": "用戶人數 {n}",
+    "saveImpact": "・儲存後這 {n} 位用戶的權限立即改變"
+  },
+  "action": {
+    "add": "新增角色",
+    "edit": "編輯角色",
+    "view": "檢視",
+    "update": "修改",
+    "delete": "刪除",
+    "viewUsers": "查看用戶",
+    "expandAll": "全部展開",
+    "collapseAll": "全部收合"
+  },
+  "status": {
+    "systemDefault": "系統預設",
+    "userDisabled": "（已停用）",
+    "menuDisabled": "選單已停用",
+    "granted": "已授權",
+    "partial": "部分",
+    "notGranted": "未授權",
+    "notApplicable": "不適用"
+  },
+  "empty": {
+    "users": "目前沒有用戶使用此角色",
+    "noMatchingFeatures": "找不到符合的功能",
+    "noFeatures": "沒有可設定的功能"
+  },
+  "loading": {
+    "permissions": "載入權限設定中...",
+    "role": "載入角色資料中...",
+    "users": "載入用戶中..."
+  },
+  "option": {
+    "noTemplate": "不使用範本（從零開始）",
+    "systemDefault": "{name}（系統預設）"
+  },
+  "validation": {
+    "nameRequired": "請輸入角色名稱"
+  },
+  "matrix": {
+    "grantedSummary": "已授權 {ratio} 個功能",
+    "ratio": "{granted}／{total}",
+    "changedCount": "變更 {n} 項",
+    "wholeRow": "整列",
+    "columnAria": "整欄{action}",
+    "columnTooltip": "整欄{action}（有搜尋時只套用到搜尋結果）",
+    "expandAria": "展開{name}",
+    "collapseAria": "收合{name}",
+    "cellAria": "{name}：{action}",
+    "rowAria": "{name}：全部權限",
+    "legendChanged": "與載入時不同（尚未儲存）",
+    "legendPartial": "部分授權（底下的功能有勾有沒勾）",
+    "legendPartialReadonly": "{term}：底下的功能有些有授權、有些沒有",
+    "legendNotApplicable": "{term}：這個功能沒有該項操作"
+  },
+  "unsavedCount": "有 {n} 項未儲存的變更",
+  "noUnsavedChanges": "沒有未儲存的變更",
+  "loadFailed": "載入角色失敗",
+  "loadFailedTitle": "載入角色失敗",
+  "loadPermissionsFailed": "載入權限設定失敗：{message}",
+  "noRolesForPermissions": "找不到任何角色，無法取得權限設定的項目，請聯絡系統管理者。",
+  "templateApplied": "已套用「{name}」的權限作為起點，可以再調整",
+  "loadTemplateFailed": "載入範本角色的權限失敗",
+  "created": "角色「{name}」已新增",
+  "createFailed": "新增角色失敗",
+  "reverted": "已還原為載入時的設定",
+  "leaveConfirmNew": "新角色還沒儲存，離開後填寫的內容會遺失。",
+  "leaveConfirm": "有 {n} 項未儲存的變更，離開後會遺失。",
+  "leaveTitle": "離開這一頁？",
+  "updated": "角色「{name}」已更新",
+  "updateFailed": "更新角色失敗",
+  "conflict": "這個角色在你編輯期間已被其他人修改，或名稱與現有角色重複，請重新載入後再調整。",
+  "conflictTitle": "版本衝突",
+  "deleteConfirm": "確定要刪除角色「{name}」嗎？角色的權限設定會一併移除，此操作無法復原。",
+  "deleteTitle": "刪除角色",
+  "deleted": "角色「{name}」已刪除",
+  "deleteFailed": "刪除角色失敗",
+  "deleteBlockedSystemDefault": "系統預設角色不能刪除",
+  "deleteBlockedInUse": "仍有 {n} 位用戶使用此角色，請先調整這些用戶的角色再刪除",
+  "loadUsersFailed": "無法載入用戶名單：{message}"
+}

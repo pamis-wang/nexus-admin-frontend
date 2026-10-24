@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { QSelect } from 'quasar'
 import customPlugin from '@/plugins/custom'
 import quasarPlugin from '@/plugins/quasar'
+import { i18n } from '@/plugins/i18n'
 import AdminUserManagementList from '@/pages/AdminUserManagement/AdminUserManagementList.vue'
 import type { AdminUserResponse } from '@/services/admin/adminUserService'
 import type { ResponseStructure } from '@/services/axiosService'
@@ -96,7 +97,7 @@ async function mountAdminUserManagementList(query: Record<string, string> = {}) 
   })
   await router.push({ name: 'userManagementList', query })
 
-  const wrapper = mount(AdminUserManagementList, { global: { plugins: [quasarPlugin, customPlugin, router] } })
+  const wrapper = mount(AdminUserManagementList, { global: { plugins: [quasarPlugin, i18n, customPlugin, router] } })
   await vi.waitFor(() => expect(wrapper.text()).toContain('editor'))
 
   return wrapper

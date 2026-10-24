@@ -1,0 +1,5 @@
+{
+  "welcome": "Welcome to Nexus Admin",
+  "description": "Create admin accounts, set up roles and their permissions for each feature, and adjust the structure of the admin menu here.",
+  "placeholder": "This page hasn't been implemented yet. It is only here to demonstrate the layout and menu."
+}

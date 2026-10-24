@@ -1,0 +1,37 @@
+{
+  "welcome": "歡迎！",
+  "logout": "登出",
+  "personalSettings": "個人設定",
+  "role": {
+    "switchTitle": "角色切換",
+    "activeRolesTitle": "生效角色（可複選）",
+    "singleRoleHint": "你只被指派了一個角色",
+    "noRoles": "沒有被指派任何角色，請洽管理者",
+    "keepOneActive": "至少要保留一個生效角色",
+    "separator": "、"
+  },
+  "colorScheme": {
+    "title": "色彩方案",
+    "light": "亮色主題",
+    "dark": "暗色主題",
+    "system": "跟隨系統",
+    "tooltip": "色彩方案：{current}（點擊改為{next}）"
+  },
+  "themeSettings": {
+    "title": "主題設定",
+    "layout": "選擇佈局",
+    "vertical": "垂直佈局",
+    "horizontal": "水平佈局",
+    "topbarColor": "頂部欄顏色",
+    "menuColor": "選單顏色",
+    "color": {
+      "light": "亮色",
+      "dark": "暗色",
+      "brand": "品牌色"
+    },
+    "darkModeMenuHint": "暗色模式下僅支援暗色或品牌色選單，以確保最佳視覺體驗",
+    "sidebarSize": "側邊選單尺寸",
+    "sidebarExpanded": "常駐展開",
+    "sidebarCollapsed": "常駐收合"
+  }
+}

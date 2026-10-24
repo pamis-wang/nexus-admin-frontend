@@ -1,66 +1,66 @@
 <template>
   <x-breadcrumb
     :items="[
-      { label: '首頁', icon: 'mdi-home', to: { name: 'home' } },
-      { label: '系統管理' },
-      { label: '角色管理', to: { name: 'roleManagementList' } },
-      { label: '檢視角色' },
+      { label: t('menu.home'), icon: 'mdi-home', to: { name: 'home' } },
+      { label: t('menu.systemManagement') },
+      { label: t('role.title'), to: { name: 'roleManagementList' } },
+      { label: t('role.viewTitle') },
     ]"
   />
 
-  <x-loading-state :loading="isLoading" message="載入角色資料中..." />
+  <x-loading-state :loading="isLoading" :message="t('role.loading.role')" />
 
   <template v-if="!isLoading && role !== null">
-    <x-page-header overline="角色" :title="role.name" icon="mdi-shield-account-outline">
+    <x-page-header :overline="t('role.overline')" :title="role.name" icon="mdi-shield-account-outline">
       <template #badges>
-        <q-badge v-if="role.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
+        <q-badge v-if="role.isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">{{ t('role.status.systemDefault') }}</q-badge>
       </template>
       <template #meta>
-        用戶人數 {{ role.userCount }}
+        {{ t('role.meta.userCount', role.userCount) }}
         <template v-if="canViewUsers && role.userCount > 0">
           ・
-          <router-link :to="buildUserListRoute()">查看用戶</router-link>
+          <router-link :to="buildUserListRoute()">{{ t('role.action.viewUsers') }}</router-link>
         </template>
       </template>
       <template #actions>
-        <q-btn outline color="secondary" icon="mdi-arrow-left" label="返回列表" :to="buildListRoute()" />
+        <q-btn outline color="secondary" icon="mdi-arrow-left" :label="t('common.action.backToList')" :to="buildListRoute()" />
         <template v-if="canDelete">
           <q-btn
             v-if="deleteBlockedReason === null"
             outline
             color="negative"
             icon="mdi-trash-can-outline"
-            label="刪除"
+            :label="t('role.action.delete')"
             :loading="isDeleting"
             @click="confirmDelete"
           />
           <!-- 停用的按鈕收不到滑鼠事件，說明掛在外層 -->
           <span v-else>
-            <q-btn outline color="negative" icon="mdi-trash-can-outline" label="刪除" disable />
+            <q-btn outline color="negative" icon="mdi-trash-can-outline" :label="t('role.action.delete')" disable />
             <q-tooltip>{{ deleteBlockedReason }}</q-tooltip>
           </span>
         </template>
-        <q-btn v-if="canUpdate" unelevated color="primary" icon="mdi-file-document-edit-outline" label="編輯角色" :to="buildEditRoute()" />
+        <q-btn v-if="canUpdate" unelevated color="primary" icon="mdi-file-document-edit-outline" :label="t('role.action.edit')" :to="buildEditRoute()" />
       </template>
     </x-page-header>
 
     <q-card flat bordered class="q-mt-xs">
       <q-card-section>
-        <x-section-header-bar title="權限設定" />
+        <x-section-header-bar :title="t('role.section.permissions')" />
         <div class="q-mt-sm">
           <AdminRolePermissionMatrix :rows="matrix.rows.value" is-readonly />
         </div>
 
-        <x-section-header-bar :title="`使用此角色的用戶（${users.length}）`" class="q-mt-md" />
+        <x-section-header-bar :title="t('role.section.users', { n: users.length })" class="q-mt-md" />
         <div class="q-mt-sm">
-          <x-loading-state :loading="isLoadingUsers" message="載入用戶中..." />
+          <x-loading-state :loading="isLoadingUsers" :message="t('role.loading.users')" />
           <template v-if="!isLoadingUsers">
             <div v-if="usersErrorMessage !== null" class="text-negative">{{ usersErrorMessage }}</div>
-            <div v-else-if="users.length === 0">目前沒有用戶使用此角色</div>
+            <div v-else-if="users.length === 0">{{ t('role.empty.users') }}</div>
             <div v-else class="row q-gutter-xs">
               <q-chip v-for="user in users" :key="user.id" dense square :outline="user.isDisabled" icon="mdi-account">
                 {{ user.fullName ?? user.account }}
-                <span v-if="user.isDisabled" class="q-ml-xs">（已停用）</span>
+                <span v-if="user.isDisabled" class="q-ml-xs">{{ t('role.status.userDisabled') }}</span>
                 <q-tooltip>{{ user.account }}</q-tooltip>
               </q-chip>
             </div>
@@ -73,6 +73,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
@@ -92,6 +93,7 @@ const USER_RESOURCE_NAME = '系統管理>用戶管理'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const dialog = useDialog()
 const notify = useNotify()
 const logger = useLogger({ prefix: 'AdminRoleManagementView', enabled: import.meta.env.DEV })
@@ -113,8 +115,8 @@ const canViewUsers = computed<boolean>(() => userStore.hasPermission(USER_RESOUR
 /** 不能刪除的原因；可以刪除時為 null */
 const deleteBlockedReason = computed<string | null>(() => {
   if (role.value === null) return null
-  if (role.value.isSystemDefault) return '系統預設角色不能刪除'
-  if (role.value.userCount > 0) return `仍有 ${role.value.userCount} 位用戶使用此角色，請先調整這些用戶的角色再刪除`
+  if (role.value.isSystemDefault) return t('role.deleteBlockedSystemDefault')
+  if (role.value.userCount > 0) return t('role.deleteBlockedInUse', role.value.userCount)
 
   return null
 })
@@ -141,9 +143,9 @@ async function loadRole() {
     }
     matrix.load(data.permissions)
   } catch (error) {
-    const errorMessage = (error as ResponseStructure<null>).errorMessage || '載入角色失敗'
+    const errorMessage = (error as ResponseStructure<null>).errorMessage || t('role.loadFailed')
     logger.error('載入角色失敗', errorMessage)
-    dialog.showError(errorMessage, '載入角色失敗')
+    dialog.showError(errorMessage, t('role.loadFailedTitle'))
     await router.push(buildListRoute())
   } finally {
     isLoading.value = false
@@ -163,9 +165,9 @@ async function loadUsers() {
       isDisabled: user.isDisabled,
     }))
   } catch (error) {
-    const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
+    const errorMessage = (error as ResponseStructure<null>).errorMessage || t('common.unknownError')
     logger.error('載入角色用戶失敗', errorMessage)
-    usersErrorMessage.value = `無法載入用戶名單：${errorMessage}`
+    usersErrorMessage.value = t('role.loadUsersFailed', { message: errorMessage })
     notify.notifyError(usersErrorMessage.value, 0)
   } finally {
     isLoadingUsers.value = false
@@ -177,14 +179,14 @@ async function confirmDelete() {
   if (role.value === null) return
 
   const roleName = role.value.name
-  dialog.showConfirm(`確定要刪除角色「${roleName}」嗎？角色的權限設定會一併移除，此操作無法復原。`, '刪除角色').onOk(async () => {
+  dialog.showConfirm(t('role.deleteConfirm', { name: roleName }), t('role.deleteTitle')).onOk(async () => {
     isDeleting.value = true
     try {
       await deleteAdminRoleById(roleId)
-      notify.notifySuccess(`角色「${roleName}」已刪除`)
+      notify.notifySuccess(t('role.deleted', { name: roleName }))
       await router.push(buildListRoute())
     } catch (error) {
-      notify.notifyError((error as ResponseStructure<null>).errorMessage || '刪除角色失敗', 0)
+      notify.notifyError((error as ResponseStructure<null>).errorMessage || t('role.deleteFailed'), 0)
     } finally {
       isDeleting.value = false
     }

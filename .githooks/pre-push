@@ -1,5 +1,5 @@
 #!/bin/sh
-# push 前的完整檢查（約 7 秒）：格式、oxlint、eslint、型別、build。單元測試不在內，需要時手動執行。
+# push 前的完整檢查：格式、oxlint、eslint、型別、build。單元測試不在內，需要時手動執行。
 # 目的是讓推上去發 MR 的分支保證 npm run build 過得去。
 #
 # 這個目錄由 package.json 的 prepare 掛上（git config core.hooksPath .githooks）。

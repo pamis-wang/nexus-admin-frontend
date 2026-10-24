@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import quasarPlugin from '@/plugins/quasar'
+import { i18n } from '@/plugins/i18n'
 import AdminRolePermissionMatrix from '@/pages/AdminRoleManagement/components/AdminRolePermissionMatrix.vue'
 import type { AdminRolePermissionCells, AdminRolePermissionCheckState, AdminRolePermissionRow } from '@/pages/AdminRoleManagement/types'
 
@@ -17,7 +18,7 @@ function buildRow(
   name: string,
   parentResourceId: string | null,
   state: AdminRolePermissionCheckState,
-  overrides: { isEnabled?: boolean; cells?: Partial<AdminRolePermissionCells> } = {},
+  overrides: { isEnabled?: boolean; cells?: Partial<AdminRolePermissionCells> } = {}
 ): AdminRolePermissionRow {
   const cells: AdminRolePermissionCells = { canAccess: state, canCreate: state, canUpdate: state, canDelete: state, ...overrides.cells }
   return {
@@ -48,7 +49,7 @@ function buildRows(): AdminRolePermissionRow[] {
 function mountMatrix(rows: AdminRolePermissionRow[], isReadonly = false) {
   return mount(AdminRolePermissionMatrix, {
     props: { rows, isReadonly },
-    global: { plugins: [quasarPlugin] },
+    global: { plugins: [quasarPlugin, i18n] },
   })
 }
 

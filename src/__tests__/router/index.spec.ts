@@ -3,7 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import type { RouteRecordRaw } from 'vue-router'
 import { useUserStore } from '@/stores/useUser'
 import type { CurrentAuthorizationResponse } from '@/services/auth/authService'
-import { filterMenuRoutesByPermission, menuRoutes } from '@/router/routes'
+import { filterMenuRoutes, menuRoutes } from '@/router/routes'
 import router from '@/router'
 
 /**
@@ -233,7 +233,7 @@ describe('選單權限過濾', () => {
    * @param resourceNames 有訪問權限的資源
    */
   function filterByResourceNames(resourceNames: string[]): RouteRecordRaw[] {
-    return filterMenuRoutesByPermission(menuRoutes, (resourceName) => resourceNames.includes(resourceName))
+    return filterMenuRoutes(menuRoutes, (resourceName) => resourceNames.includes(resourceName))
   }
 
   it('只留下有權限的項目', () => {
@@ -261,6 +261,18 @@ describe('選單權限過濾', () => {
 
   it('完全沒有權限時選單是空的', () => {
     expect(filterByResourceNames([])).toEqual([])
+  })
+
+  it('群組的 children 是空陣列時整組隱藏；葉節點沒有權限欄位一律顯示', () => {
+    const routes: RouteRecordRaw[] = [
+      { path: 'empty-group', name: 'emptyGroup', meta: { title: 'contentManagement', resourceName: '內容管理' }, children: [] },
+      { path: 'no-permission-field', name: 'noPermissionField', meta: { title: 'home' }, component: { render: () => null } },
+    ]
+
+    const names = collectRouteNames(filterMenuRoutes(routes, () => true))
+
+    expect(names).not.toContain('emptyGroup')
+    expect(names).toContain('noPermissionField')
   })
 })
 

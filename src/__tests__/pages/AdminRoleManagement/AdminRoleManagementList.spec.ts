@@ -4,9 +4,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { createPinia, setActivePinia, type Pinia } from 'pinia'
 import customPlugin from '@/plugins/custom'
 import quasarPlugin from '@/plugins/quasar'
+import { i18n } from '@/plugins/i18n'
 import { useUserStore, type ResourcePermission } from '@/stores/useUser'
 import AdminRoleManagementList from '@/pages/AdminRoleManagement/AdminRoleManagementList.vue'
 import type { AdminRoleResponse } from '@/services/admin/adminRoleService'
+import type { AuthorizationPermissionResponse } from '@/services/auth/authService'
 import type { DeletedResponse, ResponseStructure } from '@/services/axiosService'
 
 const getAdminRolesMock = vi.fn<() => Promise<ResponseStructure<AdminRoleResponse[]>>>()
@@ -42,6 +44,15 @@ function buildRoles(): AdminRoleResponse[] {
 }
 
 /**
+ * 組出授權狀態的權限節點
+ * @param resourceName 資源完整路徑
+ * @param permission 四種權限
+ */
+function buildPermissionNode(resourceName: string, permission: ResourcePermission): AuthorizationPermissionResponse {
+  return { resourceId: `resource-${resourceName}`, parentId: null, resourceName, level: 2, displayOrder: 0, children: [], ...permission }
+}
+
+/**
  * 準備登入者的權限
  * @param rolePermission 對角色管理的權限
  * @param canViewUsers 有沒有用戶管理的檢視權限
@@ -49,9 +60,14 @@ function buildRoles(): AdminRoleResponse[] {
 function seedPermissions(rolePermission: ResourcePermission, canViewUsers = true): Pinia {
   const pinia = createPinia()
   setActivePinia(pinia)
-  useUserStore().resourcePermissions = {
-    '系統管理>角色管理': rolePermission,
-    '系統管理>用戶管理': { ...FULL_PERMISSION, canAccess: canViewUsers },
+  useUserStore().authorization = {
+    permissionMode: 'audit',
+    roles: [],
+    activeRoles: [],
+    permissions: [
+      buildPermissionNode('系統管理>角色管理', rolePermission),
+      buildPermissionNode('系統管理>用戶管理', { ...FULL_PERMISSION, canAccess: canViewUsers }),
+    ],
   }
   return pinia
 }
@@ -71,7 +87,7 @@ async function mountAdminRoleManagementList(pinia: Pinia) {
   })
   await router.push({ name: 'roleManagementList' })
 
-  const wrapper = mount(AdminRoleManagementList, { global: { plugins: [quasarPlugin, customPlugin, router, pinia] } })
+  const wrapper = mount(AdminRoleManagementList, { global: { plugins: [quasarPlugin, i18n, customPlugin, router, pinia] } })
   await vi.waitFor(() => expect(wrapper.text()).toContain('訪客'))
 
   return wrapper

@@ -6,6 +6,7 @@ import XLoadingState from '@/components/XLoadingState.vue'
 import XSwitch from '@/components/XSwitch.vue'
 import XPageHeader from '@/components/XPageHeader.vue'
 import XSectionHeaderBar from '@/components/XSectionHeaderBar.vue'
+import XDraggableTable from '@/components/XDraggableTable.vue'
 
 /** 全域註冊組件 */
 export default {
@@ -17,5 +18,6 @@ export default {
     app.component('x-switch', XSwitch)
     app.component('x-page-header', XPageHeader)
     app.component('x-section-header-bar', XSectionHeaderBar)
+    app.component('x-draggable-table', XDraggableTable)
   },
 }

@@ -1,27 +1,39 @@
 <template>
   <!-- 工具列：搜尋、展開收合、授權摘要 -->
   <div class="row items-center q-gutter-sm q-mb-sm">
-    <q-input v-model="keyword" dense outlined clearable placeholder="搜尋功能名稱" aria-label="搜尋功能名稱" style="min-width: 220px">
+    <q-input
+      v-model="keyword"
+      dense
+      outlined
+      clearable
+      :placeholder="t('role.placeholder.searchFeature')"
+      :aria-label="t('role.placeholder.searchFeature')"
+      style="min-width: 220px"
+    >
       <template #prepend>
         <q-icon name="mdi-magnify" />
       </template>
     </q-input>
-    <q-btn flat color="grey" icon="mdi-unfold-more-horizontal" label="全部展開" :disable="isSearching" @click="expandAll" />
-    <q-btn flat color="grey" icon="mdi-unfold-less-horizontal" label="全部收合" :disable="isSearching" @click="collapseAll" />
+    <q-btn flat color="grey" icon="mdi-unfold-more-horizontal" :label="t('role.action.expandAll')" :disable="isSearching" @click="expandAll" />
+    <q-btn flat color="grey" icon="mdi-unfold-less-horizontal" :label="t('role.action.collapseAll')" :disable="isSearching" @click="collapseAll" />
     <q-space />
     <div class="text-body2" aria-live="polite">
-      已授權
-      <span class="text-weight-bold">{{ grantedCount }}／{{ leafRows.length }}</span>
-      個功能
-      <q-badge v-if="!props.isReadonly && changedCount > 0" color="warning" text-color="dark" class="q-ml-xs">變更 {{ changedCount }} 項</q-badge>
+      <i18n-t keypath="role.matrix.grantedSummary" :plural="leafRows.length" scope="global">
+        <template #ratio>
+          <span class="text-weight-bold">{{ t('role.matrix.ratio', { granted: grantedCount, total: leafRows.length }) }}</span>
+        </template>
+      </i18n-t>
+      <q-badge v-if="!props.isReadonly && changedCount > 0" color="warning" text-color="dark" class="q-ml-xs">
+        {{ t('role.matrix.changedCount', changedCount) }}
+      </q-badge>
     </div>
   </div>
 
   <q-markup-table flat bordered dense separator="horizontal" class="permission-matrix">
     <thead>
       <tr>
-        <th class="bg-primary text-white text-left" style="min-width: 240px">功能</th>
-        <th v-for="column in ACTION_COLUMNS" :key="column.action" class="bg-primary text-white text-center">
+        <th class="bg-primary text-white text-left" style="min-width: 240px">{{ t('role.column.feature') }}</th>
+        <th v-for="column in actionColumns" :key="column.action" class="bg-primary text-white text-center">
           <div class="column items-center">
             <span>{{ column.label }}</span>
             <q-checkbox
@@ -31,17 +43,17 @@
               dark
               size="sm"
               color="accent"
-              :aria-label="`整欄${column.label}`"
+              :aria-label="t('role.matrix.columnAria', { action: column.label })"
               @update:model-value="handleToggleColumn(column.action)"
             >
-              <q-tooltip>整欄{{ column.label }}（有搜尋時只套用到搜尋結果）</q-tooltip>
+              <q-tooltip>{{ t('role.matrix.columnTooltip', { action: column.label }) }}</q-tooltip>
             </q-checkbox>
           </div>
         </th>
         <th class="bg-primary text-white text-center">
           <div class="column items-center">
-            <span>全部</span>
-            <span v-if="!props.isReadonly" class="text-caption">整列</span>
+            <span>{{ t('table.all') }}</span>
+            <span v-if="!props.isReadonly" class="text-caption">{{ t('role.matrix.wholeRow') }}</span>
           </div>
         </th>
       </tr>
@@ -60,7 +72,7 @@
               size="sm"
               color="grey"
               :icon="isCollapsed(row.resourceId) && !isSearching ? 'mdi-chevron-right' : 'mdi-chevron-down'"
-              :aria-label="`${isCollapsed(row.resourceId) ? '展開' : '收合'}${row.name}`"
+              :aria-label="isCollapsed(row.resourceId) ? t('role.matrix.expandAria', { name: row.name }) : t('role.matrix.collapseAria', { name: row.name })"
               :aria-expanded="!isCollapsed(row.resourceId)"
               :disable="isSearching"
               @click="toggleCollapsed(row.resourceId)"
@@ -73,15 +85,15 @@
             </span>
             <q-badge v-if="!row.isEnabled" color="grey" text-color="dark" class="q-ml-sm">
               <q-icon name="mdi-eye-off-outline" size="12px" class="q-mr-xs" />
-              選單已停用
-              <q-tooltip>選單暫時關閉；這裡的權限會原樣保留，選單重新啟用後立即生效</q-tooltip>
+              {{ t('role.status.menuDisabled') }}
+              <q-tooltip>{{ t('role.hint.menuDisabled') }}</q-tooltip>
             </q-badge>
           </div>
         </td>
 
         <!-- 四種操作 -->
         <td
-          v-for="column in ACTION_COLUMNS"
+          v-for="column in actionColumns"
           :key="column.action"
           class="text-center"
           :class="{
@@ -90,19 +102,19 @@
           }"
         >
           <span v-if="row.cells[column.action] === 'na'" class="text-caption">
-            不適用
-            <q-tooltip>「{{ row.name }}」沒有{{ column.label }}操作</q-tooltip>
+            {{ t('role.status.notApplicable') }}
+            <q-tooltip>{{ t('role.hint.notApplicable', { name: row.name, action: column.label }) }}</q-tooltip>
           </span>
           <template v-else-if="props.isReadonly">
-            <q-icon v-if="row.cells[column.action] === 'all'" name="mdi-check-bold" color="primary" size="sm" aria-label="已授權" />
-            <span v-else-if="row.cells[column.action] === 'some'" class="text-caption text-weight-bold text-secondary">部分</span>
-            <span v-else class="text-grey" aria-label="未授權">—</span>
+            <q-icon v-if="row.cells[column.action] === 'all'" name="mdi-check-bold" color="primary" size="sm" :aria-label="t('role.status.granted')" />
+            <span v-else-if="row.cells[column.action] === 'some'" class="text-caption text-weight-bold text-secondary">{{ t('role.status.partial') }}</span>
+            <span v-else class="text-grey" :aria-label="t('role.status.notGranted')">—</span>
           </template>
           <q-checkbox
             v-else
             :model-value="toCheckboxValue(row.cells[column.action])"
             dense
-            :aria-label="`${row.name}：${column.label}`"
+            :aria-label="t('role.matrix.cellAria', { name: row.name, action: column.label })"
             @update:model-value="(value: boolean | null) => emit('setCell', row.resourceId, column.action, value === true)"
           />
         </td>
@@ -110,22 +122,24 @@
         <!-- 整列 -->
         <td class="text-center">
           <template v-if="props.isReadonly">
-            <span v-if="row.rowState === 'all'" class="text-caption text-weight-bold text-primary">全部</span>
-            <span v-else-if="row.rowState === 'some'" class="text-caption text-weight-bold text-secondary">部分</span>
+            <span v-if="row.rowState === 'all'" class="text-caption text-weight-bold text-primary">{{ t('table.all') }}</span>
+            <span v-else-if="row.rowState === 'some'" class="text-caption text-weight-bold text-secondary">{{ t('role.status.partial') }}</span>
             <span v-else class="text-grey">—</span>
           </template>
           <q-checkbox
             v-else
             :model-value="toCheckboxValue(row.rowState)"
             dense
-            :aria-label="`${row.name}：全部權限`"
+            :aria-label="t('role.matrix.rowAria', { name: row.name })"
             @update:model-value="emit('toggleRow', row.resourceId)"
           />
         </td>
       </tr>
 
       <tr v-if="visibleRows.length === 0">
-        <td :colspan="ACTION_COLUMNS.length + 2" class="text-center q-pa-md">{{ isSearching ? '找不到符合的功能' : '沒有可設定的功能' }}</td>
+        <td :colspan="actionColumns.length + 2" class="text-center q-pa-md">
+          {{ isSearching ? t('role.empty.noMatchingFeatures') : t('role.empty.noFeatures') }}
+        </td>
       </tr>
     </tbody>
   </q-markup-table>
@@ -135,36 +149,33 @@
     <template v-if="!props.isReadonly">
       <span class="row items-center no-wrap">
         <span class="permission-matrix__legend-swatch permission-matrix__cell--changed q-mr-xs" />
-        與載入時不同（尚未儲存）
+        {{ t('role.matrix.legendChanged') }}
       </span>
       <span class="row items-center no-wrap">
         <q-checkbox :model-value="null" dense size="xs" disable class="q-mr-xs" />
-        部分授權（底下的功能有勾有沒勾）
+        {{ t('role.matrix.legendPartial') }}
       </span>
     </template>
-    <span v-else>
-      <span class="text-weight-bold text-secondary">部分</span>
-      ：底下的功能有些有授權、有些沒有
-    </span>
-    <span>
-      <span class="text-weight-bold">不適用</span>
-      ：這個功能沒有該項操作
-    </span>
+    <i18n-t v-else keypath="role.matrix.legendPartialReadonly" tag="span" scope="global">
+      <template #term>
+        <span class="text-weight-bold text-secondary">{{ t('role.status.partial') }}</span>
+      </template>
+    </i18n-t>
+    <i18n-t keypath="role.matrix.legendNotApplicable" tag="span" scope="global">
+      <template #term>
+        <span class="text-weight-bold">{{ t('role.status.notApplicable') }}</span>
+      </template>
+    </i18n-t>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import type { AdminRolePermissionAction, AdminRolePermissionCheckState, AdminRolePermissionRow } from '@/pages/AdminRoleManagement/types'
 
-/** 四種操作的欄位；檢視是其他三種的前提，固定排第一個 */
-const ACTION_COLUMNS: ActionColumn[] = [
-  { action: 'canAccess', label: '檢視' },
-  { action: 'canCreate', label: '新增' },
-  { action: 'canUpdate', label: '修改' },
-  { action: 'canDelete', label: '刪除' },
-]
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<Props>(), {
   isReadonly: false,
@@ -181,6 +192,13 @@ const keyword = ref<string | null>(null)
 /** 收合起來的群組 */
 const collapsedIds = ref<Set<string>>(new Set())
 
+/** 四種操作的欄位；檢視是其他三種的前提，固定排第一個。欄位名稱隨語系切換 */
+const actionColumns = computed<ActionColumn[]>(() => [
+  { action: 'canAccess', label: t('role.action.view') },
+  { action: 'canCreate', label: t('common.action.add') },
+  { action: 'canUpdate', label: t('role.action.update') },
+  { action: 'canDelete', label: t('role.action.delete') },
+])
 const normalizedKeyword = computed<string>(() => keyword.value?.trim().toLowerCase() ?? '')
 const isSearching = computed<boolean>(() => normalizedKeyword.value !== '')
 const rowById = computed<Map<string, AdminRolePermissionRow>>(() => new Map(props.rows.map((row) => [row.resourceId, row])))

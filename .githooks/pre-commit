@@ -1,5 +1,5 @@
 #!/bin/sh
-# commit 前的快速檢查（約 0.5 秒）：格式與 oxlint。
+# commit 前的快速檢查：格式與 oxlint。
 # 較重的 eslint、型別檢查、build 留給 pre-push，避免每次 commit 都等。
 #
 # 這個目錄由 package.json 的 prepare 掛上（git config core.hooksPath .githooks）。

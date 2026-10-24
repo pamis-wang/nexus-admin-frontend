@@ -1,16 +1,16 @@
 <template>
   <x-breadcrumb
     :items="[
-      { label: '首頁', icon: 'mdi-home', to: { name: 'home' } },
-      { label: '系統管理' },
-      { label: '角色管理', to: { name: 'roleManagementList' } },
-      { label: '新增角色' },
+      { label: t('menu.home'), icon: 'mdi-home', to: { name: 'home' } },
+      { label: t('menu.systemManagement') },
+      { label: t('role.title'), to: { name: 'roleManagementList' } },
+      { label: t('role.addTitle') },
     ]"
   />
 
-  <x-page-header title="新增角色" icon="mdi-shield-plus-outline" />
+  <x-page-header :title="t('role.addTitle')" icon="mdi-shield-plus-outline" />
 
-  <x-loading-state :loading="isLoading" message="載入權限設定中..." />
+  <x-loading-state :loading="isLoading" :message="t('role.loading.permissions')" />
 
   <q-card v-if="!isLoading" flat bordered class="q-mt-xs">
     <q-card-section>
@@ -22,19 +22,19 @@
       </q-banner>
 
       <template v-else>
-        <x-section-header-bar title="基本資料" />
+        <x-section-header-bar :title="t('role.section.basic')" />
         <q-form ref="formRef" @submit="handleSubmit">
           <div class="row q-col-gutter-md q-mt-xs" data-tour="role-form-name">
             <div class="col-12 col-md-6">
               <q-input
                 v-model="formData.name"
-                label="角色名稱"
+                :label="t('role.field.name')"
                 maxlength="50"
                 counter
                 outlined
                 dense
                 autocomplete="off"
-                :rules="[(value: string) => value.trim() !== '' || '請輸入角色名稱']"
+                :rules="[(value: string) => value.trim() !== '' || t('role.validation.nameRequired')]"
               >
                 <template #prepend>
                   <q-icon name="mdi-asterisk" color="negative" size="8px" />
@@ -45,13 +45,13 @@
               <q-select
                 v-model="templateRoleId"
                 :options="templateOptions"
-                label="以既有角色為範本"
+                :label="t('role.field.template')"
                 emit-value
                 map-options
                 outlined
                 dense
                 :loading="isApplyingTemplate"
-                hint="只複製權限，之後兩個角色互不影響"
+                :hint="t('role.hint.template')"
                 @update:model-value="handleTemplateChange"
               >
                 <template #prepend>
@@ -62,8 +62,8 @@
           </div>
         </q-form>
 
-        <x-section-header-bar title="權限設定" class="q-mt-md" />
-        <div class="text-caption q-mt-xs q-mb-sm">勾選「新增／修改／刪除」時會自動勾選「檢視」</div>
+        <x-section-header-bar :title="t('role.section.permissions')" class="q-mt-md" />
+        <div class="text-caption q-mt-xs q-mb-sm">{{ t('role.hint.autoGrantRule') }}</div>
         <div data-tour="role-permission-matrix">
           <AdminRolePermissionMatrix :rows="matrix.rows.value" @set-cell="handleSetCell" @toggle-row="handleToggleRow" @toggle-column="handleToggleColumn" />
         </div>
@@ -79,16 +79,16 @@
       <q-card-section class="row items-center no-wrap q-py-sm q-gutter-sm">
         <div class="col text-body2 row items-center no-wrap" aria-live="polite">
           <q-icon name="mdi-information-outline" class="q-mr-xs" />
-          新角色儲存前不會影響任何用戶
+          {{ t('role.hint.newRoleUnsaved') }}
         </div>
         <div class="row no-wrap q-gutter-sm" data-tour="role-form-submit">
-          <q-btn flat color="grey" label="取消" :to="buildListRoute()" />
-          <q-btn flat color="grey" label="重設" :disable="!hasChanges" @click="handleReset" />
+          <q-btn flat color="grey" :label="t('common.action.cancel')" :to="buildListRoute()" />
+          <q-btn flat color="grey" :label="t('common.action.resetForm')" :disable="!hasChanges" @click="handleReset" />
           <q-btn
             unelevated
             color="primary"
             icon="mdi-content-save-outline"
-            label="儲存"
+            :label="t('common.action.save')"
             :loading="isSubmitting"
             :disable="isLoading || loadErrorMessage !== null"
             @click="handleSubmit"
@@ -101,6 +101,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, useTemplateRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { onBeforeRouteLeave, useRouter, type RouteLocationRaw } from 'vue-router'
 import type { QForm } from 'quasar'
 
@@ -117,6 +118,7 @@ import type { AdminRoleManagementFormData, AdminRoleManagementRow, AdminRolePerm
 const NO_TEMPLATE = ''
 
 const router = useRouter()
+const { t } = useI18n()
 const dialog = useDialog()
 const notify = useNotify()
 const logger = useLogger({ prefix: 'AdminRoleManagementAdd', enabled: import.meta.env.DEV })
@@ -136,8 +138,8 @@ const templateRoleId = ref<string>(NO_TEMPLATE)
 const isSaved = ref(false)
 
 const templateOptions = computed(() => [
-  { label: '不使用範本（從零開始）', value: NO_TEMPLATE },
-  ...templateRoles.value.map((role) => ({ label: role.isSystemDefault ? `${role.name}（系統預設）` : role.name, value: role.id })),
+  { label: t('role.option.noTemplate'), value: NO_TEMPLATE },
+  ...templateRoles.value.map((role) => ({ label: role.isSystemDefault ? t('role.option.systemDefault', { name: role.name }) : role.name, value: role.id })),
 ])
 /** 有沒有填過任何東西；有就要在離開前確認 */
 const hasChanges = computed<boolean>(() => formData.name.trim() !== '' || matrix.changedCount.value > 0)
@@ -171,16 +173,16 @@ async function loadMatrix() {
 
     const skeletonRole = templateRoles.value[0]
     if (skeletonRole === undefined) {
-      loadErrorMessage.value = '找不到任何角色，無法取得權限設定的項目，請聯絡系統管理者。'
+      loadErrorMessage.value = t('role.noRolesForPermissions')
       return
     }
 
     const matrixResponse = await getAdminRolePermissionMatrix(skeletonRole.id)
     matrix.loadBlank(matrixResponse.result.data?.permissions ?? [])
   } catch (error) {
-    const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
+    const errorMessage = (error as ResponseStructure<null>).errorMessage || t('common.unknownError')
     logger.error('載入權限設定失敗', errorMessage)
-    loadErrorMessage.value = `載入權限設定失敗：${errorMessage}`
+    loadErrorMessage.value = t('role.loadPermissionsFailed', { message: errorMessage })
   } finally {
     isLoading.value = false
   }
@@ -198,10 +200,10 @@ async function handleTemplateChange(roleId: string) {
     const response = await getAdminRolePermissionMatrix(roleId)
     matrix.applyTemplate(response.result.data?.permissions ?? [])
     const roleName = templateRoles.value.find((role) => role.id === roleId)?.name ?? ''
-    notify.notifyInfo(`已套用「${roleName}」的權限作為起點，可以再調整`)
+    notify.notifyInfo(t('role.templateApplied', { name: roleName }))
   } catch (error) {
     templateRoleId.value = NO_TEMPLATE
-    notify.notifyError((error as ResponseStructure<null>).errorMessage || '載入範本角色的權限失敗', 0)
+    notify.notifyError((error as ResponseStructure<null>).errorMessage || t('role.loadTemplateFailed'), 0)
   } finally {
     isApplyingTemplate.value = false
   }
@@ -217,12 +219,12 @@ async function handleSubmit() {
     const name = formData.name.trim()
     await createAdminRole({ name, permissions: matrix.buildPermissionItems() })
     isSaved.value = true
-    notify.notifySuccess(`角色「${name}」已新增`)
+    notify.notifySuccess(t('role.created', { name }))
     await router.push(buildListRoute())
   } catch (error) {
     const failure = error as ResponseStructure<null>
     logger.error('新增角色失敗', { status: failure.status, errorMessage: failure.errorMessage })
-    notify.notifyError(failure.errorMessage || '新增角色失敗', 0)
+    notify.notifyError(failure.errorMessage || t('role.createFailed'), 0)
   } finally {
     isSubmitting.value = false
   }
@@ -234,7 +236,7 @@ function handleReset() {
   templateRoleId.value = NO_TEMPLATE
   matrix.reset()
   formRef.value?.resetValidation()
-  notify.notifyInfo('已還原為載入時的設定')
+  notify.notifyInfo(t('role.reverted'))
 }
 
 function handleSetCell(resourceId: string, action: AdminRolePermissionAction, value: boolean) {
@@ -249,16 +251,19 @@ function handleToggleColumn(action: AdminRolePermissionAction, leafIds: string[]
   notifyHint(matrix.toggleColumn(action, leafIds))
 }
 
-/** 連動了其他操作時告訴使用者發生了什麼 */
-function notifyHint(hint: string | null) {
-  if (hint !== null) notify.notifyInfo(hint)
+/**
+ * 連動了其他操作時告訴使用者發生了什麼
+ * @param hintKey 說明的翻譯鍵；沒有連動時為 null
+ */
+function notifyHint(hintKey: string | null) {
+  if (hintKey !== null) notify.notifyInfo(t(hintKey))
 }
 
 /** 離開前確認；回傳是否離開 */
 function confirmLeave(): Promise<boolean> {
   return new Promise((resolve) => {
     dialog
-      .showConfirm('新角色還沒儲存，離開後填寫的內容會遺失。', '離開這一頁？')
+      .showConfirm(t('role.leaveConfirmNew'), t('role.leaveTitle'))
       .onOk(() => resolve(true))
       .onCancel(() => resolve(false))
       .onDismiss(() => resolve(false))

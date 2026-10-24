@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 /**
  * 系統管理路由
  *
- * 列表頁是選單項目，帶 title 與 icon；新增／檢視／編輯只從列表進入，一律不設 title，
+ * 列表頁是選單項目，帶 title（menu 字典的 key，用路由 name）與 icon；新增／檢視／編輯只從列表進入，一律不設 title，
  * 選單來源 menuRoutes 會把沒有 title 的節點整支剔掉，因此不會出現在選單上。
  *
  * requiresAuth 只掛在 MainLayout 一層，這裡不重複——to.meta 會沿 matched 由父到子合併。
@@ -13,13 +13,13 @@ export const systemRoutes: RouteRecordRaw = {
   path: 'system-management',
   name: 'systemManagement',
   redirect: { name: 'home' },
-  meta: { title: '系統管理', icon: 'mdi-cog', resourceName: '系統管理' },
+  meta: { title: 'systemManagement', icon: 'mdi-cog', resourceName: '系統管理' },
   children: [
     // 用戶管理
     {
       path: 'users',
       name: 'userManagementList',
-      meta: { title: '用戶管理', icon: 'mdi-account-circle', resourceName: '系統管理>用戶管理' },
+      meta: { title: 'userManagementList', icon: 'mdi-account-circle', resourceName: '系統管理>用戶管理' },
       component: () => import('@/pages/AdminUserManagement/AdminUserManagementList.vue'),
     },
     {
@@ -45,7 +45,7 @@ export const systemRoutes: RouteRecordRaw = {
     {
       path: 'roles',
       name: 'roleManagementList',
-      meta: { title: '角色管理', icon: 'mdi-account-group', resourceName: '系統管理>角色管理' },
+      meta: { title: 'roleManagementList', icon: 'mdi-account-group', resourceName: '系統管理>角色管理' },
       component: () => import('@/pages/AdminRoleManagement/AdminRoleManagementList.vue'),
     },
     {
@@ -73,7 +73,7 @@ export const systemRoutes: RouteRecordRaw = {
       // 與畫面顯示的 title 刻意不同名
       path: 'menu-settings',
       name: 'menuSettingsList',
-      meta: { title: '選單設定', icon: 'mdi-file-tree', resourceName: '系統管理>資源管理' },
+      meta: { title: 'menuSettingsList', icon: 'mdi-file-tree', resourceName: '系統管理>資源管理' },
       component: () => import('@/pages/AdminResourceManagement/AdminResourceManagementList.vue'),
     },
   ],

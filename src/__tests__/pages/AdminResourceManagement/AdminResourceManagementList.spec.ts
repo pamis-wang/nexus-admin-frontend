@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import customPlugin from '@/plugins/custom'
 import quasarPlugin from '@/plugins/quasar'
+import { i18n } from '@/plugins/i18n'
 import AdminResourceManagementList from '@/pages/AdminResourceManagement/AdminResourceManagementList.vue'
 import type { AdminResourceTreeResponse, ReplaceAdminResourceTreeRequest } from '@/services/admin/adminResourceService'
 import type { ResponseStructure } from '@/services/axiosService'
@@ -66,7 +67,7 @@ function buildTreeResponse(): ResponseStructure<AdminResourceTreeResponse> {
 /** 掛載頁面並等待資源樹載入完成 */
 async function mountAdminResourceManagementList() {
   const wrapper = mount(AdminResourceManagementList, {
-    global: { plugins: [quasarPlugin, customPlugin] },
+    global: { plugins: [quasarPlugin, i18n, customPlugin] },
   })
   await vi.waitFor(() => expect(wrapper.findAll('tbody tr').length).toBeGreaterThan(0))
 

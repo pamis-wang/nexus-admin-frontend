@@ -1,5 +1,5 @@
-import axios from 'axios'
-import { axiosService, request, type BaseResponse, type ResponseStructure } from '@/services/axiosService'
+import { i18n } from '@/plugins/i18n'
+import { request, type ResponseStructure } from '@/services/axiosService'
 
 /** 呼叫路徑 */
 const BASE_API_URL = `${import.meta.env.VITE_API_URL}/api/auth`
@@ -99,10 +99,28 @@ export interface LogoutResponse {
 }
 
 /**
+ * 從登入或換發失敗時拋出的錯誤取出結果
+ *
+ * 失敗時後端回非 2xx，但回應本體仍帶 authStatus 與 message；axiosService 對這兩個端點會原樣保留本體，
+ * 放在拋出的 ResponseStructure 的 result.data。沒收到回應、或本體不是這個形狀時，改用 axiosService 依語系轉好的 errorMessage
+ * @param error 拋出的錯誤
+ * @param fallback 本體不是預期形狀時的結果
+ * @param fallbackMessage 連 errorMessage 都沒有時的說明
+ * @returns 登入或換發的結果
+ */
+function readAuthFailure<T extends { authStatus: AuthStatus; message: string | null }>(error: unknown, fallback: T, fallbackMessage: string): T {
+  const failure = error as ResponseStructure<T | null>
+  const data = failure.result?.data
+  if (data !== null && data !== undefined && typeof data === 'object' && 'authStatus' in data) return data
+
+  return { ...fallback, message: failure.errorMessage || fallbackMessage }
+}
+
+/**
  * 登入
  * @description AuthController 不論登入結果一律回傳完整的回應內容，只有 HTTP 狀態碼隨 authStatus 變動
- * （例如密碼錯誤回 401、帳號鎖定回 429），這裡繞過共用的 request()（它假設非 2xx 一律視為錯誤、內容不可靠），
- * 改成自行解析回應內容，統一以 authStatus 判斷結果，不看 HTTP 狀態碼。
+ * （例如密碼錯誤回 401、帳號鎖定回 429）；失敗時從 axiosService 拋出的 ResponseStructure 取出回應內容，
+ * 統一以 authStatus 判斷結果，不看 HTTP 狀態碼。
  */
 export async function login(data: LoginRequest): Promise<LoginResponse> {
   const fallback: LoginResponse = {
@@ -115,21 +133,16 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
   }
 
   try {
-    const response = await axiosService.post<BaseResponse<LoginResponse>>(`${BASE_API_URL}/login`, data)
-    return response.data.data ?? fallback
+    const response = await request<LoginResponse>({ url: `${BASE_API_URL}/login`, method: 'POST', data })
+    return response.result.data ?? fallback
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.data) {
-      const body = error.response.data as BaseResponse<LoginResponse>
-      if (body.data) return body.data
-      return { ...fallback, message: body.error?.message ?? '登入失敗，請稍後再試' }
-    }
-    return { ...fallback, message: '網路異常，請稍後再試' }
+    return readAuthFailure(error, fallback, i18n.global.t('auth.login.failed'))
   }
 }
 
 /**
  * 換發權杖（Token Rotation）
- * @description 與 login 相同的契約特性，繞過共用的 request() 自行解析回應。
+ * @description 與 login 相同的契約特性，失敗時同樣從拋出的 ResponseStructure 取出回應內容。
  */
 export async function refresh(data: RefreshTokenRequest): Promise<RefreshTokenResponse> {
   const fallback: RefreshTokenResponse = {
@@ -141,15 +154,10 @@ export async function refresh(data: RefreshTokenRequest): Promise<RefreshTokenRe
   }
 
   try {
-    const response = await axiosService.post<BaseResponse<RefreshTokenResponse>>(`${BASE_API_URL}/refresh`, data)
-    return response.data.data ?? fallback
+    const response = await request<RefreshTokenResponse>({ url: `${BASE_API_URL}/refresh`, method: 'POST', data })
+    return response.result.data ?? fallback
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.data) {
-      const body = error.response.data as BaseResponse<RefreshTokenResponse>
-      if (body.data) return body.data
-      return { ...fallback, message: body.error?.message ?? '換發權杖失敗' }
-    }
-    return { ...fallback, message: '網路異常，請稍後再試' }
+    return readAuthFailure(error, fallback, i18n.global.t('auth.refreshFailed'))
   }
 }
 

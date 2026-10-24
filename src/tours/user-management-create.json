@@ -1,46 +1,81 @@
 {
   "id": "user-management-create",
-  "name": "用戶管理：開一個新帳號",
+  "name": {
+    "zh-TW": "用戶管理：開一個新帳號",
+    "en-US": "User Management: Create a New Account"
+  },
+  "groupName": null,
   "order": 30,
-  "requiresRouteName": null,
-  "resourceName": "系統管理>用戶管理",
+  "requiresRouteNames": [],
+  "resourceCode": "系統管理>用戶管理",
+  "requiresAnchor": null,
   "steps": [
     {
       "anchor": "user-add-button",
-      "title": "從這裡開一個新帳號",
-      "description": "開帳號之前先確認這個人是不是已經有帳號了——同一個人不要為了不同權限開兩個帳號，那會讓稽核紀錄分散在兩筆資料上。需要不同權限，是改他的角色，不是多開一個帳號。",
+      "title": {
+        "zh-TW": "從這裡開一個新帳號",
+        "en-US": "Create a new account here"
+      },
+      "description": {
+        "zh-TW": "開帳號之前先確認這個人是不是已經有帳號了——同一個人不要為了不同權限開兩個帳號，那會讓稽核紀錄分散在兩筆資料上。需要不同權限，是改他的角色，不是多開一個帳號。",
+        "en-US": "Before creating an account, check whether this person already has one. Don't create two accounts for the same person just to give them different permissions; that splits their audit trail across two records. If they need different permissions, change their role instead of creating another account."
+      },
       "routeName": "userManagementList",
       "side": "bottom",
       "align": "end"
     },
     {
       "anchor": "user-form-notice",
-      "title": "先看這兩句，可以省下之後的來回",
-      "description": "第一，這裡只建立帳號本身，建好的帳號還沒有綁定登入方式，必須另行啟用後才能登入——所以建完馬上請對方登入一定會失敗，那是正常的。第二，登入帳號建立後就不能改，電子信箱和姓名之後還可以在編輯頁調整。帳號打錯只能請系統管理員處理，送出前請再確認一次。",
+      "title": {
+        "zh-TW": "先看這兩句，可以省下之後的來回",
+        "en-US": "Read these two notes first to save back-and-forth later"
+      },
+      "description": {
+        "zh-TW": "第一，這裡只建立帳號本身，建好的帳號還沒有綁定登入方式，必須另行啟用後才能登入——所以建完馬上請對方登入一定會失敗，那是正常的。第二，登入帳號建立後就不能改，電子信箱和姓名之後還可以在編輯頁調整。帳號打錯只能請系統管理員處理，送出前請再確認一次。",
+        "en-US": "First, this only creates the account itself. The new account has no login method yet and must be activated separately before it can log in, so if the person tries to log in right after you create it, it will fail; that's normal. Second, the account can't be changed after it's created, though the email and full name can still be edited later on the edit page. A mistyped account can only be fixed by the system administrator, so double-check it before you submit."
+      },
       "routeName": "userManagementAdd",
       "side": "bottom",
       "align": "start"
     },
     {
       "anchor": "user-form-basic",
-      "title": "帳號與電子信箱必填，姓名可以留空",
-      "description": "欄位左邊有紅色星號的就是必填。電子信箱只做基本格式檢查，系統不會驗證這個信箱是否真的存在，打錯了要等到寄送通知時才會發現，請直接向本人確認。姓名留空時，列表上該欄會顯示「-」，畫面其他地方則改以帳號稱呼這個人。",
+      "title": {
+        "zh-TW": "帳號與電子信箱必填，姓名可以留空",
+        "en-US": "\"Account\" and \"Email\" are required; \"Full Name\" can be left blank"
+      },
+      "description": {
+        "zh-TW": "欄位左邊有紅色星號的就是必填。電子信箱只做基本格式檢查，系統不會驗證這個信箱是否真的存在，打錯了要等到寄送通知時才會發現，請直接向本人確認。姓名留空時，列表上該欄會顯示「-」，畫面其他地方則改以帳號稱呼這個人。",
+        "en-US": "Fields with a red asterisk on the left are required. The email only gets a basic format check; the system doesn't verify that the address actually exists, so a typo won't be noticed until a notification is sent. Please confirm it with the person directly. If the full name is left blank, that column in the list shows \"-\", and elsewhere on screen the person is referred to by their account instead."
+      },
       "routeName": "userManagementAdd",
       "side": "bottom",
       "align": "start"
     },
     {
       "anchor": "user-form-roles",
-      "title": "角色可以現在給，也可以之後再給",
-      "description": "這裡選的角色決定這個帳號登入後看得到什麼。不確定要給哪個角色時先留空，之後到編輯頁補上即可——給錯權限比暫時沒權限麻煩得多。要注意的是，帳號和角色是分兩次寫進系統的：萬一角色那一步失敗，畫面會提醒你帳號已經建好、請到編輯頁重新指派，這時不要重開一個帳號。",
+      "title": {
+        "zh-TW": "角色可以現在給，也可以之後再給",
+        "en-US": "You can assign roles now or later"
+      },
+      "description": {
+        "zh-TW": "這裡選的角色決定這個帳號登入後看得到什麼。不確定要給哪個角色時先留空，之後到編輯頁補上即可——給錯權限比暫時沒權限麻煩得多。要注意的是，帳號和角色是分兩次寫進系統的：萬一角色那一步失敗，畫面會提醒你帳號已經建好、請到編輯頁重新指派，這時不要重開一個帳號。",
+        "en-US": "The roles you choose here determine what this account can see after logging in. If you're not sure which role to give, leave it blank for now and add it later on the edit page; the wrong permissions cause far more trouble than having none for a while. Note that the account and its roles are saved to the system in two separate steps: if the role step fails, a message tells you the account has already been created and asks you to assign the roles again on the edit page. In that case, don't create the account again."
+      },
       "routeName": "userManagementAdd",
       "side": "left",
       "align": "start"
     },
     {
       "anchor": "user-form-submit",
-      "title": "送出後會回到列表，記得確認新帳號在不在",
-      "description": "儲存成功會跳出提示並回到用戶列表。新帳號在列表上的「登入狀態」會顯示「尚未綁定登入方式」，這就是還沒啟用的意思，代表帳號建立成功了。如果列表上找不到，先確認是不是還有篩選條件沒清掉，再考慮重新整理。",
+      "title": {
+        "zh-TW": "送出後會回到列表，記得確認新帳號在不在",
+        "en-US": "After you submit, you return to the list; check that the new account is there"
+      },
+      "description": {
+        "zh-TW": "儲存成功會跳出提示並回到用戶列表。新帳號在列表上的「登入狀態」會顯示「尚未綁定登入方式」，這就是還沒啟用的意思，代表帳號建立成功了。如果列表上找不到，先確認是不是還有篩選條件沒清掉，再考慮重新整理。",
+        "en-US": "Once it's saved, a message appears and you're taken back to the user list. The new account's \"Login Status\" in the list shows \"No Login Method\", which means it hasn't been activated yet and confirms the account was created. If you can't find it in the list, first check whether any filters are still applied, then try refreshing."
+      },
       "routeName": "userManagementAdd",
       "side": "top",
       "align": "center"

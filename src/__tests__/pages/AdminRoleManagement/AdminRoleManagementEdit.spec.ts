@@ -5,6 +5,7 @@ import { createMemoryHistory, createRouter, RouterView } from 'vue-router'
 import { QLayout, QPage, QPageContainer } from 'quasar'
 import customPlugin from '@/plugins/custom'
 import quasarPlugin from '@/plugins/quasar'
+import { i18n } from '@/plugins/i18n'
 import AdminRoleManagementEdit from '@/pages/AdminRoleManagement/AdminRoleManagementEdit.vue'
 import type { AdminRolePermissionMatrixResponse, AdminRolePermissionNodeResponse, UpdateAdminRoleRequest } from '@/services/admin/adminRoleService'
 import type { ResponseStructure, UpdatedResponse } from '@/services/axiosService'
@@ -42,7 +43,7 @@ function buildNode(
   resourceId: string,
   resourceName: string,
   canAccess: boolean,
-  children: AdminRolePermissionNodeResponse[] = [],
+  children: AdminRolePermissionNodeResponse[] = []
 ): AdminRolePermissionNodeResponse {
   return {
     resourceId,
@@ -96,7 +97,7 @@ async function mountPage() {
   const host = defineComponent({
     render: () => h(QLayout, { view: 'hHh lpR fFf' }, () => h(QPageContainer, () => h(QPage, () => h(RouterView)))),
   })
-  const wrapper = mount(host, { global: { plugins: [quasarPlugin, customPlugin, router] } })
+  const wrapper = mount(host, { global: { plugins: [quasarPlugin, i18n, customPlugin, router] } })
 
   return { wrapper, router }
 }

@@ -4,11 +4,11 @@
       <q-card-section class="q-pa-sm">
         <div class="text-h6 text-primary">
           <q-icon name="mdi-home" class="q-mr-sm" />
-          歡迎使用 Nexus 管理後台
+          {{ t('home.welcome') }}
         </div>
       </q-card-section>
 
-      <q-card-section>在這裡建立後台帳號、設定角色與各功能的權限，也可以調整後台選單的結構。</q-card-section>
+      <q-card-section>{{ t('home.description') }}</q-card-section>
 
       <!-- 與選單一致，沒有權限的功能不顯示捷徑，免得點進去才被導到 403 -->
       <q-card-actions>
@@ -17,7 +17,7 @@
           flat
           color="primary"
           icon="mdi-account-circle"
-          label="用戶管理"
+          :label="t('user.title')"
           :to="{ name: 'userManagementList' }"
         />
         <q-btn
@@ -25,7 +25,7 @@
           flat
           color="primary"
           icon="mdi-account-group"
-          label="角色管理"
+          :label="t('role.title')"
           :to="{ name: 'roleManagementList' }"
         />
         <q-btn
@@ -33,7 +33,7 @@
           flat
           color="primary"
           icon="mdi-file-tree"
-          label="選單設定"
+          :label="t('resource.title')"
           :to="{ name: 'menuSettingsList' }"
         />
       </q-card-actions>
@@ -42,7 +42,9 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useUserStore } from '@/stores/useUser'
 
+const { t } = useI18n()
 const userStore = useUserStore()
 </script>

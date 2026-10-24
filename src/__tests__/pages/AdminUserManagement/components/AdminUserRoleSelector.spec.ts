@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { QSelect } from 'quasar'
 import quasarPlugin from '@/plugins/quasar'
+import { i18n } from '@/plugins/i18n'
 import AdminUserRoleSelector from '@/pages/AdminUserManagement/components/AdminUserRoleSelector.vue'
 import type { AdminRoleResponse } from '@/services/admin/adminRoleService'
 import type { ResponseStructure } from '@/services/axiosService'
@@ -40,7 +41,7 @@ function mockRoles(roles: AdminRoleResponse[]) {
 async function mountAdminUserRoleSelector() {
   const wrapper = mount(AdminUserRoleSelector, {
     props: { modelValue: [] },
-    global: { plugins: [quasarPlugin] },
+    global: { plugins: [quasarPlugin, i18n] },
   })
   await vi.waitFor(() => expect(getAdminRolesMock).toHaveBeenCalled())
   await wrapper.vm.$nextTick()

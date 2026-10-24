@@ -1,0 +1,5 @@
+{
+  "minutes": "{n} minute | {n} minutes",
+  "hours": "{n} hour | {n} hours",
+  "days": "{n} day | {n} days"
+}

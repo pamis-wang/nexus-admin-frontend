@@ -1,30 +1,30 @@
 <template>
   <x-breadcrumb
     :items="[
-      { label: '首頁', icon: 'mdi-home', to: { name: 'home' } },
-      { label: '系統管理' },
-      { label: '用戶管理', to: { name: 'userManagementList' } },
-      { label: '編輯用戶' },
+      { label: t('menu.home'), icon: 'mdi-home', to: { name: 'home' } },
+      { label: t('menu.systemManagement') },
+      { label: t('user.title'), to: { name: 'userManagementList' } },
+      { label: t('user.editTitle') },
     ]"
   />
 
-  <x-page-header title="編輯用戶" icon="mdi-account-edit-outline">
+  <x-page-header :title="t('user.editTitle')" icon="mdi-account-edit-outline">
     <template #badges>
-      <q-badge v-if="isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">系統預設</q-badge>
-      <q-badge v-if="formData.isDisabled" color="grey-6" class="q-ml-sm">已停用</q-badge>
+      <q-badge v-if="isSystemDefault" color="warning" text-color="dark" class="q-ml-sm">{{ t('user.status.systemDefault') }}</q-badge>
+      <q-badge v-if="formData.isDisabled" color="grey-6" class="q-ml-sm">{{ t('user.status.disabled') }}</q-badge>
     </template>
   </x-page-header>
 
-  <x-loading-state :loading="isLoadingUser" message="載入用戶資料中..." />
+  <x-loading-state :loading="isLoadingUser" :message="t('user.loading.user')" />
 
   <q-card v-if="!isLoadingUser" flat bordered class="q-mt-xs">
     <q-card-section>
       <q-form @submit="handleSubmit" @reset="handleReset">
-        <x-section-header-bar title="基本資料" />
+        <x-section-header-bar :title="t('user.section.basic')" />
         <div class="row q-col-gutter-md q-mt-xs">
           <div class="col-12 col-md-6">
             <!-- 後端允許修改帳號，但後台目前不開放；送出時仍要原樣帶回，PUT 是完整替換 -->
-            <q-input :model-value="formData.account" label="登入帳號" outlined dense readonly hint="目前不開放在後台修改">
+            <q-input :model-value="formData.account" :label="t('user.field.account')" outlined dense readonly :hint="t('user.hint.accountReadonly')">
               <template #prepend>
                 <div style="width: 8px" />
               </template>
@@ -34,8 +34,11 @@
             <q-input
               v-model="formData.email"
               type="email"
-              label="電子信箱"
-              :rules="[(value) => !!value?.trim() || '請輸入電子信箱', (value) => EMAIL_PATTERN.test(value ?? '') || '電子信箱格式不正確']"
+              :label="t('user.field.email')"
+              :rules="[
+                (value) => !!value?.trim() || t('user.validation.emailRequired'),
+                (value) => EMAIL_PATTERN.test(value ?? '') || t('user.validation.emailFormat'),
+              ]"
               maxlength="100"
               outlined
               dense
@@ -46,7 +49,7 @@
             </q-input>
           </div>
           <div class="col-12 col-md-6">
-            <q-input v-model="formData.fullName" label="姓名" maxlength="50" outlined dense>
+            <q-input v-model="formData.fullName" :label="t('user.field.fullName')" maxlength="50" outlined dense>
               <template #prepend>
                 <div style="width: 8px" />
               </template>
@@ -57,15 +60,15 @@
           </div>
         </div>
 
-        <div class="text-caption text-grey-7 q-mt-sm">帳號的停用狀態目前不開放在後台變更，列表與本頁都只顯示狀態，儲存時會把載入當下的值原樣帶回。</div>
+        <div class="text-caption text-grey-7 q-mt-sm">{{ t('user.hint.disabledReadonly') }}</div>
 
         <q-separator class="q-mt-md" />
 
         <div class="q-pa-md q-mt-lg">
           <div class="row q-gutter-sm justify-center">
-            <q-btn flat label="取消" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
-            <q-btn flat label="重設" color="grey" size="md" class="q-px-xl" type="reset" />
-            <q-btn unelevated label="儲存" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />
+            <q-btn flat :label="t('common.action.cancel')" color="grey" size="md" class="q-px-xl" @click="handleCancel" />
+            <q-btn flat :label="t('common.action.resetForm')" color="grey" size="md" class="q-px-xl" type="reset" />
+            <q-btn unelevated :label="t('common.action.save')" color="primary" size="md" class="q-px-xl" type="submit" :loading="isSubmitting" />
           </div>
         </div>
       </q-form>
@@ -75,6 +78,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useDialog } from '@/composables/useDialog'
@@ -87,6 +91,7 @@ import type { AdminUserManagementEditFormData } from '@/pages/AdminUserManagemen
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const dialog = useDialog()
 const notify = useNotify()
 const logger = useLogger({ prefix: 'AdminUserManagementEdit', enabled: import.meta.env.DEV })
@@ -109,7 +114,7 @@ onMounted(async () => {
 async function loadUser() {
   const userId = String(route.params.userId ?? '')
   if (userId.length === 0) {
-    dialog.showError('缺少用戶唯一編號', '載入失敗')
+    dialog.showError(t('user.missingId'), t('common.dialog.loadFailed'))
     router.push({ name: 'userManagementList' })
     return
   }
@@ -119,7 +124,7 @@ async function loadUser() {
     const response = await getAdminUserById(userId)
 
     if (response.status !== 200 || !response.result.data) {
-      dialog.showError(response.result.error?.message || '找不到指定用戶', '載入失敗')
+      dialog.showError(response.result.error?.message || t('user.notFound'), t('common.dialog.loadFailed'))
       router.push({ name: 'userManagementList' })
       return
     }
@@ -134,9 +139,9 @@ async function loadUser() {
     isSystemDefault.value = user.isSystemDefault
     originalFormData.value = { ...formData, roleIds: [...formData.roleIds] }
   } catch (error) {
-    const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
+    const errorMessage = (error as ResponseStructure<null>).errorMessage || t('common.unknownError')
     logger.error('載入用戶失敗', errorMessage)
-    dialog.showError(errorMessage, '載入用戶失敗')
+    dialog.showError(errorMessage, t('user.loadFailedTitle'))
     router.push({ name: 'userManagementList' })
   } finally {
     isLoadingUser.value = false
@@ -160,18 +165,18 @@ async function handleSubmit() {
     })
 
     if (!response.success) {
-      notify.notifyError(response.result.error?.message || '更新用戶失敗', 0)
+      notify.notifyError(response.result.error?.message || t('user.updateFailed'), 0)
       return
     }
 
     const isRolesUpdated = await updateRoles()
     if (isRolesUpdated) {
-      notify.notifySuccess(`用戶「${formData.account}」已更新`)
+      notify.notifySuccess(t('user.updated', { account: formData.account }))
     }
     router.push({ name: 'userManagementList' })
   } catch (error) {
     const failure = error as ResponseStructure<null>
-    const errorMessage = failure.errorMessage || '未知錯誤'
+    const errorMessage = failure.errorMessage || t('common.unknownError')
     logger.error('更新用戶失敗', { status: failure.status, errorMessage })
 
     if (failure.status === 409) {
@@ -197,9 +202,9 @@ async function updateRoles(): Promise<boolean> {
     }
     throw response
   } catch (error) {
-    const errorMessage = (error as ResponseStructure<null>).errorMessage || '未知錯誤'
+    const errorMessage = (error as ResponseStructure<null>).errorMessage || t('common.unknownError')
     logger.error('更新角色失敗', errorMessage)
-    dialog.showWarning(`用戶「${formData.account}」的基本資料已更新，但角色未更新（${errorMessage}），請重新操作一次。`, '角色未更新')
+    dialog.showWarning(t('user.roleUpdateFailed', { account: formData.account, message: errorMessage }), t('user.roleUpdateFailedTitle'))
     return false
   }
 }

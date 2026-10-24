@@ -1,0 +1,8 @@
+{
+  "noData": "No data found",
+  "rowsPerPage": "Rows per page:",
+  "dense": "Compact",
+  "standard": "Standard",
+  "all": "All",
+  "range": "{start} - {end} of {total}"
+}

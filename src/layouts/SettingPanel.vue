@@ -2,7 +2,7 @@
   <q-card style="width: 400px; max-width: 100%">
     <!-- 標題列 -->
     <q-card-section class="row items-center q-py-sm" :class="layoutStore.getTopbarColorClass()">
-      <div class="text-h6">主題設定</div>
+      <div class="text-h6">{{ t('shell.themeSettings.title') }}</div>
       <q-space />
       <q-btn flat round dense icon="mdi-close" v-close-popup />
     </q-card-section>
@@ -11,7 +11,7 @@
     <q-card-section class="q-pa-md">
       <!-- 選擇佈局 -->
       <div class="q-mb-lg">
-        <h6 class="text-h6 q-my-md">選擇佈局</h6>
+        <h6 class="text-h6 q-my-md">{{ t('shell.themeSettings.layout') }}</h6>
         <div class="row q-gutter-md">
           <div class="col-5">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setLayout('vertical')">
@@ -19,7 +19,7 @@
                 <LayoutVerticalPreview :is-selected="layoutStore.layoutConfig.layout === 'vertical'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">垂直佈局</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.themeSettings.vertical') }}</div>
           </div>
           <div class="col-5">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setLayout('horizontal')">
@@ -27,14 +27,14 @@
                 <LayoutHorizontalPreview :is-selected="layoutStore.layoutConfig.layout === 'horizontal'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">水平佈局</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.themeSettings.horizontal') }}</div>
           </div>
         </div>
       </div>
 
       <!-- 色彩方案 -->
       <div class="q-mb-lg">
-        <h6 class="text-h6 q-my-md">色彩方案</h6>
+        <h6 class="text-h6 q-my-md">{{ t('shell.colorScheme.title') }}</h6>
         <div class="row q-gutter-md">
           <div class="col-3">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setColorScheme('light')">
@@ -42,7 +42,7 @@
                 <ColorSchemeLight :is-selected="layoutStore.layoutConfig.colorScheme === 'light'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">亮色主題</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.colorScheme.light') }}</div>
           </div>
           <div class="col-3">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setColorScheme('dark')">
@@ -50,7 +50,7 @@
                 <ColorSchemeDark :is-selected="layoutStore.layoutConfig.colorScheme === 'dark'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">暗色主題</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.colorScheme.dark') }}</div>
           </div>
           <div class="col-3">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setColorScheme('system')">
@@ -58,14 +58,14 @@
                 <ColorSchemeSystem :is-selected="layoutStore.layoutConfig.colorScheme === 'system'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">跟隨系統</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.colorScheme.system') }}</div>
           </div>
         </div>
       </div>
 
       <!-- 頂部欄顏色 -->
       <div class="q-mb-lg">
-        <h6 class="text-h6 q-my-md">頂部欄顏色</h6>
+        <h6 class="text-h6 q-my-md">{{ t('shell.themeSettings.topbarColor') }}</h6>
         <div class="row q-gutter-md">
           <div class="col-3">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setTopbarColor('light')">
@@ -73,7 +73,7 @@
                 <TopbarColorLight :is-selected="layoutStore.layoutConfig.topbarColor === 'light'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">亮色</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.themeSettings.color.light') }}</div>
           </div>
           <div class="col-3">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setTopbarColor('dark')">
@@ -81,7 +81,7 @@
                 <TopbarColorDark :is-selected="layoutStore.layoutConfig.topbarColor === 'dark'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">暗色</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.themeSettings.color.dark') }}</div>
           </div>
           <div class="col-3">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setTopbarColor('brand')">
@@ -89,14 +89,14 @@
                 <TopbarColorBrand :is-selected="layoutStore.layoutConfig.topbarColor === 'brand'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">品牌色</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.themeSettings.color.brand') }}</div>
           </div>
         </div>
       </div>
 
       <!-- 選單顏色 -->
       <div class="q-mb-lg">
-        <h6 class="text-h6 q-my-md">選單顏色</h6>
+        <h6 class="text-h6 q-my-md">{{ t('shell.themeSettings.menuColor') }}</h6>
         <div class="row q-gutter-md">
           <div class="col-3" v-if="isMenuColorAvailable.light">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setMenuColor('light')">
@@ -104,7 +104,7 @@
                 <MenuColorLight :is-selected="layoutStore.layoutConfig.menuColor === 'light'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">亮色</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.themeSettings.color.light') }}</div>
           </div>
           <div class="col-3">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setMenuColor('dark')">
@@ -112,7 +112,7 @@
                 <MenuColorDark :is-selected="layoutStore.layoutConfig.menuColor === 'dark'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">暗色</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.themeSettings.color.dark') }}</div>
           </div>
           <div class="col-3">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setMenuColor('brand')">
@@ -120,16 +120,16 @@
                 <MenuColorBrand :is-selected="layoutStore.layoutConfig.menuColor === 'brand'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">品牌色</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.themeSettings.color.brand') }}</div>
           </div>
         </div>
         <!-- 提示文字 -->
-        <div v-if="!isMenuColorAvailable.light" class="text-caption text-grey-6 q-mt-sm">💡 暗色模式下僅支援暗色或品牌色選單，以確保最佳視覺體驗</div>
+        <div v-if="!isMenuColorAvailable.light" class="text-caption text-grey-6 q-mt-sm">💡 {{ t('shell.themeSettings.darkModeMenuHint') }}</div>
       </div>
 
       <!-- 側邊選單尺寸：僅垂直佈局適用 -->
       <div class="q-mb-lg" v-if="layoutStore.layoutConfig.layout === 'vertical'">
-        <h6 class="text-h6 q-my-md">側邊選單尺寸</h6>
+        <h6 class="text-h6 q-my-md">{{ t('shell.themeSettings.sidebarSize') }}</h6>
         <div class="row q-gutter-md">
           <div class="col-5">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setSidebarSize('default')">
@@ -137,7 +137,7 @@
                 <SidebarSizeDefault :is-selected="layoutStore.layoutConfig.sidebarSize === 'default'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">常駐展開</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.themeSettings.sidebarExpanded') }}</div>
           </div>
           <div class="col-5">
             <q-card flat bordered class="cursor-pointer layout-preview-card" @click="layoutStore.setSidebarSize('sm-hover')">
@@ -145,7 +145,7 @@
                 <SidebarSizeHover :is-selected="layoutStore.layoutConfig.sidebarSize === 'sm-hover'" :size="80" />
               </q-card-section>
             </q-card>
-            <div class="text-center q-mt-sm text-caption">常駐收合</div>
+            <div class="text-center q-mt-sm text-caption">{{ t('shell.themeSettings.sidebarCollapsed') }}</div>
           </div>
         </div>
       </div>
@@ -155,6 +155,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useLayoutStore } from '@/stores/useLayout'
 import LayoutVerticalPreview from '@/layouts/components/LayoutVerticalPreview.vue'
 import LayoutHorizontalPreview from '@/layouts/components/LayoutHorizontalPreview.vue'
@@ -170,6 +171,7 @@ import MenuColorBrand from '@/layouts/components/MenuColorBrand.vue'
 import SidebarSizeDefault from '@/layouts/components/SidebarSizeDefault.vue'
 import SidebarSizeHover from '@/layouts/components/SidebarSizeHover.vue'
 
+const { t } = useI18n()
 // 使用 layout store
 const layoutStore = useLayoutStore()
 

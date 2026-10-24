@@ -1,0 +1,37 @@
+{
+  "welcome": "Welcome!",
+  "logout": "Log Out",
+  "personalSettings": "Personal Settings",
+  "role": {
+    "switchTitle": "Switch Role",
+    "activeRolesTitle": "Active Roles (Select Multiple)",
+    "singleRoleHint": "You are assigned only one role.",
+    "noRoles": "No roles are assigned to you. Please contact an administrator.",
+    "keepOneActive": "At least one role must remain active.",
+    "separator": ", "
+  },
+  "colorScheme": {
+    "title": "Color Scheme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "tooltip": "Color Scheme: {current} (click to switch to {next})"
+  },
+  "themeSettings": {
+    "title": "Theme Settings",
+    "layout": "Layout",
+    "vertical": "Vertical",
+    "horizontal": "Horizontal",
+    "topbarColor": "Top Bar Color",
+    "menuColor": "Menu Color",
+    "color": {
+      "light": "Light",
+      "dark": "Dark",
+      "brand": "Brand Color"
+    },
+    "darkModeMenuHint": "In dark mode, only dark or brand color menus are available for better contrast.",
+    "sidebarSize": "Sidebar Size",
+    "sidebarExpanded": "Always Expanded",
+    "sidebarCollapsed": "Always Collapsed"
+  }
+}

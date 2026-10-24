@@ -1,0 +1,12 @@
+{
+  "timeout": "The request timed out. Please try again later.",
+  "network": "Network error. Please check your connection and try again.",
+  "badRequest": "The request is invalid. Please check your input and try again.",
+  "unauthorized": "Your session has expired. Please log in again.",
+  "forbidden": "You do not have permission to perform this action.",
+  "notFound": "The requested data could not be found.",
+  "unprocessable": "The data format is invalid. Please check and try again.",
+  "server": "A server error occurred. Please try again later.",
+  "unexpected": "An unexpected error occurred ({status}).",
+  "uploadFailed": "File upload failed: {reason}"
+}

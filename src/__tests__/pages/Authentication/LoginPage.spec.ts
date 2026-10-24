@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import quasarPlugin from '@/plugins/quasar'
+import { i18n } from '@/plugins/i18n'
 import LoginPage from '@/pages/Authentication/LoginPage.vue'
 import type { LoginResult } from '@/composables/useAuthentication'
 
@@ -17,7 +18,7 @@ vi.mock('@/composables/useAuthentication', () => ({
 function mountLoginPage() {
   return mount(LoginPage, {
     global: {
-      plugins: [quasarPlugin],
+      plugins: [quasarPlugin, i18n],
     },
   })
 }

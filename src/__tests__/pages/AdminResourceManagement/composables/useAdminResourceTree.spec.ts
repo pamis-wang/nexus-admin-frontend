@@ -39,7 +39,7 @@ vi.mock('@/composables/useNotify', () => ({
 function buildNode(
   id: string,
   resourceName: string,
-  options: { resourceCode?: string | null; children?: AdminResourceTreeNodeResponse[]; isEnabled?: boolean } = {},
+  options: { resourceCode?: string | null; children?: AdminResourceTreeNodeResponse[]; isEnabled?: boolean } = {}
 ): AdminResourceTreeNodeResponse {
   return {
     id,
@@ -157,7 +157,7 @@ describe('useAdminResourceTree - 丟棄未送出的新增列', () => {
         buildNode('id-a', 'A', { children: [buildNode('id-a1', 'A>A1', { children: [buildNode('id-a1x', 'A>A1>A1X')] })] }),
         buildNode('id-b', 'B'),
         buildNode('id-c', 'C'),
-      ]),
+      ])
     )
     const tree = useAdminResourceTree()
     await tree.loadTree()
@@ -237,7 +237,7 @@ describe('useAdminResourceTree - 編輯與搬移', () => {
       buildTreeResponse('v1', [
         buildNode('id-a', 'A', { children: [buildNode('id-a1', 'A>A1', { children: [buildNode('id-a1x', 'A>A1>A1X')] })] }),
         buildNode('id-b', 'B', { children: [buildNode('id-b1', 'B>B1')] }),
-      ]),
+      ])
     )
     const tree = useAdminResourceTree()
     await tree.loadTree()
@@ -346,7 +346,7 @@ describe('useAdminResourceTree - 整批替換', () => {
           children: [buildNode('id-users', '系統管理>用戶管理', { resourceCode: 'admin_users' }), buildNode('id-menu', '系統管理>選單管理')],
         }),
         buildNode('id-content', '內容管理'),
-      ]),
+      ])
     )
 
     const isSuccess = await tree.saveTree()

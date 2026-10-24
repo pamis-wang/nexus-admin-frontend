@@ -32,7 +32,7 @@ function buildNode(
   resourceId: string,
   resourceName: string,
   options: NodeOptions = {},
-  children: AdminRolePermissionNodeResponse[] = [],
+  children: AdminRolePermissionNodeResponse[] = []
 ): AdminRolePermissionNodeResponse {
   return {
     resourceId,
@@ -224,7 +224,7 @@ describe('useAdminRolePermissionMatrix - 整列與整欄', () => {
       matrix
         .buildPermissionItems()
         .filter((item) => item.canDelete)
-        .map((item) => item.resourceId),
+        .map((item) => item.resourceId)
     ).toEqual(['system', 'roles'])
   })
 
